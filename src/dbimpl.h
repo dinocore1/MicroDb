@@ -10,13 +10,16 @@
 namespace microdb {
 
     class DBImpl : public DB {
-        
     public:
+        const std::string mInstanceId;
+        
         leveldb::DB* mLevelDB;
+        
+        DBImpl(const std::string& id);
         
         virtual ~DBImpl();
         
-        Status Put(const std::string& key, const std::string& value);
+        Status Put(const std::string& value, std::string* key);
         
     };
     

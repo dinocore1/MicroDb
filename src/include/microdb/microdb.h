@@ -15,7 +15,7 @@ namespace microdb{
         
         virtual ~DB();
         
-        virtual Status Put(const std::string& key, const std::string& value) = 0;
+        virtual Status Put(const std::string& value, std::string* key) = 0;
     };
 }
 
