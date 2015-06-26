@@ -44,9 +44,9 @@ namespace microdb {
             
         } else {
             
-            UUID id = UUID::createRandom();
+            string instanceId = UUID::createRandom().getString();
             metaDoc.SetObject();
-            metaDoc.AddMember(KEY_INSTANCEID, StringRef(id.getString().c_str()), metaDoc.GetAllocator());
+            metaDoc.AddMember(KEY_INSTANCEID, StringRef(instanceId.c_str()), metaDoc.GetAllocator());
             metaDoc.AddMember("current_version", 0, metaDoc.GetAllocator());
             
             StringBuffer buffer;
@@ -84,6 +84,11 @@ namespace microdb {
         
         Document doc;
         doc.Parse(value.c_str());
+        
+        if(doc.HasParseError() || !doc.IsObject()) {
+            return PARSE_ERROR;
+        }
+        
         
         return OK;
         

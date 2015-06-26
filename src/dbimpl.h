@@ -7,11 +7,13 @@
 #include <microdb/status.h>
 #include <microdb/microdb.h>
 
+#include "uuid.h"
+
 namespace microdb {
 
     class DBImpl : public DB {
     public:
-        const std::string mInstanceId;
+        const UUID mInstanceId;
         
         leveldb::DB* mLevelDB;
         

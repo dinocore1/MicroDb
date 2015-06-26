@@ -64,7 +64,7 @@ DIGIT       [0-9a-fA-F]
 
 namespace microdb {
     
-    UUID::UUID(const char* value) {
+    bool UUID::parse(const char* value) {
         yyscan_t scanner;
         uuidlex_init(&scanner);
         uuidlex_init_extra(mData, &scanner);
@@ -75,5 +75,7 @@ namespace microdb {
         uuid_delete_buffer(buff, scanner);
         
         uuidlex_destroy(scanner);
+        
+        return true;
     }
 }
