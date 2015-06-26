@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>5C79EF4A-1DED-4C0F-8105-64A900DB790E</string>
+	<key>IDESourceControlProjectName</key>
+	<string>MicroDB</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>E41D9418B12789E9F7E9E03BB8D22D396713CE96</key>
+		<string>github.com:dinocore1/MicroDb.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>MicroDB.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>E41D9418B12789E9F7E9E03BB8D22D396713CE96</key>
+		<string>..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:dinocore1/MicroDb.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>E41D9418B12789E9F7E9E03BB8D22D396713CE96</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>E41D9418B12789E9F7E9E03BB8D22D396713CE96</string>
+			<key>IDESourceControlWCCName</key>
+			<string>MicroDB</string>
+		</dict>
+	</array>
+</dict>
+</plist>

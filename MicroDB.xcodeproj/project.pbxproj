@@ -1,0 +1,314 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9A7DE161A749D971F26067 /* dbimpl.cpp */; };
+		DAE2FF5C1B35EC80009DFDAA /* libleveldb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */; };
+		DAE2FF611B35F4B4009DFDAA /* rapidjson in Resources */ = {isa = PBXBuildFile; fileRef = DAE2FF601B35F4B4009DFDAA /* rapidjson */; };
+		DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */ = {isa = PBXBuildFile; fileRef = DAE2FF621B38E1A0009DFDAA /* viewquery.l */; };
+		DAFA01841B38E3E6009392B3 /* viewquery.y in Resources */ = {isa = PBXBuildFile; fileRef = DAFA01831B38E3E6009392B3 /* viewquery.y */; };
+		DAFA01851B38EDAB009392B3 /* viewquery.y in Sources */ = {isa = PBXBuildFile; fileRef = DAFA01831B38E3E6009392B3 /* viewquery.y */; };
+		DAFA01891B3CC401009392B3 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DAFA01881B3CC401009392B3 /* uuid.cpp */; };
+		DAFA018B1B3CC7FD009392B3 /* uuid_lex.l in Sources */ = {isa = PBXBuildFile; fileRef = DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */; };
+		DAFA018D1B3CFA55009392B3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DAFA018C1B3CFA55009392B3 /* CoreFoundation.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		DAE2FF401B34810E009DFDAA /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			fileType = sourcecode.yacc;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).hpp",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).cpp",
+			);
+			script = "# $(YACC)\n\necho \"hello world ${INPUT_FILE_PATH}\"\n/usr/bin/bison -d -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.cpp ${INPUT_FILE_PATH}\n";
+		};
+		DAE2FF641B38E1C5009DFDAA /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			fileType = sourcecode.lex;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILE_DIR)/${INPUT_FILE_BASE}.lex.cpp",
+			);
+			script = "# $(LEX)\n/usr/bin/flex -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.lex.cpp ${INPUT_FILE_PATH}";
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXFileReference section */
+		0C9A7DE161A749D971F26067 /* dbimpl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dbimpl.cpp; sourceTree = "<group>"; };
+		35EF16CD18BB1F897A354E78 /* libMicroDB.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libMicroDB.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C38307034C060C60F0B5670 /* microdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = microdb.h; sourceTree = "<group>"; };
+		DAE2FF411B35E136009DFDAA /* status.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = status.h; sourceTree = "<group>"; };
+		DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libleveldb.a; path = "../../Downloads/leveldb-1.18/libleveldb.a"; sourceTree = "<group>"; };
+		DAE2FF5D1B35ED30009DFDAA /* dbimpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dbimpl.h; sourceTree = "<group>"; };
+		DAE2FF601B35F4B4009DFDAA /* rapidjson */ = {isa = PBXFileReference; lastKnownFileType = folder; path = rapidjson; sourceTree = "<group>"; };
+		DAE2FF621B38E1A0009DFDAA /* viewquery.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; path = viewquery.l; sourceTree = "<group>"; };
+		DAFA01831B38E3E6009392B3 /* viewquery.y */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.yacc; path = viewquery.y; sourceTree = "<group>"; };
+		DAFA01861B38F154009392B3 /* viewqueryparser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = viewqueryparser.h; sourceTree = "<group>"; };
+		DAFA01871B38FD6D009392B3 /* uuid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uuid.h; sourceTree = "<group>"; };
+		DAFA01881B3CC401009392B3 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uuid.cpp; sourceTree = "<group>"; };
+		DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; path = uuid_lex.l; sourceTree = "<group>"; };
+		DAFA018C1B3CFA55009392B3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4C7B4F5A59F76F6429971822 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAFA018D1B3CFA55009392B3 /* CoreFoundation.framework in Frameworks */,
+				DAE2FF5C1B35EC80009DFDAA /* libleveldb.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		1ECB454402AB3AAA2F86389D /* src */ = {
+			isa = PBXGroup;
+			children = (
+				4D4B257A246B010C4CD4233A /* include */,
+				0C9A7DE161A749D971F26067 /* dbimpl.cpp */,
+				DAE2FF5D1B35ED30009DFDAA /* dbimpl.h */,
+				DAFA01861B38F154009392B3 /* viewqueryparser.h */,
+				DAE2FF621B38E1A0009DFDAA /* viewquery.l */,
+				DAFA01831B38E3E6009392B3 /* viewquery.y */,
+				DAFA01871B38FD6D009392B3 /* uuid.h */,
+				DAFA01881B3CC401009392B3 /* uuid.cpp */,
+				DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		3C8020DC049D0E4C23060FD1 /* MicroDB */ = {
+			isa = PBXGroup;
+			children = (
+				DAFA018C1B3CFA55009392B3 /* CoreFoundation.framework */,
+				DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */,
+				1ECB454402AB3AAA2F86389D /* src */,
+				5D152846484B63E96A99218C /* Products */,
+			);
+			name = MicroDB;
+			sourceTree = "<group>";
+		};
+		4D4B257A246B010C4CD4233A /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DAE2FF601B35F4B4009DFDAA /* rapidjson */,
+				71D16FD74ABC7ECB425766FA /* microdb */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		5D152846484B63E96A99218C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				35EF16CD18BB1F897A354E78 /* libMicroDB.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		71D16FD74ABC7ECB425766FA /* microdb */ = {
+			isa = PBXGroup;
+			children = (
+				4C38307034C060C60F0B5670 /* microdb.h */,
+				DAE2FF411B35E136009DFDAA /* status.h */,
+			);
+			path = microdb;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		452E773219A0702D31676F63 /* MicroDB */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2D2640167AFC54A25DD707DC /* Build configuration list for PBXNativeTarget "MicroDB" */;
+			buildPhases = (
+				13367031401C29D17E3B1448 /* Resources */,
+				21EB695C37A877497F9127F5 /* Sources */,
+				4C7B4F5A59F76F6429971822 /* Frameworks */,
+			);
+			buildRules = (
+				DAE2FF401B34810E009DFDAA /* PBXBuildRule */,
+				DAE2FF641B38E1C5009DFDAA /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = MicroDB;
+			productName = MicroDB;
+			productReference = 35EF16CD18BB1F897A354E78 /* libMicroDB.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+			};
+			buildConfigurationList = 1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "MicroDB" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 3C8020DC049D0E4C23060FD1 /* MicroDB */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				452E773219A0702D31676F63 /* MicroDB */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13367031401C29D17E3B1448 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAFA01841B38E3E6009392B3 /* viewquery.y in Resources */,
+				DAE2FF611B35F4B4009DFDAA /* rapidjson in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		21EB695C37A877497F9127F5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DAFA01891B3CC401009392B3 /* uuid.cpp in Sources */,
+				DAFA01851B38EDAB009392B3 /* viewquery.y in Sources */,
+				DAFA018B1B3CC7FD009392B3 /* uuid_lex.l in Sources */,
+				DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */,
+				2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		319227141F8F6E397ADE0E25 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				EXECUTABLE_PREFIX = lib;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = GUID_CFUUID;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					src/include,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/paul/Downloads/leveldb-1.18",
+				);
+				PRODUCT_NAME = MicroDB;
+			};
+			name = Debug;
+		};
+		346E4155578C57DD2D91472D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = DEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/paul/Downloads/leveldb-1.18/include",
+				);
+				LIBRARY_SEARCH_PATHS = "/Users/paul/Downloads/leveldb-1.18";
+				OBJROOT = obj/Debug/MicroDB;
+				ONLY_ACTIVE_ARCH = YES;
+			};
+			name = Debug;
+		};
+		4C461745402D51E45B7D2787 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/paul/Downloads/leveldb-1.18/include",
+				);
+				LIBRARY_SEARCH_PATHS = "/Users/paul/Downloads/leveldb-1.18";
+				OBJROOT = obj/Release/MicroDB;
+				ONLY_ACTIVE_ARCH = NO;
+			};
+			name = Release;
+		};
+		79642F9B6F2A448270A9038F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_PREFIX = lib;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREPROCESSOR_DEFINITIONS = GUID_CFUUID;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					src/include,
+				);
+				INSTALL_PATH = /usr/local/lib;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"/Users/paul/Downloads/leveldb-1.18",
+				);
+				PRODUCT_NAME = MicroDB;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB928908733DD80010E9CD /* Build configuration list for PBXProject "MicroDB" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				346E4155578C57DD2D91472D /* Debug */,
+				4C461745402D51E45B7D2787 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2D2640167AFC54A25DD707DC /* Build configuration list for PBXNativeTarget "MicroDB" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				319227141F8F6E397ADE0E25 /* Debug */,
+				79642F9B6F2A448270A9038F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
