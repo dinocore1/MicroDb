@@ -56,3 +56,8 @@ expr
     ;
 
 %%
+
+void viewquery_error(YYLTYPE* locp, microdb::ViewQuery* ctx, const char* err)
+{
+    
+}
