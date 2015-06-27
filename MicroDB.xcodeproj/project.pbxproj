@@ -26,9 +26,9 @@
 			isEditable = 1;
 			outputFiles = (
 				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).hpp",
-				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).cpp",
+				"$(DERIVED_FILE_DIR)/$(INPUT_FILE_BASE).yy.cpp",
 			);
-			script = "# $(YACC)\n\necho \"hello world ${INPUT_FILE_PATH}\"\n/usr/bin/bison -d -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.cpp ${INPUT_FILE_PATH}\n";
+			script = "# $(YACC)\n\necho \"hello world ${INPUT_FILE_PATH}\"\n/usr/bin/bison -d -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.yy.cpp ${INPUT_FILE_PATH}\n";
 		};
 		DAE2FF641B38E1C5009DFDAA /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
@@ -37,8 +37,9 @@
 			isEditable = 1;
 			outputFiles = (
 				"$(DERIVED_FILE_DIR)/${INPUT_FILE_BASE}.lex.cpp",
+				"$(DERIVED_FILE_DIR)/${INPUT_FILE_BASE}.lex.h",
 			);
-			script = "# $(LEX)\n/usr/bin/flex -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.lex.cpp ${INPUT_FILE_PATH}";
+			script = "# $(LEX)\n/usr/bin/flex -o ${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.lex.cpp --header-file=${DERIVED_FILE_DIR}/${INPUT_FILE_BASE}.lex.h ${INPUT_FILE_PATH}";
 		};
 /* End PBXBuildRule section */
 
@@ -57,6 +58,7 @@
 		DAFA01881B3CC401009392B3 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uuid.cpp; sourceTree = "<group>"; };
 		DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.lex; path = uuid_lex.l; sourceTree = "<group>"; };
 		DAFA018C1B3CFA55009392B3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		DAFA018E1B3E4454009392B3 /* viewquery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = viewquery.h; path = src/viewquery.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 			children = (
 				4D4B257A246B010C4CD4233A /* include */,
 				0C9A7DE161A749D971F26067 /* dbimpl.cpp */,
+				DAFA018E1B3E4454009392B3 /* viewquery.h */,
 				DAE2FF5D1B35ED30009DFDAA /* dbimpl.h */,
 				DAFA01861B38F154009392B3 /* viewqueryparser.h */,
 				DAE2FF621B38E1A0009DFDAA /* viewquery.l */,
