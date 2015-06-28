@@ -2,7 +2,7 @@
 %pure-parser
 %name-prefix="viewquery"
 %locations
-%parse-param { microdb::Selector** sltr }
+%parse-param { microdb::ParserStruct* ctx }
 %lex-param { void* scanner }
 
 %{
@@ -31,11 +31,12 @@
 %{
 
 #include "viewquery.lex.h"
-void viewqueryerror(YYLTYPE* locp, microdb::ViewQuery* ctx, const char* err);
+
+void viewqueryerror(YYLTYPE* locp, microdb::ParserStruct* ctx, const char* err);
 
 using namespace microdb;
 
-#define scanner ctx->scanner;
+#define scanner ctx->svt
 
 
 %}
@@ -45,8 +46,9 @@ using namespace microdb;
 
 
 query
-    : path { *yyextra = $1; }
+    : path { ctx->selector = $1; }
     ;
+
 
 stmtlist
     : stmtlist condition
@@ -64,25 +66,31 @@ path
 
 %%
 
+
+
+void viewqueryerror(YYLTYPE* locp, microdb::ParserStruct* ctx, const char* err)
+{
+    
+}
+
 namespace microdb {
     
     bool ViewQuery::compile(const char* code) {
-        yyscan_t scan;
-        viewquerylex_init(&scan);
         
-        YY_BUFFER_STATE buff = viewquery_scan_string(code, scan);
+        ParserStruct parserStr;
         
-        yyparse(scan);
+        viewquerylex_init(&parserStr.svt);
         
-        viewquery_delete_buffer(buff, scan);
+        YY_BUFFER_STATE buff = viewquery_scan_string(code, parserStr.svt);
         
-        viewquery_lex_destroy(scan);
+        viewqueryparse(&parserStr);
+        
+        viewquery_delete_buffer(buff, parserStr.svt);
+        
+        viewquerylex_destroy(parserStr.svt);
+        
+        mSelector = parserStr.selector;
         
         return true;
     }
-}
-
-void viewqueryerror(YYLTYPE* locp, microdb::ViewQuery* ctx, const char* err)
-{
-    
 }

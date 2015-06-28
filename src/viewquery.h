@@ -44,6 +44,11 @@ namespace microdb {
         }
     };
     
+    typedef struct ParserStruct {
+        void* svt;
+        Selector* selector;
+    } ParserStruct;
+    
     class ViewQuery {
     private:
         Selector* mSelector;
