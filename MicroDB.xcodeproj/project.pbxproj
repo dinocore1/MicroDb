@@ -79,8 +79,8 @@
 			children = (
 				4D4B257A246B010C4CD4233A /* include */,
 				0C9A7DE161A749D971F26067 /* dbimpl.cpp */,
-				DAFA018E1B3E4454009392B3 /* viewquery.h */,
 				DAE2FF5D1B35ED30009DFDAA /* dbimpl.h */,
+				DAFA018E1B3E4454009392B3 /* viewquery.h */,
 				DAFA01861B38F154009392B3 /* viewqueryparser.h */,
 				DAE2FF621B38E1A0009DFDAA /* viewquery.l */,
 				DAFA01831B38E3E6009392B3 /* viewquery.y */,

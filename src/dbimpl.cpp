@@ -34,32 +34,8 @@ namespace microdb {
             return ERROR;
         }
         
-        Document metaDoc;
-        string value;
-        status = levelDB->Get(leveldb::ReadOptions(), DOC_META, &value);
-        if(status.ok()){
-            char* buf = (char*) value.c_str();
-            metaDoc.ParseInsitu(buf);
-            
-            
-        } else {
-            
-            string instanceId = UUID::createRandom().getString();
-            metaDoc.SetObject();
-            metaDoc.AddMember(KEY_INSTANCEID, StringRef(instanceId.c_str()), metaDoc.GetAllocator());
-            metaDoc.AddMember("current_version", 0, metaDoc.GetAllocator());
-            
-            StringBuffer buffer;
-            Writer<StringBuffer> writer(buffer);
-            metaDoc.Accept(writer);
-            
-            status = levelDB->Put(leveldb::WriteOptions(), DOC_META, buffer.GetString());
-        }
-        
-        
-        DBImpl* retval = new DBImpl(metaDoc[KEY_INSTANCEID].GetString());
-        retval->mLevelDB = levelDB;
-        
+        DBImpl* retval = new DBImpl();
+        retval->init(levelDB);
         
         *dbptr = retval;
         return OK;
@@ -69,15 +45,48 @@ namespace microdb {
         
     }
     
-    DBImpl::DBImpl(const std::string& id)
-    : mInstanceId(id) {
-        
-    }
+    DBImpl::DBImpl() { }
     
     DBImpl::~DBImpl() {
         if(mLevelDB != nullptr){
           delete mLevelDB;
         }
+    }
+    
+    Status DBImpl::init(leveldb::DB* db) {
+        mLevelDB = db;
+        
+        Document metaDoc;
+        string value;
+        leveldb::Status status = mLevelDB->Get(leveldb::ReadOptions(), DOC_META, &value);
+        if(status.ok()){
+            char* buf = (char*) value.c_str();
+            metaDoc.ParseInsitu(buf);
+            
+        } else {
+            
+            string instanceId = UUID::createRandom().getString();
+            metaDoc.SetObject();
+            metaDoc.AddMember(KEY_INSTANCEID, StringRef(instanceId.c_str()), metaDoc.GetAllocator());
+            
+            StringBuffer buffer;
+            Writer<StringBuffer> writer(buffer);
+            metaDoc.Accept(writer);
+            
+            status = mLevelDB->Put(leveldb::WriteOptions(), DOC_META, buffer.GetString());
+        }
+        
+        mInstanceId = UUID(metaDoc[KEY_INSTANCEID].GetString());
+        
+        unique_ptr<leveldb::Iterator> it(mLevelDB->NewIterator(leveldb::ReadOptions()));
+        
+        
+        for(it->Seek("view"); it->Valid() && it->key().starts_with("view"); it->Next()){
+            
+        }
+        
+        
+        return OK;
     }
     
     Status DBImpl::Put(const std::string& value, std::string* key = nullptr) {
