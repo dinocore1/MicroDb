@@ -30,7 +30,14 @@
 ","                 { return TCOMMA; }
 "."                 { return TDOT; }
 "$"                 { return TPATHSTART; }
-"="                 { return TEQUALS; }
+"=="                { return TEQUALS; }
+"<="                { return TLEQ; }
+">="                { return TGEQ; }
+"!="                { return TNEQ; }
+"<"                 { return TLT; }
+">"                 { return TGT; }
+"="                 { return TASSIGN; }
+\"(\\.|[^"])*\"     { yylval->sval = new std::string(yytext[1], yyleng-2); return TSTRLITERAL; }
 [0-9]+              { SAVE_INT; return TINT; }
 [a-zA-Z0-9_]+       { SAVE_STRING; return TID; }
 [ \n\t]             ;

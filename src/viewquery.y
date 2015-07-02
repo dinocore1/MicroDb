@@ -20,17 +20,19 @@
     microdb::argList* arglist;
     microdb::FunctionCall* funcall;
     microdb::Statement* stmtval;
+    microdb::stmtList* stmtlistval;
 }
 
 %token TIF TLPAREN TRPAREN TLBRACE TRBRACE TDOT TPATHSTART TCOMMA
-%token TEQUALS
+%token TASSIGN TEQUALS TLEQ TGEQ TGT TLT TNEQ
 %token <ival> TINT
-%token <sval> TID
+%token <sval> TID TSTRLITERAL
 
+%type <stmtlistval> stmtlist
 %type <stmtval> stmt assign
 %type <arglist> arglist
 %type <funcall> funCall
-%type <selval> path var
+%type <selval> path var literal expr
 
 
 %start query
@@ -53,23 +55,44 @@ using namespace microdb;
 
 
 query
-    : path { ctx->selector = $1; }
+    : stmtlist { ctx->stmts = *$1; delete $1; }
     ;
 
 
 stmtlist
-    : stmtlist stmt
-    |
+    : stmtlist stmt { $$ = $1; $$->push_back($2); }
+    | { $$ = new stmtList(); }
     ;
 
 stmt
-    : condition
+    : ifstmt
     | funCall
     | assign
     ;
 
+ifstmt
+    : TIF TLPAREN condition TRPAREN TLBRACE stmtlist TRBRACE
+    ;
+
+
 condition
-    : TIF TLPAREN path TRPAREN TLBRACE stmtlist TRBRACE
+    : expr TEQUALS expr
+    | expr TLEQ expr
+    | expr TGEQ expr
+    | expr TGT expr
+    | expr TLT expr
+    | expr TNEQ expr
+    ;
+
+expr
+    : path
+    | literal
+    | funCall
+    ;
+
+literal
+    : TSTRLITERAL { $$ = new StrLiteralSelector(*$1); delete $1; }
+    | TINT { $$ = new IntLiteralSelector($1); }
     ;
 
 funCall
@@ -77,17 +100,18 @@ funCall
     ;
 
 arglist
-    : path { $$ = new arglist(); $$->push_back($1); }
+    : path { $$ = new argList(); $$->push_back($1); }
     | arglist TCOMMA path { $$ = $1; $$->push_back($3); }
-    | { $$ = new arglist(); }
-    ;
-
-var
-    : TID { $$ = new VarSelector(*$1); delete $1; }
+    | { $$ = new argList(); }
     ;
 
 assign
-    : TID TEQUALS path { $$ = new Assign($1, $3); delete $1; }
+    : TID TASSIGN expr { $$ = new Assign(*$1, $3); delete $1; }
+    ;
+
+
+var
+    : TID { $$ = new VarSelector(*$1); delete $1; }
     ;
 
 path
@@ -120,7 +144,7 @@ namespace microdb {
         
         viewquerylex_destroy(parserStr.svt);
         
-        mSelector = parserStr.selector;
+        mStatements = parserStr.stmts;
         
         return true;
     }

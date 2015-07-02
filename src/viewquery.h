@@ -25,6 +25,8 @@ namespace microdb {
         virtual void execute() = 0;
     };
     
+    typedef std::vector< Statement* > stmtList;
+    
     class Environment {
         
         std::map< std::string, rapidjson::Document > mVariables;
@@ -61,7 +63,7 @@ namespace microdb {
         }
     };
     
-    class FunctionCall : public Statement {
+    class FunctionCall : public Statement, public Selector {
     public:
         const std::string mFunctionName;
         const argList mArgList;
@@ -71,10 +73,10 @@ namespace microdb {
         : mFunctionName(name), mArgList(arglist) {}
         
         void execute() {
-            call();
+            select();
         }
         
-        rapidjson::Value& call() {
+        rapidjson::Value& select() {
             dataFunction fun = mEnv->GetFunction(mFunctionName);
             if(fun == nullptr) {
                 return fun(mArgList);
@@ -127,14 +129,47 @@ namespace microdb {
         }
     };
     
+    class StrLiteralSelector : public Selector {
+    private:
+        const std::string mValue;
+        
+    public:
+        
+        StrLiteralSelector(const std::string& value)
+        : mValue(value) { }
+        
+        rapidjson::Value& select() {
+            rapidjson::Value value(rapidjson::kStringType);
+            value.SetString(mValue.c_str(), mValue.length());
+            
+            return value.Move();
+        }
+    };
+    
+    class IntLiteralSelector : public Selector {
+    private:
+        const int mValue;
+        
+    public:
+        IntLiteralSelector(int value)
+        : mValue(value) { }
+        
+        rapidjson::Value& select() {
+            rapidjson::Value value(rapidjson::kNumberType);
+            value.SetInt(mValue);
+            
+            return value.Move();
+        }
+    };
+    
     typedef struct ParserStruct {
         void* svt;
-        Selector* selector;
+        stmtList stmts;
     } ParserStruct;
     
     class ViewQuery {
     private:
-        Selector* mSelector;
+        stmtList mStatements;
     public:
         bool compile(const char* code);
         
