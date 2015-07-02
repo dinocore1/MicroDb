@@ -27,8 +27,10 @@
 ")"                 { return TRPAREN; }
 "{"                 { return TLBRACE; }
 "}"                 { return TRBRACE; }
+","                 { return TCOMMA; }
 "."                 { return TDOT; }
 "$"                 { return TPATHSTART; }
+"="                 { return TEQUALS; }
 [0-9]+              { SAVE_INT; return TINT; }
 [a-zA-Z0-9_]+       { SAVE_STRING; return TID; }
 [ \n\t]             ;

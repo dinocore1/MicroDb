@@ -17,13 +17,20 @@
     std::string* sval;
     int ival;
     microdb::Selector* selval;
+    microdb::argList* arglist;
+    microdb::FunctionCall* funcall;
+    microdb::Statement* stmtval;
 }
 
-%token TIF TLPAREN TRPAREN TLBRACE TRBRACE TDOT TPATHSTART
+%token TIF TLPAREN TRPAREN TLBRACE TRBRACE TDOT TPATHSTART TCOMMA
+%token TEQUALS
 %token <ival> TINT
 %token <sval> TID
 
-%type <selval> path
+%type <stmtval> stmt assign
+%type <arglist> arglist
+%type <funcall> funCall
+%type <selval> path var
 
 
 %start query
@@ -51,16 +58,40 @@ query
 
 
 stmtlist
-    : stmtlist condition
+    : stmtlist stmt
     |
+    ;
+
+stmt
+    : condition
+    | funCall
+    | assign
     ;
 
 condition
     : TIF TLPAREN path TRPAREN TLBRACE stmtlist TRBRACE
     ;
 
+funCall
+    : TID TLPAREN arglist TRPAREN { $$ = new FunctionCall(*$1, *$3); delete $1; delete $3; }
+    ;
+
+arglist
+    : path { $$ = new arglist(); $$->push_back($1); }
+    | arglist TCOMMA path { $$ = $1; $$->push_back($3); }
+    | { $$ = new arglist(); }
+    ;
+
+var
+    : TID { $$ = new VarSelector(*$1); delete $1; }
+    ;
+
+assign
+    : TID TEQUALS path { $$ = new Assign($1, $3); delete $1; }
+    ;
+
 path
-    : TPATHSTART { $$ = new PathStart(); }
+    : var { $$ = $1; }
     | path TDOT TID { $$ = new MemberSelector(*$3, $1); delete $3; }
     ;
 
