@@ -149,6 +149,7 @@ namespace microdb {
                 case LessThanOrEqual:
                     break;
                 case NotEqual:
+                    return left != right ? RETURN_TRUE : RETURN_FALSE;
                     break;
             }
             
@@ -200,34 +201,29 @@ namespace microdb {
     
     class StrLiteralSelector : public Selector {
     private:
-        const std::string mValue;
+        const std::string mStrValue;
+        rapidjson::Value mValue;
         
     public:
         
         StrLiteralSelector(const std::string& value)
-        : mValue(value) { }
+        : mStrValue(value), mValue(mStrValue.c_str(), mStrValue.size()) { }
         
         rapidjson::Value& select() {
-            rapidjson::Value value(rapidjson::kStringType);
-            value.SetString(mValue.c_str(), mValue.length());
-            
-            return value.Move();
+            return mValue;
         }
     };
     
     class IntLiteralSelector : public Selector {
     private:
-        const int mValue;
+        rapidjson::Value mValue;
         
     public:
         IntLiteralSelector(int value)
         : mValue(value) { }
         
         rapidjson::Value& select() {
-            rapidjson::Value value(rapidjson::kNumberType);
-            value.SetInt(mValue);
-            
-            return value.Move();
+            return mValue;
         }
     };
     
