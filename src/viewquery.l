@@ -37,7 +37,7 @@
 "<"                 { return TLT; }
 ">"                 { return TGT; }
 "="                 { return TASSIGN; }
-\"(\\.|[^"])*\"     { yylval->sval = new std::string(yytext[1], yyleng-2); return TSTRLITERAL; }
+\"(\\.|[^"])*\"     { yylval->sval = new std::string(&yytext[1], yyleng-2); return TSTRLITERAL; }
 [0-9]+              { SAVE_INT; return TINT; }
 [a-zA-Z0-9_]+       { SAVE_STRING; return TID; }
 [ \n\t]             ;

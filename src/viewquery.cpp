@@ -3,9 +3,9 @@
 
 namespace microdb {
     
-    void ViewQuery::execute() {
+    void ViewQuery::execute(Environment* env) {
         for(Statement* stmt : mStatements) {
-            stmt->execute();
+            stmt->execute(env);
         }
     }
 }

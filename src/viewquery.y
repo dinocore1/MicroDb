@@ -16,10 +16,10 @@
 %union {
     std::string* sval;
     int ival;
-    microdb::Selector* selval;
-    microdb::argList* arglist;
     microdb::Statement* stmtval;
+    microdb::Selector* selval;
     microdb::stmtList* stmtlistval;
+    microdb::argList* arglist;
 }
 
 %token TIF TLPAREN TRPAREN TLBRACE TRBRACE TDOT TPATHSTART TCOMMA
@@ -94,7 +94,7 @@ literal
     ;
 
 funCall
-    : TID TLPAREN arglist TRPAREN { $$ = new FunctionCall(*$1, *$3, ctx->mEnv); delete $1; delete $3; }
+    : TID TLPAREN arglist TRPAREN { $$ = new FunctionCall(*$1, *$3); delete $1; delete $3; }
     ;
 
 arglist
@@ -104,12 +104,12 @@ arglist
     ;
 
 assign
-    : TID TASSIGN expr { $$ = new Assign(*$1, $3, ctx->mEnv); delete $1; }
+    : TID TASSIGN expr { $$ = new Assign(*$1, $3); delete $1; }
     ;
 
 
 var
-    : TID { $$ = new VarSelector(*$1, ctx->mEnv); delete $1; }
+    : TID { $$ = new VarSelector(*$1); delete $1; }
     ;
 
 path
@@ -123,7 +123,7 @@ path
 
 void viewqueryerror(YYLTYPE* locp, microdb::ParserStruct* ctx, const char* err)
 {
-    
+    ctx->mParseSuccess = false;
 }
 
 namespace microdb {
@@ -131,9 +131,9 @@ namespace microdb {
     bool ViewQuery::compile(const char* code) {
         
         ParserStruct parserStr;
+        parserStr.mParseSuccess = true;
         
         viewquerylex_init(&parserStr.svt);
-        parserStr.mEnv = mEnv;
         
         YY_BUFFER_STATE buff = viewquery_scan_string(code, parserStr.svt);
         
@@ -145,6 +145,6 @@ namespace microdb {
         
         mStatements = parserStr.stmts;
         
-        return true;
+        return parserStr.mParseSuccess;
     }
 }

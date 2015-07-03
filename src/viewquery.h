@@ -11,21 +11,25 @@
 
 namespace microdb {
     
-    class Selector {
-    public:
-        virtual rapidjson::Value& select() = 0;
-    };
-    
-    typedef std::vector< Selector* > argList;
-    typedef rapidjson::Value& (*dataFunction)(const std::vector< Selector* >& args);
+    class Environment;
     
     class Statement {
-        
     public:
-        virtual void execute() = 0;
+        virtual void execute(Environment* env) = 0;
+    };
+    
+    class Selector : public Statement {
+    public:
+        void execute(Environment* env) {
+            select(env);
+        }
+        
+        virtual rapidjson::Value& select(Environment* env) = 0;
     };
     
     typedef std::vector< Statement* > stmtList;
+    typedef std::vector< Selector* > argList;
+    typedef rapidjson::Value& (*dataFunction)(const std::vector< Selector* >& args);
     
     class Environment {
         
@@ -35,7 +39,8 @@ namespace microdb {
     public:
         
         rapidjson::Document& GetVar(const std::string& name) {
-            return mVariables[name];
+            rapidjson::Document& retval = mVariables[name];
+            return retval;
         }
         
         void SetVar(std::string name, rapidjson::Value& value) {
@@ -53,13 +58,12 @@ namespace microdb {
     public:
         const std::string mVarName;
         Selector* mSelector;
-        Environment* mEnv;
         
-        Assign(const std::string& varName, Selector* selector, Environment* env)
-        : mVarName(varName), mSelector(selector), mEnv(env) { }
+        Assign(const std::string& varName, Selector* selector)
+        : mVarName(varName), mSelector(selector) { }
         
-        void execute() {
-            mEnv->SetVar(mVarName, mSelector->select());
+        void execute(Environment* env) {
+            env->SetVar(mVarName, mSelector->select(env));
         }
     };
     
@@ -72,31 +76,26 @@ namespace microdb {
         IfStatement(Selector* condition, const stmtList& thenStatements)
         : mCondition(condition), mThenStmts(thenStatements) { }
         
-        void execute() {
-            rapidjson::Value& conditionVar = mCondition->select();
+        void execute(Environment* env) {
+            rapidjson::Value& conditionVar = mCondition->select(env);
             if(conditionVar.IsBool() && conditionVar.IsTrue()) {
                 for(Statement* stmt : mThenStmts) {
-                    stmt->execute();
+                    stmt->execute(env);
                 }
             }
         }
     };
     
-    class FunctionCall : public Statement, public Selector {
+    class FunctionCall : public Selector {
     public:
         const std::string mFunctionName;
         const argList mArgList;
-        Environment* mEnv;
         
-        FunctionCall(const std::string& name, const argList& arglist, Environment* env)
-        : mFunctionName(name), mArgList(arglist), mEnv(env) {}
+        FunctionCall(const std::string& name, const argList& arglist)
+        : mFunctionName(name), mArgList(arglist) {}
         
-        void execute() {
-            select();
-        }
-        
-        rapidjson::Value& select() {
-            dataFunction fun = mEnv->GetFunction(mFunctionName);
+        rapidjson::Value& select(Environment* env) {
+            dataFunction fun = env->GetFunction(mFunctionName);
             if(fun == nullptr) {
                 return fun(mArgList);
             } else {
@@ -104,8 +103,6 @@ namespace microdb {
                 return retval.Move();
             }
         }
-        
-        
         
     };
     
@@ -128,9 +125,9 @@ namespace microdb {
         Condition(Selector* lhs, Selector* rhs, OperatorType op)
         : mLHS(lhs), mRHS(rhs), mOp(op) { }
         
-        rapidjson::Value& select() {
-            rapidjson::Value& left = mLHS->select();
-            rapidjson::Value& right = mRHS->select();
+        rapidjson::Value& select(Environment* env) {
+            rapidjson::Value& left = mLHS->select(env);
+            rapidjson::Value& right = mRHS->select(env);
             
 
 #define RETURN_TRUE rapidjson::Value(rapidjson::kTrueType).Move()
@@ -160,13 +157,12 @@ namespace microdb {
     class VarSelector : public Selector {
     public:
         const std::string mVarName;
-        Environment* mEnv;
         
-        VarSelector(const std::string& name, Environment* env)
-        : mVarName(name), mEnv(env) {}
+        VarSelector(const std::string& name)
+        : mVarName(name) {}
         
-        rapidjson::Value& select() {
-            return mEnv->GetVar(mVarName);
+        rapidjson::Value& select(Environment* env) {
+            return env->GetVar(mVarName);
         }
     };
     
@@ -180,22 +176,18 @@ namespace microdb {
         MemberSelector(std::string& memberName, Selector* parent = nullptr)
         : mMemberName(memberName), mParent(parent) {}
         
-        rapidjson::Value& select() {
-            
-            rapidjson::Value value(rapidjson::kNullType);
+        rapidjson::Value& select(Environment* env) {
             
             if(mParent != nullptr){
-                value = mParent->select();
+                rapidjson::Value& value = mParent->select(env);
+                const char* memberName = mMemberName.c_str();
+                if(value.IsObject() && value.HasMember(memberName)){
+                    return value[memberName];
+                }
             }
             
-            const char* memberName = mMemberName.c_str();
-            if(value.IsObject() && value.HasMember(memberName)){
-                return value[memberName];
-            } else {
-                value.SetNull();
-                return value.Move();
-            }
-            
+            rapidjson::Value nullVal(rapidjson::kNullType);
+            return nullVal.Move();
         }
     };
     
@@ -207,9 +199,9 @@ namespace microdb {
     public:
         
         StrLiteralSelector(const std::string& value)
-        : mStrValue(value), mValue(mStrValue.c_str(), mStrValue.size()) { }
+        : mStrValue(value), mValue(mStrValue.c_str(), mStrValue.length()) { }
         
-        rapidjson::Value& select() {
+        rapidjson::Value& select(Environment* env) {
             return mValue;
         }
     };
@@ -222,27 +214,27 @@ namespace microdb {
         IntLiteralSelector(int value)
         : mValue(value) { }
         
-        rapidjson::Value& select() {
+        rapidjson::Value& select(Environment* env) {
             return mValue;
         }
     };
     
     typedef struct ParserStruct {
         void* svt;
-        Environment* mEnv;
+        bool mParseSuccess;
         stmtList stmts;
     } ParserStruct;
     
     class ViewQuery {
     private:
         stmtList mStatements;
+        
     public:
-        Environment* mEnv;
         
         bool compile(const char* code);
         
-        void map(rapidjson::Document& input);
-        void execute();
+        void map(rapidjson::Document& input, Environment* env);
+        void execute(Environment* env);
     };
 }
 
