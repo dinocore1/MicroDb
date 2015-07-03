@@ -18,7 +18,6 @@
     int ival;
     microdb::Selector* selval;
     microdb::argList* arglist;
-    microdb::FunctionCall* funcall;
     microdb::Statement* stmtval;
     microdb::stmtList* stmtlistval;
 }
@@ -29,10 +28,9 @@
 %token <sval> TID TSTRLITERAL
 
 %type <stmtlistval> stmtlist
-%type <stmtval> stmt assign
+%type <stmtval> stmt ifstmt assign funCall
 %type <arglist> arglist
-%type <funcall> funCall
-%type <selval> path var literal expr
+%type <selval> path var literal expr condition
 
 
 %start query
@@ -71,12 +69,12 @@ stmt
     ;
 
 ifstmt
-    : TIF TLPAREN condition TRPAREN TLBRACE stmtlist TRBRACE
+    : TIF TLPAREN condition TRPAREN TLBRACE stmtlist TRBRACE { $$ = new IfStatement($3, *$6); delete $6; }
     ;
 
 
 condition
-    : expr TEQUALS expr
+    : expr TEQUALS expr { $$ = new Condition($1, $3, microdb::Condition::Equals); }
     | expr TLEQ expr
     | expr TGEQ expr
     | expr TGT expr
@@ -96,7 +94,7 @@ literal
     ;
 
 funCall
-    : TID TLPAREN arglist TRPAREN { $$ = new FunctionCall(*$1, *$3); delete $1; delete $3; }
+    : TID TLPAREN arglist TRPAREN { $$ = new FunctionCall(*$1, *$3, ctx->mEnv); delete $1; delete $3; }
     ;
 
 arglist
@@ -106,12 +104,12 @@ arglist
     ;
 
 assign
-    : TID TASSIGN expr { $$ = new Assign(*$1, $3); delete $1; }
+    : TID TASSIGN expr { $$ = new Assign(*$1, $3, ctx->mEnv); delete $1; }
     ;
 
 
 var
-    : TID { $$ = new VarSelector(*$1); delete $1; }
+    : TID { $$ = new VarSelector(*$1, ctx->mEnv); delete $1; }
     ;
 
 path
@@ -135,6 +133,7 @@ namespace microdb {
         ParserStruct parserStr;
         
         viewquerylex_init(&parserStr.svt);
+        parserStr.mEnv = mEnv;
         
         YY_BUFFER_STATE buff = viewquery_scan_string(code, parserStr.svt);
         

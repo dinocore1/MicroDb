@@ -55,11 +55,30 @@ namespace microdb {
         Selector* mSelector;
         Environment* mEnv;
         
-        Assign(const std::string& varName, Selector* selector)
-        : mVarName(varName), mSelector(selector) { }
+        Assign(const std::string& varName, Selector* selector, Environment* env)
+        : mVarName(varName), mSelector(selector), mEnv(env) { }
         
         void execute() {
             mEnv->SetVar(mVarName, mSelector->select());
+        }
+    };
+    
+    class IfStatement : public Statement {
+    private:
+        Selector* mCondition;
+        stmtList mThenStmts;
+        
+    public:
+        IfStatement(Selector* condition, const stmtList& thenStatements)
+        : mCondition(condition), mThenStmts(thenStatements) { }
+        
+        void execute() {
+            rapidjson::Value& conditionVar = mCondition->select();
+            if(conditionVar.IsBool() && conditionVar.IsTrue()) {
+                for(Statement* stmt : mThenStmts) {
+                    stmt->execute();
+                }
+            }
         }
     };
     
@@ -69,8 +88,8 @@ namespace microdb {
         const argList mArgList;
         Environment* mEnv;
         
-        FunctionCall(const std::string& name, const argList& arglist)
-        : mFunctionName(name), mArgList(arglist) {}
+        FunctionCall(const std::string& name, const argList& arglist, Environment* env)
+        : mFunctionName(name), mArgList(arglist), mEnv(env) {}
         
         void execute() {
             select();
@@ -90,12 +109,60 @@ namespace microdb {
         
     };
     
+    class Condition : public Selector {
+    public:
+        
+        enum OperatorType {
+            Equals,
+            GreaterThan,
+            LessThan,
+            GreaterOrEqual,
+            LessThanOrEqual,
+            NotEqual
+        };
+        
+        Selector* mLHS;
+        Selector* mRHS;
+        OperatorType mOp;
+        
+        Condition(Selector* lhs, Selector* rhs, OperatorType op)
+        : mLHS(lhs), mRHS(rhs), mOp(op) { }
+        
+        rapidjson::Value& select() {
+            rapidjson::Value& left = mLHS->select();
+            rapidjson::Value& right = mRHS->select();
+            
+
+#define RETURN_TRUE rapidjson::Value(rapidjson::kTrueType).Move()
+#define RETURN_FALSE rapidjson::Value(rapidjson::kFalseType).Move()
+            
+            switch(mOp) {
+                case Equals:
+                    return left == right ? RETURN_TRUE : RETURN_FALSE;
+                    break;
+                case GreaterThan:
+                    break;
+                case LessThan:
+                    break;
+                case GreaterOrEqual:
+                    break;
+                case LessThanOrEqual:
+                    break;
+                case NotEqual:
+                    break;
+            }
+            
+            return rapidjson::Value(rapidjson::kFalseType).Move();
+        }
+    };
+    
     class VarSelector : public Selector {
     public:
         const std::string mVarName;
         Environment* mEnv;
         
-        VarSelector(const std::string& name) : mVarName(name) {}
+        VarSelector(const std::string& name, Environment* env)
+        : mVarName(name), mEnv(env) {}
         
         rapidjson::Value& select() {
             return mEnv->GetVar(mVarName);
@@ -123,9 +190,11 @@ namespace microdb {
             const char* memberName = mMemberName.c_str();
             if(value.IsObject() && value.HasMember(memberName)){
                 return value[memberName];
+            } else {
+                value.SetNull();
+                return value.Move();
             }
             
-            return value.Move();
         }
     };
     
@@ -164,6 +233,7 @@ namespace microdb {
     
     typedef struct ParserStruct {
         void* svt;
+        Environment* mEnv;
         stmtList stmts;
     } ParserStruct;
     
@@ -171,9 +241,12 @@ namespace microdb {
     private:
         stmtList mStatements;
     public:
+        Environment* mEnv;
+        
         bool compile(const char* code);
         
-        void evaluate(rapidjson::Document& input);
+        void map(rapidjson::Document& input);
+        void execute();
     };
 }
 
