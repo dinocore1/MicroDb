@@ -61,6 +61,7 @@ namespace microdb {
         IndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
         : mObjId(objId), mWriteBatch(writeBatch), mCount(0) {
             mFunctions["emit"] = indexMapEnvEmit;
+            mFunctions["hash"] = hash;
         }
         
         void execute(rapidjson::Value& obj, ViewQuery* view) {
