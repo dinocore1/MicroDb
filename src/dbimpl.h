@@ -35,6 +35,7 @@ namespace microdb {
         
 
         Status Insert(const std::string& value, std::string* key);
+        Status Update(const std::string& key, const std::string& value);
         Status Delete(const std::string& key);
         
     };

@@ -26,86 +26,100 @@ extern "C" int yyparse();
 
 namespace microdb {
     
-    
+    rapidjson::Value& indexMapEnvEmit(Environment* env, const std::vector< Selector* >& args);
     
     class IndexMapEnv : public Environment {
         
-    public:
+    private:
         ViewQuery* mView;
-        WriteBatch* mWriteBatch;
-        std::string mObjId;
         unsigned int mCount;
         
-        IndexMapEnv()
-        : mCount(0) {
+    protected:
+        WriteBatch* mWriteBatch;
+        const std::string mObjId;
+        
+        std::string generateKey(rapidjson::Value& key) {
+            Document keyDoc;
+            keyDoc.SetArray();
+            keyDoc.PushBack(StringRef(mView->mName.c_str()), keyDoc.GetAllocator());
+            keyDoc.PushBack(key, keyDoc.GetAllocator());
+            keyDoc.PushBack(StringRef(mObjId.c_str()), keyDoc.GetAllocator());
+            keyDoc.PushBack(mCount++, keyDoc.GetAllocator());
             
+            StringBuffer keyBuffer;
+            Writer<StringBuffer> keyWriter(keyBuffer);
+            keyDoc.Accept(keyWriter);
+            
+            return keyBuffer.GetString();
         }
         
-        void emit() {
-            
+    public:
+        
+        
+        IndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
+        : mObjId(objId), mWriteBatch(writeBatch), mCount(0) {
+            mFunctions["emit"] = indexMapEnvEmit;
         }
         
-        void clear() {
+        void execute(rapidjson::Value& obj, ViewQuery* view) {
+            mView = view;
             mVariables.clear();
+            SetVar("obj", obj);
+            mCount = 0;
+            mView->execute(this);
         }
+        
+        virtual rapidjson::Value& emit(const std::vector< Selector* >& args) = 0;
+        
         
     };
     
-    rapidjson::Value& indexAddEmit(Environment* env, const std::vector< Selector* >& args) {
-
-        IndexMapEnv* mapEnv = (IndexMapEnv*)env;
+    class CreateIndexMapEnv : public IndexMapEnv {
+    public:
         
-        if(!args.empty()) {
-            Value& emitKey = args[0]->select(env);
+        CreateIndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
+        : IndexMapEnv(objId, writeBatch) { }
         
-
-            Document keyDoc;
-            keyDoc.SetArray();
-            keyDoc.PushBack(StringRef(mapEnv->mView->mName.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(emitKey, keyDoc.GetAllocator());
-            keyDoc.PushBack(StringRef(mapEnv->mObjId.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(mapEnv->mCount++, keyDoc.GetAllocator());
+        rapidjson::Value& emit(const std::vector< Selector* >& args) {
+            if(!args.empty()) {
+                Value& emitKey = args[0]->select(this);
+                std::string keyStr = generateKey(emitKey);
+                
+                StringBuffer valueBuffer;
+                Writer<StringBuffer> valueWriter(valueBuffer);
+                if(args.size() >= 2) {
+                    args[1]->select(this).Accept(valueWriter);
+                }
+                
+                mWriteBatch->Put(keyStr, valueBuffer.GetString());
+            }
             
-            StringBuffer keyBuffer;
-            Writer<StringBuffer> keyWriter(keyBuffer);
-            keyDoc.Accept(keyWriter);
-            
-            
-            mapEnv->mWriteBatch->Put(keyBuffer.GetString(), "");
-            
-            
+            return Value(kNullType).Move();
         }
+    };
+    
+    class DeleteIndexMapEnv : public IndexMapEnv {
+    public:
         
-        return Value(kNullType).Move();
+        DeleteIndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
+        : IndexMapEnv(objId, writeBatch) { }
+        
+        rapidjson::Value& emit(const std::vector< Selector* >& args) {
+            if(!args.empty()) {
+                Value& emitKey = args[0]->select(this);
+                std::string keyStr = generateKey(emitKey);
+                mWriteBatch->Delete(keyStr);
+            }
+            
+            return Value(kNullType).Move();
+        }
+    };
+    
+    rapidjson::Value& indexMapEnvEmit(Environment* env, const std::vector< Selector* >& args) {
+        IndexMapEnv* mapEnv = (IndexMapEnv*)env;
+        return mapEnv->emit(args);
     }
     
-    rapidjson::Value& indexDeleteEmit(Environment* env, const std::vector< Selector* >& args) {
-        
-        IndexMapEnv* mapEnv = (IndexMapEnv*)env;
-        
-        if(!args.empty()) {
-            Value& emitKey = args[0]->select(env);
-            
-            
-            Document keyDoc;
-            keyDoc.SetArray();
-            keyDoc.PushBack(StringRef(mapEnv->mView->mName.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(emitKey, keyDoc.GetAllocator());
-            keyDoc.PushBack(StringRef(mapEnv->mObjId.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(mapEnv->mCount++, keyDoc.GetAllocator());
-            
-            StringBuffer keyBuffer;
-            Writer<StringBuffer> keyWriter(keyBuffer);
-            keyDoc.Accept(keyWriter);
-            
-            
-            mapEnv->mWriteBatch->Delete(keyBuffer.GetString());
-            
-            
-        }
-        
-        return Value(kNullType).Move();
-    }
     
     Status DB::Open(const std::string& dbdirpath, DB** dbptr) {
         
@@ -197,13 +211,16 @@ namespace microdb {
         
         WriteBatch batch;
         
+        const std::string objKey = UUID::createRandom().getString();
+        if(keyout != nullptr) {
+            *keyout = objKey;
+        }
+        batch.Put("o" + objKey, value);
 
-        std::string key = UUID::createRandom().getString();
-        batch.Put("o" + key, value);
-
+        CreateIndexMapEnv createIndex(objKey, &batch);
         
         for(ViewQuery* view : mViews) {
-            
+            createIndex.execute(doc, view);
         }
         
         
@@ -213,10 +230,65 @@ namespace microdb {
         
     }
     
+    Status DBImpl::Update(const std::string& key, const std::string& value) {
+        
+        Document oldDoc, newDoc;
+        newDoc.Parse(value.c_str());
+        
+        if(newDoc.HasParseError() || !newDoc.IsObject()) {
+            return PARSE_ERROR;
+        }
+        
+        const std::string dbkey = "o" + key;
+        
+        std::string oldDocStr;
+        mLevelDB->Get(ReadOptions(), dbkey, &oldDocStr);
+        oldDoc.ParseInsitu((char*)oldDocStr.c_str());
+        
+        WriteBatch batch;
+        
+        DeleteIndexMapEnv deleteIndex(key, &batch);
+        CreateIndexMapEnv createIndex(key, &batch);
+        
+        batch.Delete(dbkey);
+        batch.Put(dbkey, value);
+
+        for(ViewQuery* view : mViews) {
+            deleteIndex.execute(oldDoc, view);
+            createIndex.execute(newDoc, view);
+        }
+        
+        mLevelDB->Write(WriteOptions(), &batch);
+        
+        return OK;
+
+    }
+    
     Status DBImpl::Delete(const std::string &key) {
         
-        //get the object and run it thought each view's map function to
-        //generate index keys, then delete these index keys
+        const std::string dbkey = "o" + key;
+        
+        std::string valueStr;
+        mLevelDB->Get(ReadOptions(), dbkey, &valueStr);
+        
+        Document doc;
+        doc.ParseInsitu((char*)valueStr.c_str());
+        
+        if(doc.HasParseError() || !doc.IsObject()) {
+            return PARSE_ERROR;
+        }
+        
+        WriteBatch batch;
+        
+        DeleteIndexMapEnv deleteIndex(key, &batch);
+        
+        batch.Delete(dbkey);
+        
+        for(ViewQuery* view : mViews) {
+            deleteIndex.execute(doc, view);
+        }
+        
+        mLevelDB->Write(WriteOptions(), &batch);
         
         return OK;
     }
