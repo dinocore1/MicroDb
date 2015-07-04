@@ -19,6 +19,29 @@
 using namespace std;
 
 namespace microdb {
+    
+    class IndexDataum {
+    private:
+        const char* mData;
+        const unsigned int mLength;
+        
+    public:
+        static const uint8_t STRING_TYPE = 1;
+        static const uint8_t NUMBER_TYPE = 2;
+        
+        static std::string convert(double value);
+        static std::string convert(const char* data, const unsigned int len);
+        
+        IndexDataum(const char* data, const unsigned int length);
+        
+        uint8_t getType();
+        const char* getString();
+        double getNumber();
+        
+        int compare(IndexDataum& other);
+        
+        
+    };
 
     class DBImpl : public DB {
     private:

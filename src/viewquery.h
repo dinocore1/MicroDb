@@ -37,7 +37,7 @@ namespace microdb {
     class Environment {
         
     private:
-        rapidjson::CrtAllocator mEnvAllocator;
+        rapidjson::MemoryPoolAllocator<> mEnvAllocator;
         
     protected:
         std::map< std::string, rapidjson::Document > mVariables;
@@ -57,6 +57,10 @@ namespace microdb {
         
         dataFunction GetFunction(const std::string& name) {
             return mFunctions[name];
+        }
+        
+        void SetFunction(const std::string& name, dataFunction fun) {
+            mFunctions[name] = fun;
         }
         
         rapidjson::Document::AllocatorType& getGlobalAllocator() {
@@ -107,7 +111,7 @@ namespace microdb {
         
         rapidjson::Value& select(Environment* env) {
             dataFunction fun = env->GetFunction(mFunctionName);
-            if(fun == nullptr) {
+            if(fun != nullptr) {
                 return fun(env, mArgList);
             } else {
                 rapidjson::Value retval(rapidjson::kNullType);
