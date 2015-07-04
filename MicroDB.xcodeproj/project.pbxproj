@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9A7DE161A749D971F26067 /* dbimpl.cpp */; };
+		DA0D13A71B4842520044AD87 /* dbfunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA0D13A61B4842520044AD87 /* dbfunctions.cpp */; };
 		DA3E04C31B4633F80051B078 /* viewquery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA3E04C21B4633F80051B078 /* viewquery.cpp */; };
 		DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA9BDBD01B47838500EB5934 /* sha256.cpp */; };
 		DAE2FF5C1B35EC80009DFDAA /* libleveldb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */; };
@@ -49,6 +50,8 @@
 		0C9A7DE161A749D971F26067 /* dbimpl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = dbimpl.cpp; sourceTree = "<group>"; };
 		35EF16CD18BB1F897A354E78 /* libMicroDB.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libMicroDB.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C38307034C060C60F0B5670 /* microdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = microdb.h; sourceTree = "<group>"; };
+		DA0D13A51B4841860044AD87 /* dbfunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dbfunctions.h; sourceTree = "<group>"; };
+		DA0D13A61B4842520044AD87 /* dbfunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dbfunctions.cpp; sourceTree = "<group>"; };
 		DA3E04C21B4633F80051B078 /* viewquery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = viewquery.cpp; sourceTree = "<group>"; };
 		DA9BDBD01B47838500EB5934 /* sha256.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sha256.cpp; sourceTree = "<group>"; };
 		DA9BDBD21B47839F00EB5934 /* sha256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
@@ -95,6 +98,8 @@
 				DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */,
 				DA9BDBD01B47838500EB5934 /* sha256.cpp */,
 				DA9BDBD21B47839F00EB5934 /* sha256.h */,
+				DA0D13A51B4841860044AD87 /* dbfunctions.h */,
+				DA0D13A61B4842520044AD87 /* dbfunctions.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -205,6 +210,7 @@
 				DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */,
 				DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */,
 				2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */,
+				DA0D13A71B4842520044AD87 /* dbfunctions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

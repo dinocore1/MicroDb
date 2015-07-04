@@ -6,6 +6,9 @@
 #include <map>
 
 
+#include <rapidjson/allocators.h>
+#include <rapidjson/encodings.h>
+
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 
@@ -33,6 +36,9 @@ namespace microdb {
     
     class Environment {
         
+    private:
+        rapidjson::CrtAllocator mEnvAllocator;
+        
     protected:
         std::map< std::string, rapidjson::Document > mVariables;
         std::map< std::string, dataFunction > mFunctions;
@@ -51,6 +57,10 @@ namespace microdb {
         
         dataFunction GetFunction(const std::string& name) {
             return mFunctions[name];
+        }
+        
+        rapidjson::Document::AllocatorType& getGlobalAllocator() {
+            return mEnvAllocator;
         }
         
     };

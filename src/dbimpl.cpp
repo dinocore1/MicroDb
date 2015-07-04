@@ -13,6 +13,7 @@
 #include <microdb/microdb.h>
 #include "dbimpl.h"
 #include "uuid.h"
+#include "dbfunctions.h"
 
 
 using namespace std;
