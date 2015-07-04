@@ -24,7 +24,7 @@ namespace microdb {
     private:
         UUID mInstanceId;
         leveldb::DB* mLevelDB;
-        vector< unique_ptr<ViewQuery> > mViews;
+        vector< ViewQuery* > mViews;
         
     public:
         
@@ -34,8 +34,8 @@ namespace microdb {
         Status init(leveldb::DB* db);
         
 
-        
-        Status Put(const std::string& value, std::string* key);
+        Status Insert(const std::string& value, std::string* key);
+        Status Delete(const std::string& key);
         
     };
     

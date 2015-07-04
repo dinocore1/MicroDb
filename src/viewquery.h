@@ -29,10 +29,11 @@ namespace microdb {
     
     typedef std::vector< Statement* > stmtList;
     typedef std::vector< Selector* > argList;
-    typedef rapidjson::Value& (*dataFunction)(const std::vector< Selector* >& args);
+    typedef rapidjson::Value& (*dataFunction)(Environment* env, const std::vector< Selector* >& args);
     
     class Environment {
         
+    protected:
         std::map< std::string, rapidjson::Document > mVariables;
         std::map< std::string, dataFunction > mFunctions;
         
@@ -97,7 +98,7 @@ namespace microdb {
         rapidjson::Value& select(Environment* env) {
             dataFunction fun = env->GetFunction(mFunctionName);
             if(fun == nullptr) {
-                return fun(mArgList);
+                return fun(env, mArgList);
             } else {
                 rapidjson::Value retval(rapidjson::kNullType);
                 return retval.Move();
@@ -230,6 +231,7 @@ namespace microdb {
         stmtList mStatements;
         
     public:
+        std::string mName;
         
         bool compile(const char* code);
         

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9A7DE161A749D971F26067 /* dbimpl.cpp */; };
 		DA3E04C31B4633F80051B078 /* viewquery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA3E04C21B4633F80051B078 /* viewquery.cpp */; };
+		DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA9BDBD01B47838500EB5934 /* sha256.cpp */; };
 		DAE2FF5C1B35EC80009DFDAA /* libleveldb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */; };
 		DAE2FF611B35F4B4009DFDAA /* rapidjson in Resources */ = {isa = PBXBuildFile; fileRef = DAE2FF601B35F4B4009DFDAA /* rapidjson */; };
 		DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */ = {isa = PBXBuildFile; fileRef = DAE2FF621B38E1A0009DFDAA /* viewquery.l */; };
@@ -49,6 +50,8 @@
 		35EF16CD18BB1F897A354E78 /* libMicroDB.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libMicroDB.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C38307034C060C60F0B5670 /* microdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = microdb.h; sourceTree = "<group>"; };
 		DA3E04C21B4633F80051B078 /* viewquery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = viewquery.cpp; sourceTree = "<group>"; };
+		DA9BDBD01B47838500EB5934 /* sha256.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sha256.cpp; sourceTree = "<group>"; };
+		DA9BDBD21B47839F00EB5934 /* sha256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
 		DAE2FF411B35E136009DFDAA /* status.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = status.h; sourceTree = "<group>"; };
 		DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libleveldb.a; path = "../../Downloads/leveldb-1.18/libleveldb.a"; sourceTree = "<group>"; };
 		DAE2FF5D1B35ED30009DFDAA /* dbimpl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dbimpl.h; sourceTree = "<group>"; };
@@ -90,6 +93,8 @@
 				DAFA01871B38FD6D009392B3 /* uuid.h */,
 				DAFA01881B3CC401009392B3 /* uuid.cpp */,
 				DAFA018A1B3CC7FD009392B3 /* uuid_lex.l */,
+				DA9BDBD01B47838500EB5934 /* sha256.cpp */,
+				DA9BDBD21B47839F00EB5934 /* sha256.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -197,6 +202,7 @@
 				DAFA01851B38EDAB009392B3 /* viewquery.y in Sources */,
 				DAFA018B1B3CC7FD009392B3 /* uuid_lex.l in Sources */,
 				DA3E04C31B4633F80051B078 /* viewquery.cpp in Sources */,
+				DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */,
 				DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */,
 				2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */,
 			);
