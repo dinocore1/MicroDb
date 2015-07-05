@@ -50,5 +50,70 @@ namespace microdb {
         return leveldb::Slice((const char*)&mData[0], mLocation);
     }
     
+    /////////////// IndexDatum /////////////////////
+    
+    IndexDataum::IndexDataum(const char* data, const size_t size) : mData(data), mSize(size), mLocation(0) { }
+    
+    void IndexDataum::reset() {
+        mLocation(0);
+    }
+    
+    bool IndexDataum::hasNext() {
+        
+    }
+    
+    void IndexDataum::next() {
+        
+    }
+    
+    uint8_t IndexDataum::getType() {
+        return 0x20 & mData[mLocation];
+    }
+    
+    leveldb::Slice IndexDataum::getString() {
+        
+    }
+    
+    double IndexDataum::getNumber() {
+        
+    }
+    
+    inline const char* IndexDataum::getString() {
+        return &mData[1];
+    }
+    
+    inline double IndexDataum::getNumber() {
+        return *(double*)&mData[1];
+    }
+    
+    int IndexDataum::compare(microdb::IndexDataum &other) {
+        
+        int retval = getType() - other.getType();
+        if(retval == 0) {
+            switch (retval) {
+                case STRING_TYPE:
+                    retval = strcmp(getString(), other.getString());
+                    break;
+                    
+                case NUMBER_TYPE:
+                    double a = getNumber();
+                    double b = other.getNumber();
+                    
+                    if(a == b ||
+                       std::abs(a-b)<std::abs(std::min(a,b))*std::numeric_limits<double>::epsilon()) {
+                        retval = 0;
+                    } else if (a < b) {
+                        retval = -1;
+                    } else {
+                        retval = 1;
+                    }
+                    break;
+            }
+            
+        }
+        
+        return retval;
+    }
+    
 }
 

@@ -40,20 +40,21 @@ namespace microdb {
     
     class IndexDataum {
     private:
-        const char* mData;
-        const unsigned int mLength;
+        const uint8_t* mData;
+        const size_t mSize;
+        size_t mLocation;
         
     public:
-        IndexDataum(const char* data, const unsigned int length);
+        IndexDataum(const char* data, const size_t size);
         
-        
+        void reset();
+        bool hasNext();
+        void next();
         uint8_t getType();
-        leveldb::Slice& getString();
+        leveldb::Slice getString();
         double getNumber();
         
         int compare(IndexDataum& other);
-        
-        
     };
 
     class DBImpl : public DB {
