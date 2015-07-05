@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		2B9E158B77A17A1C708E00FA /* dbimpl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C9A7DE161A749D971F26067 /* dbimpl.cpp */; };
 		DA0D13A71B4842520044AD87 /* dbfunctions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA0D13A61B4842520044AD87 /* dbfunctions.cpp */; };
+		DA0D13AA1B496D220044AD87 /* membuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA0D13A91B496D220044AD87 /* membuffer.cpp */; };
+		DA0D13AC1B4975000044AD87 /* indexutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA0D13AB1B4975000044AD87 /* indexutils.cpp */; };
 		DA3E04C31B4633F80051B078 /* viewquery.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA3E04C21B4633F80051B078 /* viewquery.cpp */; };
 		DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DA9BDBD01B47838500EB5934 /* sha256.cpp */; };
 		DAE2FF5C1B35EC80009DFDAA /* libleveldb.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DAE2FF5B1B35EC80009DFDAA /* libleveldb.a */; };
@@ -52,6 +54,9 @@
 		4C38307034C060C60F0B5670 /* microdb.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = microdb.h; sourceTree = "<group>"; };
 		DA0D13A51B4841860044AD87 /* dbfunctions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dbfunctions.h; sourceTree = "<group>"; };
 		DA0D13A61B4842520044AD87 /* dbfunctions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dbfunctions.cpp; sourceTree = "<group>"; };
+		DA0D13A81B496D140044AD87 /* membuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = membuffer.h; sourceTree = "<group>"; };
+		DA0D13A91B496D220044AD87 /* membuffer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = membuffer.cpp; sourceTree = "<group>"; };
+		DA0D13AB1B4975000044AD87 /* indexutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = indexutils.cpp; sourceTree = "<group>"; };
 		DA3E04C21B4633F80051B078 /* viewquery.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = viewquery.cpp; sourceTree = "<group>"; };
 		DA9BDBD01B47838500EB5934 /* sha256.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sha256.cpp; sourceTree = "<group>"; };
 		DA9BDBD21B47839F00EB5934 /* sha256.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
@@ -100,6 +105,9 @@
 				DA9BDBD21B47839F00EB5934 /* sha256.h */,
 				DA0D13A51B4841860044AD87 /* dbfunctions.h */,
 				DA0D13A61B4842520044AD87 /* dbfunctions.cpp */,
+				DA0D13A81B496D140044AD87 /* membuffer.h */,
+				DA0D13A91B496D220044AD87 /* membuffer.cpp */,
+				DA0D13AB1B4975000044AD87 /* indexutils.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -203,9 +211,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA0D13AC1B4975000044AD87 /* indexutils.cpp in Sources */,
 				DAFA01891B3CC401009392B3 /* uuid.cpp in Sources */,
 				DAFA01851B38EDAB009392B3 /* viewquery.y in Sources */,
 				DAFA018B1B3CC7FD009392B3 /* uuid_lex.l in Sources */,
+				DA0D13AA1B496D220044AD87 /* membuffer.cpp in Sources */,
 				DA3E04C31B4633F80051B078 /* viewquery.cpp in Sources */,
 				DA9BDBD11B47838500EB5934 /* sha256.cpp in Sources */,
 				DAE2FF631B38E1A0009DFDAA /* viewquery.l in Sources */,

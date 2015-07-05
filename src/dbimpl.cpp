@@ -5,6 +5,7 @@
 
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
+#include <leveldb/comparator.h>
 
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
@@ -21,12 +22,27 @@ using namespace std;
 using namespace rapidjson;
 using namespace leveldb;
 
-extern "C" int yyparse();
 
 #define DOC_META "microdb_meta"
 #define KEY_INSTANCEID "id"
 
 namespace microdb {
+    
+    
+    
+    
+    class MicroDBComparator : public leveldb::Comparator {
+        
+    public:
+        
+        int Compare(const leveldb::Slice& a, const leveldb::Slice& b) const {
+        }
+        
+        const char* Name() const { return "MicroDBComparator"; }
+        void FindShortestSeparator(std::string*, const leveldb::Slice&) const { }
+        void FindShortSuccessor(std::string*) const { }
+        
+    };
     
     rapidjson::Value& indexMapEnvEmit(Environment* env, const std::vector< Selector* >& args);
     

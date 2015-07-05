@@ -12,6 +12,7 @@
 
 #include "uuid.h"
 #include "viewquery.h"
+#include "membuffer.h"
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
@@ -20,22 +21,34 @@ using namespace std;
 
 namespace microdb {
     
+
+    class IndexDataumBuilder {
+    private:
+        MemBuffer mData;
+        size_t mLocation;
+        
+    public:
+        IndexDataumBuilder();
+        
+        void addString(const char* cstr);
+        void addString(const char* cstr, unsigned int len);
+        void addNumber(double value);
+        
+        leveldb::Slice getSlice();
+        
+    };
+    
     class IndexDataum {
     private:
         const char* mData;
         const unsigned int mLength;
         
     public:
-        static const uint8_t STRING_TYPE = 1;
-        static const uint8_t NUMBER_TYPE = 2;
-        
-        static std::string convert(double value);
-        static std::string convert(const char* data, const unsigned int len);
-        
         IndexDataum(const char* data, const unsigned int length);
         
+        
         uint8_t getType();
-        const char* getString();
+        leveldb::Slice& getString();
         double getNumber();
         
         int compare(IndexDataum& other);
