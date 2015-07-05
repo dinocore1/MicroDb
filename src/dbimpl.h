@@ -17,6 +17,19 @@
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 
+#define TYPE_MASK 0xE0
+#define LENG_MASK 0x1F
+
+#define TYPE_LONG 0x80
+
+#define TYPE_NUMBER 0x09
+#define TYPE_STRING 0x20
+#define TYPE_SHORT_STRING 0x20
+#define TYPE_LONG_STRING 0xA0
+
+#define MAX_SHORT_STRING 0x1F
+#define MAX_LONG_STRING 0x1FFF
+
 using namespace std;
 
 namespace microdb {
@@ -30,9 +43,11 @@ namespace microdb {
     public:
         IndexDataumBuilder();
         
-        void addString(const char* cstr);
-        void addString(const char* cstr, unsigned int len);
-        void addNumber(double value);
+        IndexDataumBuilder& move();
+        
+        IndexDataumBuilder& addString(const char* cstr);
+        IndexDataumBuilder& addString(const char* cstr, unsigned int len);
+        IndexDataumBuilder& addNumber(double value);
         
         leveldb::Slice getSlice();
         
@@ -44,15 +59,20 @@ namespace microdb {
         const size_t mSize;
         size_t mLocation;
         
+        IndexDataum(const void* data, const size_t size, size_t location);
+        
     public:
-        IndexDataum(const char* data, const size_t size);
+        IndexDataum(const void* data, const size_t size);
+        IndexDataum(const leveldb::Slice& a);
         
         void reset();
         bool hasNext();
-        void next();
         uint8_t getType();
-        leveldb::Slice getString();
-        double getNumber();
+        
+        bool starts_with(const IndexDataum& value);
+        
+        IndexDataum getString(leveldb::Slice& retval);
+        IndexDataum getNumber(double& retval);
         
         int compare(IndexDataum& other);
     };
@@ -67,6 +87,8 @@ namespace microdb {
         
         DBImpl();
         virtual ~DBImpl();
+        
+        static const leveldb::Slice& metaKey();
         
         Status init(leveldb::DB* db);
         

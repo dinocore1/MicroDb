@@ -28,14 +28,16 @@ using namespace leveldb;
 
 namespace microdb {
     
-    
-    
-    
     class MicroDBComparator : public leveldb::Comparator {
         
     public:
         
         int Compare(const leveldb::Slice& a, const leveldb::Slice& b) const {
+            IndexDataum aIndex(a);
+            IndexDataum bIndex(b);
+            
+            int retval = aIndex.compare(bIndex);
+            return retval;
         }
         
         const char* Name() const { return "MicroDBComparator"; }
@@ -43,6 +45,12 @@ namespace microdb {
         void FindShortSuccessor(std::string*) const { }
         
     };
+    
+    static MicroDBComparator MICRODBCOMPARATOR;
+    
+    MicroDBComparator* MicroDBComparator() {
+        return &MICRODBCOMPARATOR;
+    }
     
     rapidjson::Value& indexMapEnvEmit(Environment* env, const std::vector< Selector* >& args);
     
@@ -145,6 +153,7 @@ namespace microdb {
         leveldb::DB* levelDB;
         leveldb::Options options;
         options.create_if_missing = true;
+        options.comparator = MicroDBComparator();
         
         leveldb::Status status = leveldb::DB::Open(options, dbdirpath, &levelDB);
         if(!status.ok()){
@@ -170,18 +179,23 @@ namespace microdb {
         }
     }
     
+    char META_KEY[5] = { TYPE_SHORT_STRING | 4, 'm', 'e', 't', 'a' };
+    leveldb::Slice META_KEY_SLICE(META_KEY, 5);
+    
+    const leveldb::Slice& DBImpl::metaKey() {
+        return META_KEY_SLICE;
+    }
+    
     Status DBImpl::init(leveldb::DB* db) {
         mLevelDB = db;
         
         Document metaDoc;
         string value;
-        leveldb::Status status = mLevelDB->Get(leveldb::ReadOptions(), DOC_META, &value);
+        leveldb::Status status = mLevelDB->Get(leveldb::ReadOptions(), META_KEY_SLICE, &value);
         if(status.ok()){
-            char* buf = (char*) value.c_str();
-            metaDoc.ParseInsitu(buf);
+            metaDoc.Parse(value.c_str());
             
         } else {
-            
             string instanceId = UUID::createRandom().getString();
             metaDoc.SetObject();
             metaDoc.AddMember(KEY_INSTANCEID, StringRef(instanceId.c_str()), metaDoc.GetAllocator());
@@ -190,7 +204,7 @@ namespace microdb {
             Writer<StringBuffer> writer(buffer);
             metaDoc.Accept(writer);
             
-            status = mLevelDB->Put(leveldb::WriteOptions(), DOC_META, buffer.GetString());
+            status = mLevelDB->Put(leveldb::WriteOptions(), META_KEY_SLICE, buffer.GetString());
         }
         
         mInstanceId = UUID(metaDoc[KEY_INSTANCEID].GetString());
