@@ -64,19 +64,22 @@ namespace microdb {
         WriteBatch* mWriteBatch;
         const std::string mObjId;
         
-        inline std::string generateKey(rapidjson::Value& key) {
-            Document keyDoc;
-            keyDoc.SetArray();
-            keyDoc.PushBack(StringRef(mView->mName.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(key, keyDoc.GetAllocator());
-            keyDoc.PushBack(StringRef(mObjId.c_str()), keyDoc.GetAllocator());
-            keyDoc.PushBack(mCount++, keyDoc.GetAllocator());
+        inline void generateKey(IndexDataumBuilder& builder, rapidjson::Value& key) {
+            builder.addString("i");
+            builder.addString(mView->mName);
             
-            StringBuffer keyBuffer;
-            Writer<StringBuffer> keyWriter(keyBuffer);
-            keyDoc.Accept(keyWriter);
+            if(key.IsNumber()) {
+                builder.addNumber(key.GetDouble());
+            } else {
+                StringBuffer keyBuffer;
+                Writer<StringBuffer> keyWriter(keyBuffer);
+                key.Accept(keyWriter);
+                builder.addString(keyBuffer.GetString());
+            }
             
-            return keyBuffer.GetString();
+            builder.addString(mObjId);
+            builder.addNumber(mCount++);
+            
         }
         
     public:
@@ -109,8 +112,8 @@ namespace microdb {
         
         rapidjson::Value& emit(const std::vector< Selector* >& args) {
             if(!args.empty()) {
-                Value& emitKey = args[0]->select(this);
-                std::string keyStr = generateKey(emitKey);
+                IndexDataumBuilder builder;
+                generateKey(builder, args[0]->select(this));
                 
                 StringBuffer valueBuffer;
                 Writer<StringBuffer> valueWriter(valueBuffer);
@@ -118,7 +121,7 @@ namespace microdb {
                     args[1]->select(this).Accept(valueWriter);
                 }
                 
-                mWriteBatch->Put(keyStr, valueBuffer.GetString());
+                mWriteBatch->Put(builder.getSlice(), valueBuffer.GetString());
             }
             
             return Value(kNullType).Move();
@@ -133,9 +136,9 @@ namespace microdb {
         
         rapidjson::Value& emit(const std::vector< Selector* >& args) {
             if(!args.empty()) {
-                Value& emitKey = args[0]->select(this);
-                std::string keyStr = generateKey(emitKey);
-                mWriteBatch->Delete(keyStr);
+                IndexDataumBuilder builder;
+                generateKey(builder, args[0]->select(this));
+                mWriteBatch->Delete(builder.getSlice());
             }
             
             return Value(kNullType).Move();
@@ -182,6 +185,9 @@ namespace microdb {
     char META_KEY[5] = { TYPE_SHORT_STRING | 4, 'm', 'e', 't', 'a' };
     leveldb::Slice META_KEY_SLICE(META_KEY, 5);
     
+    char VIEW_KEY[5] = { TYPE_SHORT_STRING | 4, 'v', 'i', 'e', 'w' };
+    leveldb::Slice VIEW_KEY_SLICE(VIEW_KEY, 5);
+    
     const leveldb::Slice& DBImpl::metaKey() {
         return META_KEY_SLICE;
     }
@@ -193,7 +199,7 @@ namespace microdb {
         string value;
         leveldb::Status status = mLevelDB->Get(leveldb::ReadOptions(), META_KEY_SLICE, &value);
         if(status.ok()){
-            metaDoc.Parse(value.c_str());
+            metaDoc.ParseInsitu((char*)value.c_str());
             
         } else {
             string instanceId = UUID::createRandom().getString();
@@ -212,22 +218,55 @@ namespace microdb {
         unique_ptr<leveldb::Iterator> it(mLevelDB->NewIterator(leveldb::ReadOptions()));
         
         
-        for(it->Seek("view"); it->Valid() && it->key().starts_with("view"); it->Next()){
-            Slice key = it->key();
+        for(it->Seek(VIEW_KEY_SLICE); it->Valid() && it->key().starts_with(VIEW_KEY_SLICE); it->Next()){
+            IndexDataum key(it->key());
+            leveldb::Slice keyValue;
+            key.getString(keyValue).getString(keyValue);
+            
+            
             Slice value = it->value();
             
             rapidjson::Document queryValue;
-            queryValue.ParseInsitu((char*)value.data());
+            queryValue.Parse(value.data());
             
             ViewQuery* query = new ViewQuery();
-            query->mName = key.ToString();
-            query->mName.erase(0, 4);
+            
+            query->mName = keyValue.ToString();
             
             query->compile(queryValue["map"].GetString());
             
             mViews.push_back(query);
             
         }
+        
+        
+        return OK;
+    }
+    
+    Status DBImpl::SetView(const std::string& viewName, const std::string& mapQuery) {
+        
+        unique_ptr<ViewQuery> query(new ViewQuery());
+        if(!query->compile(mapQuery.c_str())){
+            return PARSE_ERROR;
+        }
+        
+        rapidjson::Document viewDoc;
+        viewDoc.SetObject();
+        
+        viewDoc.AddMember("map", StringRef(mapQuery.data(), mapQuery.length()), viewDoc.GetAllocator());
+        
+        IndexDataumBuilder builder;
+        builder.addString("view");
+        builder.addString(viewName);
+        
+        StringBuffer buffer;
+        Writer<StringBuffer> writer(buffer);
+        viewDoc.Accept(writer);
+        
+        
+        mLevelDB->Put(WriteOptions(), builder.getSlice(), buffer.GetString());
+        
+        mViews.push_back(query.release());
         
         
         return OK;
@@ -248,7 +287,7 @@ namespace microdb {
         if(keyout != nullptr) {
             *keyout = objKey;
         }
-        batch.Put("o" + objKey, value);
+        batch.Put(IndexDataumBuilder().addString("o").addString(objKey).getSlice(), value);
 
         CreateIndexMapEnv createIndex(objKey, &batch);
         

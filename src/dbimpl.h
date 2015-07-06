@@ -47,8 +47,10 @@ namespace microdb {
         
         IndexDataumBuilder& addString(const char* cstr);
         IndexDataumBuilder& addString(const char* cstr, unsigned int len);
+        IndexDataumBuilder& addString(const std::string& str);
         IndexDataumBuilder& addNumber(double value);
         
+        std::string build();
         leveldb::Slice getSlice();
         
     };
@@ -67,9 +69,10 @@ namespace microdb {
         
         void reset();
         bool hasNext();
+        void next();
         uint8_t getType();
         
-        bool starts_with(const IndexDataum& value);
+        bool starts_with(IndexDataum& value);
         
         IndexDataum getString(leveldb::Slice& retval);
         IndexDataum getNumber(double& retval);
@@ -92,6 +95,7 @@ namespace microdb {
         
         Status init(leveldb::DB* db);
         
+        Status SetView(const std::string& viewName, const std::string& mapQuery);
 
         Status Insert(const std::string& value, std::string* key);
         Status Update(const std::string& key, const std::string& value);

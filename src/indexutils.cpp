@@ -41,12 +41,21 @@ namespace microdb {
         return *this;
     }
     
+    IndexDataumBuilder& IndexDataumBuilder::addString(const std::string &str) {
+        addString(str.data(), str.size());
+        return *this;
+    }
+    
     IndexDataumBuilder& IndexDataumBuilder::addNumber(double value) {
         mData.ensureSize(mLocation + 9);
         mData[mLocation] = TYPE_NUMBER;
         memcpy(&mData[mLocation+1], &value, 8);
         mLocation += 9;
         return *this;
+    }
+    
+    std::string IndexDataumBuilder::build() {
+        return std::string((char*)&mData[0], mLocation);
     }
     
     leveldb::Slice IndexDataumBuilder::getSlice() {
@@ -72,8 +81,50 @@ namespace microdb {
         return 0x20 & mData[mLocation];
     }
     
-    bool IndexDataum::starts_with(const IndexDataum &value) {
-        return memcmp(&mData[mLocation], &value.mData[value.mLocation], value.mSize) == 0;
+    inline bool prefixString(IndexDataum& a, IndexDataum& prefix) {
+        leveldb::Slice aSlice, bSlice;
+        IndexDataum nextA = a.getString(aSlice);
+        IndexDataum nextB = prefix.getString(bSlice);
+        
+        bool retval = aSlice.starts_with(bSlice);
+        
+        return retval;
+    }
+    
+    inline bool prefixType(IndexDataum& a, IndexDataum& prefix) {
+        int aType = a.getType();
+        int bType = prefix.getType();
+        int retval = aType - bType;
+        if(retval == 0) {
+            if(aType == TYPE_STRING) {
+                retval = prefixString(a, prefix);
+            }
+        }
+        return retval;
+    }
+    
+    inline bool prefixHasNext(IndexDataum& a, IndexDataum& prefix) {
+
+        if(!a.hasNext() && prefix.hasNext()) {
+            return false;
+        }
+        
+        bool retval = a.hasNext() && prefix.hasNext();
+        if(retval) {
+            retval = prefixType(a, prefix);
+        }
+        return retval;
+    }
+    
+    bool IndexDataum::starts_with(IndexDataum &value) {
+        while(value.hasNext()) {
+            if(!hasNext()) {
+                return false;
+            } else {
+                
+            }
+        }
+        return prefixHasNext(*this, value);
     }
     
     IndexDataum IndexDataum::getString(leveldb::Slice& retval) {
