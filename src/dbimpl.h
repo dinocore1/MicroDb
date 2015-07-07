@@ -3,6 +3,7 @@
 #define MicroDB_dbimpl_h
 
 #include <vector>
+#include <set>
 #include <memory>
 
 #include <leveldb/db.h>
@@ -83,8 +84,8 @@ namespace microdb {
     class DBImpl : public DB {
     private:
         UUID mInstanceId;
-        leveldb::DB* mLevelDB;
-        vector< ViewQuery* > mViews;
+        unique_ptr<leveldb::DB> mLevelDB;
+        set< ViewQuery > mViews;
         
     public:
         

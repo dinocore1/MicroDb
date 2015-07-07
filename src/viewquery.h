@@ -19,6 +19,7 @@ namespace microdb {
     class Statement {
     public:
         virtual void execute(Environment* env) = 0;
+        virtual std::string toString() = 0;
     };
     
     class Selector : public Statement {
@@ -80,6 +81,10 @@ namespace microdb {
         void execute(Environment* env) {
             env->SetVar(mVarName, mSelector->select(env));
         }
+        
+        std::string toString() {
+            return mVarName + " = " + mSelector->toString();
+        }
     };
     
     class IfStatement : public Statement {
@@ -99,6 +104,8 @@ namespace microdb {
                 }
             }
         }
+        
+        std::string toString();
     };
     
     class FunctionCall : public Selector {
@@ -118,6 +125,8 @@ namespace microdb {
                 return retval.Move();
             }
         }
+        
+        std::string toString();
         
     };
     
@@ -167,6 +176,8 @@ namespace microdb {
             
             return rapidjson::Value(rapidjson::kFalseType).Move();
         }
+        
+        std::string toString();
     };
     
     class VarSelector : public Selector {
@@ -178,6 +189,10 @@ namespace microdb {
         
         rapidjson::Value& select(Environment* env) {
             return env->GetVar(mVarName);
+        }
+        
+        std::string toString() {
+            return mVarName;
         }
     };
     
@@ -204,6 +219,8 @@ namespace microdb {
             rapidjson::Value nullVal(rapidjson::kNullType);
             return nullVal.Move();
         }
+        
+        std::string toString();
     };
     
     class StrLiteralSelector : public Selector {
@@ -219,6 +236,8 @@ namespace microdb {
         rapidjson::Value& select(Environment* env) {
             return mValue;
         }
+        
+        std::string toString();
     };
     
     class IntLiteralSelector : public Selector {
@@ -232,6 +251,9 @@ namespace microdb {
         rapidjson::Value& select(Environment* env) {
             return mValue;
         }
+        
+        
+        std::string toString();
     };
     
     typedef struct ParserStruct {
@@ -245,12 +267,18 @@ namespace microdb {
         stmtList mStatements;
         
     public:
-        std::string mName;
+        const std::string mName;
+        
+        ViewQuery(const std::string& name);
+        
+        void setStatements(const stmtList& stmts);
         
         bool compile(const char* code);
-        
         void map(rapidjson::Document& input, Environment* env);
         void execute(Environment* env);
+        
+        bool operator<(const ViewQuery& other) const;
+        
     };
 }
 
