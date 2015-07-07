@@ -240,37 +240,21 @@ namespace microdb {
         return OK;
     }
     
-    Status DBImpl::SetView(const std::string& viewName, const std::string& mapQuery) {
+    Status DBImpl::AddView(const std::string& viewName, const std::string& mapQuery) {
         
         ViewQuery query(viewName);
+        
+        if(mViews.find(query) != mViews.end()) {
+            return EXISTS_ERROR;
+        }
+        
         if(!query.compile(mapQuery.c_str())){
             return PARSE_ERROR;
         }
         
-        auto it = mViews.insert(query);
-        bool needToDestroyIndex = !it.second && strcmp((*it.first).toString(), query.toString()) != 0;
-        bool needToBuildIndex = it.second || needToDestroyIndex;
-        if(needToDestroyIndex) {
-            unique_ptr<leveldb::Iterator> indexIt(mLevelDB->NewIterator(leveldb::ReadOptions()));
-            
-            IndexDataumBuilder idxPrefix;
-            idxPrefix.addString("i");
-            idxPrefix.addString(viewName);
-            leveldb::Slice prefix = idxPrefix.getSlice();
-            
-            for(indexIt->Seek(prefix); indexIt->Valid() && indexIt->key().starts_with(prefix); indexIt->Next()) {
-                mLevelDB->Delete(WriteOptions(), indexIt->key());
-            }
-            
-            (*it.first).setStatements(query.mStatements);
-        }
+        mViews.insert(query);
         
-        if(needToBuildIndex) {
-            unique_ptr<leveldb::Iterator> indexIt(mLevelDB->NewIterator(leveldb::ReadOptions()));
-            
-        }
-        
-        ViewQuery query = mViews.find(ViewQuery::CreateKey(viewName));
+        //TODO: build index
         
         rapidjson::Document viewDoc;
         viewDoc.SetObject();
@@ -287,6 +271,27 @@ namespace microdb {
         
         mLevelDB->Put(WriteOptions(), builder.getSlice(), buffer.GetString());
         
+        
+        return OK;
+    }
+    
+    Status DBImpl::DeleteView(const std::string& viewName) {
+        ViewQuery query(viewName);
+        
+        if(mViews.find(query) != mViews.end()) {
+            return EXISTS_ERROR;
+        }
+        
+        unique_ptr<leveldb::Iterator> indexIt(mLevelDB->NewIterator(leveldb::ReadOptions()));
+        
+        IndexDataumBuilder idxPrefix;
+        idxPrefix.addString("i");
+        idxPrefix.addString(viewName);
+        leveldb::Slice prefix = idxPrefix.getSlice();
+        
+        for(indexIt->Seek(prefix); indexIt->Valid() && indexIt->key().starts_with(prefix); indexIt->Next()) {
+            mLevelDB->Delete(WriteOptions(), indexIt->key());
+        }
         
         return OK;
     }
@@ -310,7 +315,7 @@ namespace microdb {
 
         CreateIndexMapEnv createIndex(objKey, &batch);
         
-        for(ViewQuery* view : mViews) {
+        for(const ViewQuery& view : mViews) {
             createIndex.execute(doc, view);
         }
         

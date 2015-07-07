@@ -15,7 +15,8 @@ namespace microdb{
         
         virtual ~DB();
         
-        virtual Status SetView(const std::string& viewName, const std::string& mapQuery) = 0;
+        virtual Status AddView(const std::string& viewName, const std::string& mapQuery) = 0;
+        virtual Status DeleteView(const std::string& viewName) = 0;
         
         virtual Status Insert(const std::string& value, std::string* key = nullptr) = 0;
         virtual Status Update(const std::string& key, const std::string& value) = 0;

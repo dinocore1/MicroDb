@@ -96,7 +96,8 @@ namespace microdb {
         
         Status init(leveldb::DB* db);
         
-        Status SetView(const std::string& viewName, const std::string& mapQuery);
+        Status AddView(const std::string& viewName, const std::string& mapQuery);
+        Status DeleteView(const std::string& viewName);
 
         Status Insert(const std::string& value, std::string* key);
         Status Update(const std::string& key, const std::string& value);
