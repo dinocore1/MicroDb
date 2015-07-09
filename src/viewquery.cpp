@@ -2,13 +2,14 @@
 #include "viewquery.h"
 
 #include <sstream>
+#include <algorithm>
 
 namespace microdb {
     
     ViewQuery::ViewQuery(const std::string& name)
     : mName(name) { }
     
-    void ViewQuery::execute(Environment* env) {
+    void ViewQuery::execute(Environment* env) const {
         for(Statement* stmt : mStatements) {
             stmt->execute(env);
         }
@@ -76,6 +77,25 @@ namespace microdb {
     
     std::string MemberSelector::toString() {
         return mParent->toString() + "." + mMemberName;
+    }
+    
+    std::string IntLiteralSelector::toString() {
+        std::stringstream buf;
+        buf << mValue.GetDouble();
+        return buf.str();
+    }
+    
+    void find_and_replace(std::string& source, const std::string& find, const std::string& replace) {
+        for(std::string::size_type i = 0; (i = source.find(find, i)) != std::string::npos;) {
+            source.replace(i, find.length(), replace);
+            i += replace.length();
+        }
+    }
+    
+    std::string StrLiteralSelector::toString() {
+        std::string retval = mStrValue;
+        find_and_replace(retval, "\"", "\\\\");
+        return retval;
     }
     
 }

@@ -56,13 +56,12 @@ namespace microdb {
     
     class IndexMapEnv : public Environment {
         
-    private:
-        ViewQuery* mView;
-        unsigned int mCount;
-        
     protected:
+        unsigned int mCount;
+        const std::string* mObjId;
+        const ViewQuery* mView;
         WriteBatch* mWriteBatch;
-        const std::string mObjId;
+        
         
         inline void generateKey(IndexDataumBuilder& builder, rapidjson::Value& key) {
             builder.addString("i");
@@ -77,7 +76,7 @@ namespace microdb {
                 builder.addString(keyBuffer.GetString());
             }
             
-            builder.addString(mObjId);
+            builder.addString(*mObjId);
             builder.addNumber(mCount++);
             
         }
@@ -85,13 +84,15 @@ namespace microdb {
     public:
         
         
-        IndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
-        : mObjId(objId), mWriteBatch(writeBatch), mCount(0) {
+        IndexMapEnv()
+        : mWriteBatch(nullptr) {
             mFunctions["emit"] = indexMapEnvEmit;
             mFunctions["hash"] = hash;
         }
         
-        void execute(rapidjson::Value& obj, ViewQuery* view) {
+        void execute(const std::string& objId, rapidjson::Value& obj, const ViewQuery* view, WriteBatch* writeBatch = nullptr) {
+            mWriteBatch = writeBatch;
+            mObjId = &objId;
             mView = view;
             mVariables.clear();
             SetVar("obj", obj);
@@ -107,8 +108,8 @@ namespace microdb {
     class CreateIndexMapEnv : public IndexMapEnv {
     public:
         
-        CreateIndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
-        : IndexMapEnv(objId, writeBatch) { }
+        CreateIndexMapEnv()
+        : IndexMapEnv() { }
         
         rapidjson::Value& emit(const std::vector< Selector* >& args) {
             if(!args.empty()) {
@@ -131,8 +132,8 @@ namespace microdb {
     class DeleteIndexMapEnv : public IndexMapEnv {
     public:
         
-        DeleteIndexMapEnv(const std::string& objId, WriteBatch* writeBatch)
-        : IndexMapEnv(objId, writeBatch) { }
+        DeleteIndexMapEnv()
+        : IndexMapEnv() { }
         
         rapidjson::Value& emit(const std::vector< Selector* >& args) {
             if(!args.empty()) {
@@ -254,7 +255,15 @@ namespace microdb {
         
         mViews.insert(query);
         
-        //TODO: build index
+        //build index
+        IndexDataumBuilder idxPrefix;
+        idxPrefix.addString("o");
+        leveldb::Slice prefix = idxPrefix.getSlice();
+        
+        unique_ptr<leveldb::Iterator> indexIt(mLevelDB->NewIterator(leveldb::ReadOptions()));
+        for(indexIt->Seek(prefix); indexIt->Valid() && indexIt->key().starts_with(prefix); indexIt->Next()) {
+            
+        }
         
         rapidjson::Document viewDoc;
         viewDoc.SetObject();
@@ -313,10 +322,11 @@ namespace microdb {
         }
         batch.Put(IndexDataumBuilder().addString("o").addString(objKey).getSlice(), value);
 
-        CreateIndexMapEnv createIndex(objKey, &batch);
+        
+        CreateIndexMapEnv createIndex;
         
         for(const ViewQuery& view : mViews) {
-            createIndex.execute(doc, view);
+            createIndex.execute(objKey, doc, &view, &batch);
         }
         
         
@@ -343,15 +353,15 @@ namespace microdb {
         
         WriteBatch batch;
         
-        DeleteIndexMapEnv deleteIndex(key, &batch);
-        CreateIndexMapEnv createIndex(key, &batch);
+        DeleteIndexMapEnv deleteIndex;
+        CreateIndexMapEnv createIndex;
         
         batch.Delete(dbkey);
         batch.Put(dbkey, value);
 
-        for(ViewQuery* view : mViews) {
-            deleteIndex.execute(oldDoc, view);
-            createIndex.execute(newDoc, view);
+        for(const ViewQuery& view : mViews) {
+            deleteIndex.execute(key, oldDoc, &view, &batch);
+            createIndex.execute(key, newDoc, &view, &batch);
         }
         
         mLevelDB->Write(WriteOptions(), &batch);
@@ -376,12 +386,12 @@ namespace microdb {
         
         WriteBatch batch;
         
-        DeleteIndexMapEnv deleteIndex(key, &batch);
+        DeleteIndexMapEnv deleteIndex;
         
         batch.Delete(dbkey);
         
-        for(ViewQuery* view : mViews) {
-            deleteIndex.execute(doc, view);
+        for(const ViewQuery& view : mViews) {
+            deleteIndex.execute(key, doc, &view, &batch);
         }
         
         mLevelDB->Write(WriteOptions(), &batch);

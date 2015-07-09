@@ -274,8 +274,8 @@ namespace microdb {
         void setStatements(const stmtList& stmts);
         
         bool compile(const char* code);
-        void map(rapidjson::Document& input, Environment* env);
-        void execute(Environment* env);
+        void map(rapidjson::Document& input, Environment* env) const;
+        void execute(Environment* env) const;
         
         bool operator<(const ViewQuery& other) const;
         
