@@ -18,6 +18,7 @@ namespace microdb {
     
     class Statement {
     public:
+        virtual ~Statement() { };
         virtual void execute(Environment* env) = 0;
         virtual std::string toString() = 0;
     };
@@ -34,6 +35,18 @@ namespace microdb {
     typedef std::vector< Statement* > stmtList;
     typedef std::vector< Selector* > argList;
     typedef rapidjson::Value& (*dataFunction)(Environment* env, const std::vector< Selector* >& args);
+    
+    inline void destroyStmtList(stmtList& list) {
+        for(Statement* stmt : list) {
+            delete stmt;
+        }
+    }
+    
+    inline void destroyArgList(argList& list) {
+        for(Selector* arg : list) {
+            delete arg;
+        }
+    }
     
     class Environment {
         
@@ -71,9 +84,15 @@ namespace microdb {
     };
     
     class Assign : public Statement {
-    public:
+    private:
         const std::string mVarName;
         Selector* mSelector;
+        
+    public:
+        
+        ~Assign() {
+            delete mSelector;
+        }
         
         Assign(const std::string& varName, Selector* selector)
         : mVarName(varName), mSelector(selector) { }
@@ -93,8 +112,14 @@ namespace microdb {
         stmtList mThenStmts;
         
     public:
+        
         IfStatement(Selector* condition, const stmtList& thenStatements)
         : mCondition(condition), mThenStmts(thenStatements) { }
+        
+        ~IfStatement() {
+            delete mCondition;
+            destroyStmtList(mThenStmts);
+        }
         
         void execute(Environment* env) {
             rapidjson::Value& conditionVar = mCondition->select(env);
@@ -109,12 +134,18 @@ namespace microdb {
     };
     
     class FunctionCall : public Selector {
-    public:
+    private:
         const std::string mFunctionName;
-        const argList mArgList;
+        argList mArgList;
+        
+    public:
         
         FunctionCall(const std::string& name, const argList& arglist)
         : mFunctionName(name), mArgList(arglist) {}
+        
+        ~FunctionCall() {
+            destroyArgList(mArgList);
+        }
         
         rapidjson::Value& select(Environment* env) {
             dataFunction fun = env->GetFunction(mFunctionName);
@@ -148,6 +179,11 @@ namespace microdb {
         
         Condition(Selector* lhs, Selector* rhs, OperatorType op)
         : mLHS(lhs), mRHS(rhs), mOp(op) { }
+        
+        ~Condition() {
+            delete mLHS;
+            delete mRHS;
+        }
         
         rapidjson::Value& select(Environment* env) {
             rapidjson::Value& left = mLHS->select(env);
@@ -205,6 +241,10 @@ namespace microdb {
     public:
         MemberSelector(std::string& memberName, Selector* parent = nullptr)
         : mMemberName(memberName), mParent(parent) {}
+        
+        ~MemberSelector() {
+            delete mParent;
+        }
         
         rapidjson::Value& select(Environment* env) {
             
@@ -270,6 +310,7 @@ namespace microdb {
         const std::string mName;
         
         ViewQuery(const std::string& name);
+        ~ViewQuery();
         
         void setStatements(const stmtList& stmts);
         

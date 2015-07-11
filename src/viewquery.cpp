@@ -9,6 +9,10 @@ namespace microdb {
     ViewQuery::ViewQuery(const std::string& name)
     : mName(name) { }
     
+    ViewQuery::~ViewQuery() {
+        destroyStmtList(mStatements);
+    }
+    
     void ViewQuery::execute(Environment* env) const {
         for(Statement* stmt : mStatements) {
             stmt->execute(env);

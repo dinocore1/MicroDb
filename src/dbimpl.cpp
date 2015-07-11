@@ -260,9 +260,20 @@ namespace microdb {
         idxPrefix.addString("o");
         leveldb::Slice prefix = idxPrefix.getSlice();
         
+        CreateIndexMapEnv createIndex;
+        
+        
         unique_ptr<leveldb::Iterator> indexIt(mLevelDB->NewIterator(leveldb::ReadOptions()));
         for(indexIt->Seek(prefix); indexIt->Valid() && indexIt->key().starts_with(prefix); indexIt->Next()) {
+            std::string objId(indexIt->key().data(), indexIt->key().size());
+            std::string objStrValue(indexIt->value().data(), indexIt->value().size());
             
+            rapidjson::Document objValue;
+            objValue.ParseInsitu((char*)objStrValue.c_str());
+            
+            WriteBatch batch;
+            createIndex.execute(objId, objValue, &query, &batch);
+            mLevelDB->Write(WriteOptions(), &batch);
         }
         
         rapidjson::Document viewDoc;
@@ -279,8 +290,7 @@ namespace microdb {
         viewDoc.Accept(writer);
         
         mLevelDB->Put(WriteOptions(), builder.getSlice(), buffer.GetString());
-        
-        
+
         return OK;
     }
     
