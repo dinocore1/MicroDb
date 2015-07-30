@@ -90,6 +90,8 @@ leveldb_src = [
 'port/port_posix.cc'
 ]
 
+corefoundataion_dep = dependency('appleframeworks', modules: ['CoreFoundation'] )
+
 lib_headers = install_headers(leveldb_pub_headers, subdir : 'leveldb')
 pub_headers = include_directories('include')
 internal_headers = include_directories('port')
@@ -98,5 +100,11 @@ leveldb_include = [ pub_headers, internal_headers ]
 leveldb_staticlib = static_library('libleveldb',
             leveldb_src,
             include_directories : leveldb_include,
-            cpp_args : ['-DOS_MACOSX', '-DLEVELDB_PLATFORM_POSIX']
+            cpp_args : ['-DOS_MACOSX', '-DLEVELDB_PLATFORM_POSIX'],
+            dependencies : corefoundataion_dep
             )
+
+dep = declare_dependency(
+        link_with: leveldb_staticlib,
+        include_directories : pub_headers
+        )

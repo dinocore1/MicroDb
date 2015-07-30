@@ -1,17 +1,23 @@
 project('MicroDB an Embedded Object Database', 'cpp')
 add_global_arguments('-std=c++11', language : 'cpp')
 
+flex = find_program('flex')
+bison = find_program('bison')
+
+
+
 leveldb_dep = dependency('leveldb', required : false)
 if leveldb_dep.found()
-	include_external = []
+	inc = []
 	link = []
 else
 	leveldb_sp = subproject('leveldb')
-	include_external = leveldb_sp.get_variable('pub_headers')
-	link = leveldb_sp.get_variable('leveldb_staticlib')
+	leveldb_dep = leveldb_sp.get_variable('dep')
 endif
 
-inc_microdb = [include_directories('include'), include_external ]
+gtest_sp = subproject('gtest')
+
+inc = include_directories('include')
 
 subdir('include')
 subdir('src')

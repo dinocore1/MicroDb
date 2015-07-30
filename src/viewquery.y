@@ -28,9 +28,9 @@
 %token <sval> TID TSTRLITERAL
 
 %type <stmtlistval> stmtlist
-%type <stmtval> stmt ifstmt assign funCall
+%type <stmtval> stmt ifstmt assign
 %type <arglist> arglist
-%type <selval> path var literal expr condition
+%type <selval> path var literal expr condition funCall
 
 
 %start query
@@ -64,7 +64,7 @@ stmtlist
 
 stmt
     : ifstmt
-    | funCall
+    | funCall { $$ = $1; }
     | assign
     ;
 
@@ -127,24 +127,24 @@ void viewqueryerror(YYLTYPE* locp, microdb::ParserStruct* ctx, const char* err)
 }
 
 namespace microdb {
-    
+
     bool ViewQuery::compile(const char* code) {
-        
+
         ParserStruct parserStr;
         parserStr.mParseSuccess = true;
-        
+
         viewquerylex_init(&parserStr.svt);
-        
+
         YY_BUFFER_STATE buff = viewquery_scan_string(code, parserStr.svt);
-        
+
         viewqueryparse(&parserStr);
-        
+
         viewquery_delete_buffer(buff, parserStr.svt);
-        
+
         viewquerylex_destroy(parserStr.svt);
-        
+
         mStatements = parserStr.stmts;
-        
+
         return parserStr.mParseSuccess;
     }
 }
