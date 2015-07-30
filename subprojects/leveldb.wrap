@@ -1,0 +1,5 @@
+[wrap-git]
+directory = leveldb
+
+url = https://github.com/google/leveldb.git
+revision = v1.18

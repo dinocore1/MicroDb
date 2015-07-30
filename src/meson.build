@@ -7,8 +7,8 @@ microdb_srcs = [
 			'sha256.cpp'
 		]
 
-
 microdb_lib = shared_library('microdb',
 														sources : microdb_srcs,
-														include_directories : [ include_directories(''), inc_microdb],
+														include_directories : inc_microdb,
+														link_with : link,
 														install : true)
