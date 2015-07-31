@@ -31,9 +31,17 @@ flexgen.process('uuidlex.l'),
 bisongen.process('viewquery.y')
 ]
 
+if host.name() == 'darwin'
+  cpp_args = ['-DGUID_CFUUID']
+  dep = dependency('appleframeworks', modules : 'foundation')
+else
+  dep = []
+  cpp_args = []
+endif
+
 microdb_lib = shared_library('microdb',
 														sources : microdb_srcs,
 														include_directories : inc,
 														dependencies : leveldb_dep,
-														cpp_args : [ '-DGUID_CFUUID' ],
+														cpp_args : cpp_args,
 														install : true)

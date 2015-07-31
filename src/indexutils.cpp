@@ -3,7 +3,7 @@
 #include "dbimpl.h"
 
 #include <cmath>
-
+#include <limits>
 #include <leveldb/comparator.h>
 
 
@@ -12,15 +12,15 @@ namespace microdb {
 
     IndexDataumBuilder::IndexDataumBuilder()
     : mData(512), mLocation(0) { }
-    
+
     IndexDataumBuilder& IndexDataumBuilder::move() {
         return *this;
     }
-    
+
     IndexDataumBuilder& IndexDataumBuilder::addString(const char *cstr, unsigned int len) {
-        
+
         assert(len < MAX_LONG_STRING);
-        
+
         if(len <= MAX_SHORT_STRING) {
             mData.ensureSize(len + 1);
             mData[mLocation] = TYPE_SHORT_STRING | (LENG_MASK & len);
@@ -35,17 +35,17 @@ namespace microdb {
         }
         return *this;
     }
-    
+
     IndexDataumBuilder& IndexDataumBuilder::addString(const char *cstr) {
         addString(cstr, strlen(cstr));
         return *this;
     }
-    
+
     IndexDataumBuilder& IndexDataumBuilder::addString(const std::string &str) {
         addString(str.data(), str.size());
         return *this;
     }
-    
+
     IndexDataumBuilder& IndexDataumBuilder::addNumber(double value) {
         mData.ensureSize(mLocation + 9);
         mData[mLocation] = TYPE_NUMBER;
@@ -53,44 +53,44 @@ namespace microdb {
         mLocation += 9;
         return *this;
     }
-    
+
     std::string IndexDataumBuilder::build() {
         return std::string((char*)&mData[0], mLocation);
     }
-    
+
     leveldb::Slice IndexDataumBuilder::getSlice() {
         return leveldb::Slice((const char*)&mData[0], mLocation);
     }
-    
+
     /////////////// IndexDatum /////////////////////
-    
+
     IndexDataum::IndexDataum(const void* data, const size_t size) : mData((uint8_t*)data), mSize(size), mLocation(0) { }
     IndexDataum::IndexDataum(const void* data, const size_t size, size_t location) : mData((uint8_t*)data), mSize(size), mLocation(location) {}
     IndexDataum::IndexDataum(const leveldb::Slice& slice)
     : mData((uint8_t*)slice.data()), mSize(slice.size()), mLocation(0) { }
-    
+
     void IndexDataum::reset() {
         mLocation = 0;
     }
-    
+
     bool IndexDataum::hasNext() {
         return mLocation < mSize;
     }
-    
+
     uint8_t IndexDataum::getType() {
         return 0x20 & mData[mLocation];
     }
-    
+
     inline bool prefixString(IndexDataum& a, IndexDataum& prefix) {
         leveldb::Slice aSlice, bSlice;
         IndexDataum nextA = a.getString(aSlice);
         IndexDataum nextB = prefix.getString(bSlice);
-        
+
         bool retval = aSlice.starts_with(bSlice);
-        
+
         return retval;
     }
-    
+
     inline bool prefixType(IndexDataum& a, IndexDataum& prefix) {
         int aType = a.getType();
         int bType = prefix.getType();
@@ -102,34 +102,34 @@ namespace microdb {
         }
         return retval;
     }
-    
+
     inline bool prefixHasNext(IndexDataum& a, IndexDataum& prefix) {
 
         if(!a.hasNext() && prefix.hasNext()) {
             return false;
         }
-        
+
         bool retval = a.hasNext() && prefix.hasNext();
         if(retval) {
             retval = prefixType(a, prefix);
         }
         return retval;
     }
-    
+
     bool IndexDataum::starts_with(IndexDataum &value) {
         while(value.hasNext()) {
             if(!hasNext()) {
                 return false;
             } else {
-                
+
             }
         }
         return prefixHasNext(*this, value);
     }
-    
+
     IndexDataum IndexDataum::getString(leveldb::Slice& retval) {
         assert(TYPE_STRING & mData[mLocation]);
-        
+
         size_t offset;
         const char* buf;
         uint16_t size = 0;
@@ -142,37 +142,37 @@ namespace microdb {
             buf = (const char*) &mData[mLocation + 1];
             offset = size + 1;
         }
-        
+
         retval = leveldb::Slice(buf, size);
-        
+
         return IndexDataum(mData, mSize, mLocation + offset);
     }
-    
+
     IndexDataum IndexDataum::getNumber(double& retval) {
         assert(TYPE_NUMBER & mData[mLocation]);
-        
+
         memcpy(&retval, &mData[mLocation + 1], 8);
-        
+
         return IndexDataum(mData, mSize, mLocation+9);
     }
-    
+
     inline int compareString(IndexDataum& a, IndexDataum& b) {
         leveldb::Slice aSlice, bSlice;
         IndexDataum nextA = a.getString(aSlice);
         IndexDataum nextB = b.getString(bSlice);
-        
+
         int retval = leveldb::BytewiseComparator()->Compare(aSlice, bSlice);
         if(retval == 0) {
             retval = nextA.compare(nextB);
         }
         return retval;
     }
-    
+
     inline int compareNumber(IndexDataum& a, IndexDataum& b) {
         double aNum, bNum;
         IndexDataum nextA = a.getNumber(aNum);
         IndexDataum nextB = b.getNumber(bNum);
-        
+
         int retval;
         if(aNum == bNum || std::abs(aNum-bNum)<std::abs(std::min(aNum,bNum))*std::numeric_limits<double>::epsilon()) {
             retval = nextA.compare(nextB);
@@ -183,7 +183,7 @@ namespace microdb {
         }
         return retval;
     }
-    
+
     inline int compareType(IndexDataum& a, IndexDataum& b) {
         int aType = a.getType();
         int bType = b.getType();
@@ -197,7 +197,7 @@ namespace microdb {
         }
         return retval;
     }
-    
+
     inline int compareHasNext(IndexDataum& a, IndexDataum& b) {
         int ahasNext = a.hasNext() ? 1 : 0;
         int bhasNext = b.hasNext() ? 1 : 0;
@@ -207,11 +207,10 @@ namespace microdb {
         }
         return retval;
     }
-    
+
     int IndexDataum::compare(microdb::IndexDataum &other) {
         int retval = compareHasNext(*this, other);
         return retval;
     }
-    
-}
 
+}
