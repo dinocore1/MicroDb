@@ -39,9 +39,9 @@ else
   cpp_args = []
 endif
 
-microdb_lib = shared_library('microdb',
-														sources : microdb_srcs,
-														include_directories : inc,
-														dependencies : leveldb_dep,
-														cpp_args : cpp_args,
-														install : true)
+microdb_lib = build_target('microdb', sources
+	include_directories : incdir,
+	link_with : leveldb_lib,
+	dependencies : leveldb_dep,
+	target_type : libtype
+	)
