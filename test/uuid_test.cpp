@@ -38,6 +38,14 @@ TEST(uuidtests, testequals) {
   ASSERT_TRUE(id1 == id2);
 }
 
+TEST(uuidtests, testequals2) {
+
+  UUID id1("De305D54-75b4-431b-adb2-eb6b9e546014");
+  UUID id2("de305d54-75b4-431b-adb2-eb6b9e546014");
+
+  ASSERT_TRUE(id1 == id2);
+}
+
 TEST(uuidtests, testnotequals) {
 
   UUID id1("de305d54-75b4-431b-adb2-eb6b9e546014");

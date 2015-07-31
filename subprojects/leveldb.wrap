@@ -1,5 +1,8 @@
-[wrap-git]
+[wrap-file]
 directory = leveldb
 
-url = https://github.com/google/leveldb.git
-revision = v1.18
+source_url = https://github.com/google/leveldb/archive/v1.18.zip
+source_filename = leveldb-1.18.zip
+
+patch_url = https://github.com/dinocore1/leveldb_meson/archive/master.zip
+patch_filename = leveldb_meson-master.zip
