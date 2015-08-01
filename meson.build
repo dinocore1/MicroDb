@@ -17,8 +17,7 @@ if leveldb_dep.found()
 	link = []
 else
 	leveldb_proj = subproject('leveldb')
-	leveldb_dep = leveldb_sp.get_variable('dep')
-	leveldb_inc = leveldb_proj.get_variable('incdir')
+	leveldb_dep = leveldb_proj.get_variable('dep')
 endif
 
 gtest_sp = subproject('gtest')

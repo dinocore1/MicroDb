@@ -1,8 +1,10 @@
 [wrap-file]
-directory = leveldb
+directory = leveldb-1.18
 
 source_url = https://github.com/google/leveldb/archive/v1.18.zip
 source_filename = leveldb-1.18.zip
+source_hash = 1839529427792c4931ecf08d2fd66480b6c1103ce02d3bb7fff7197729facccf
 
 patch_url = https://github.com/dinocore1/leveldb_meson/archive/master.zip
 patch_filename = leveldb_meson-master.zip
+patch_hash = 736a805c74100707638e0ba62fd050caa33a3a1aed04fc47c472ce63133a9bf7
