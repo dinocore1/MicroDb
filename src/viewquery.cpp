@@ -108,13 +108,18 @@ namespace microdb {
         mParent->select(env, parent);
         if(parent.IsArray()) {
           mIndex->select(env, index);
-          uint64_t indexValue;
-          if(index.IsUint64()) {
-            indexValue = index.GetUint64();
+          int64_t indexValue = -1;
+          if(index.IsInt()) {
+            indexValue = index.GetInt();
           } else if(index.IsUint()) {
             indexValue = index.GetUint();
+          } else if(index.IsDouble()) {
+            indexValue = (int64_t) index.GetDouble();
           }
-          retval = parent[index.GetInt()];
+
+          if(indexValue >= 0 && indexValue < parent.Size()) {
+            retval = parent[indexValue];
+          }
           return;
         }
       }
