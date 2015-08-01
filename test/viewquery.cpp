@@ -76,6 +76,18 @@ TEST(viewquery, member_access) {
   ASSERT_TRUE(strcmp("world", x.GetString()) == 0);
 }
 
+TEST(viewquery, nullobj_access) {
+  ViewQuery query("test");
+  ASSERT_TRUE(query.compile("x = obj.hello"));
+
+  Environment env;
+
+  query.execute(&env);
+
+  Value& x = env.GetVar("x");
+  ASSERT_TRUE(x.IsNull());
+}
+
 TEST(viewquery, array_access) {
   ViewQuery query("test");
   ASSERT_TRUE(query.compile("x = obj[0]"));
