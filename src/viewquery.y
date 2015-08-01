@@ -98,8 +98,8 @@ funCall
     ;
 
 arglist
-    : path { $$ = new argList(); $$->push_back($1); }
-    | arglist TCOMMA path { $$ = $1; $$->push_back($3); }
+    : arglist TCOMMA expr { $$ = $1; $$->push_back($3); }
+    | expr { $$ = new argList(); $$->push_back($1); }
     | { $$ = new argList(); }
     ;
 
