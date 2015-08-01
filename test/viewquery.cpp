@@ -75,3 +75,22 @@ TEST(viewquery, member_access) {
   ASSERT_TRUE(x.IsString());
   ASSERT_TRUE(strcmp("world", x.GetString()) == 0);
 }
+
+TEST(viewquery, array_access) {
+  ViewQuery query("test");
+  ASSERT_TRUE(query.compile("x = obj[0]"));
+
+  Environment env;
+
+  Value obj;
+  obj.SetArray();
+  obj.PushBack(Value("hello"), env.getGlobalAllocator());
+
+  env.SetVar("obj", obj);
+
+  query.execute(&env);
+
+  Value& x = env.GetVar("x");
+  ASSERT_TRUE(x.IsString());
+  ASSERT_TRUE(strcmp("hello", x.GetString()) == 0);
+}

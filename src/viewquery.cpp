@@ -91,6 +91,43 @@ namespace microdb {
         return mParent->toString() + "." + mMemberName;
     }
 
+    ArraySelector::ArraySelector(Selector* index, Selector* parent)
+    : mParent(parent), mIndex(index) {
+
+    }
+
+    ArraySelector::~ArraySelector() {
+      delete mParent;
+      delete mIndex;
+    }
+
+    void ArraySelector::select(Environment* env, rapidjson::Value& retval) {
+      if(mParent != nullptr && mIndex != nullptr) {
+        rapidjson::Value parent, index;
+
+        mParent->select(env, parent);
+        if(parent.IsArray()) {
+          mIndex->select(env, index);
+          uint64_t indexValue;
+          if(index.IsUint64()) {
+            indexValue = index.GetUint64();
+          } else if(index.IsUint()) {
+            indexValue = index.GetUint();
+          }
+          retval = parent[index.GetInt()];
+          return;
+        }
+      }
+
+      retval.SetNull();
+    }
+
+    std::string ArraySelector::toString() {
+      std::stringstream buf;
+      buf << mParent->toString() << '[' << mIndex->toString() << ']';
+      return buf.str();
+    }
+
     std::string IntLiteralSelector::toString() {
         std::stringstream buf;
         buf << mValue;

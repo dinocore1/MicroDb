@@ -22,7 +22,8 @@
     microdb::argList* arglist;
 }
 
-%token TIF TLPAREN TRPAREN TLBRACE TRBRACE TDOT TPATHSTART TCOMMA
+%token TIF TLPAREN TRPAREN TLBRACE TRBRACE TLSBRACE TRSBRACE TDOT
+%token TPATHSTART TCOMMA
 %token TASSIGN TEQUALS TLEQ TGEQ TGT TLT TNEQ
 %token <ival> TINT
 %token <sval> TID TSTRLITERAL
@@ -115,6 +116,7 @@ var
 path
     : var { $$ = $1; }
     | path TDOT TID { $$ = new MemberSelector(*$3, $1); delete $3; }
+    | path TLSBRACE expr TRSBRACE { $$ = new ArraySelector($3, $1); }
     ;
 
 %%

@@ -263,6 +263,19 @@ namespace microdb {
         std::string toString();
     };
 
+    class ArraySelector : public Selector {
+    private:
+      Selector* mParent;
+      Selector* mIndex;
+
+    public:
+      ArraySelector(Selector* index, Selector* parent);
+      ~ArraySelector();
+
+      void select(Environment* env, rapidjson::Value& retval);
+      std::string toString();
+    };
+
     class StrLiteralSelector : public Selector {
     private:
         const std::string mStrValue;

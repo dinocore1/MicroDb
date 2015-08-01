@@ -27,6 +27,8 @@
 ")"                 { return TRPAREN; }
 "{"                 { return TLBRACE; }
 "}"                 { return TRBRACE; }
+"["                 { return TLSBRACE; }
+"]"                 { return TRSBRACE; }
 ","                 { return TCOMMA; }
 "."                 { return TDOT; }
 "$"                 { return TPATHSTART; }
