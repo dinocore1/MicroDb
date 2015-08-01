@@ -93,7 +93,7 @@ namespace microdb {
 
     std::string IntLiteralSelector::toString() {
         std::stringstream buf;
-        buf << mValue.GetDouble();
+        buf << mValue;
         return buf.str();
     }
 

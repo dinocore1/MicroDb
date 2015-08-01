@@ -7,9 +7,9 @@
 namespace microdb {
 
 
-rapidjson::Value& hash(Environment* env, const std::vector< Selector* >& args);
+void hash(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args);
 
-    
+
 }
 
 

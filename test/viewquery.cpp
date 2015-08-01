@@ -23,16 +23,14 @@ void printValue(rapidjson::Value& value) {
   printf("doc: %s", output);
 }
 
-rapidjson::Value& helloWorldFun(Environment* env, const std::vector< Selector* >& args) {
+void helloWorldFun(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args) {
 
-  rapidjson::Value retval;
   //printf("I am ehre %f\n", retval.GetDouble());
-  retval.SetString("hello to you", env->getGlobalAllocator());
+  retval.SetString("hello to you");
   //retval = 4;
   //retval.SetObject();
   //retval.AddMember("message", "hello to you", env->getGlobalAllocator());
 
-  return retval.Move();
 }
 
 void helloWorld2(Environment* env, Value& retval) {
@@ -52,7 +50,8 @@ TEST(viewquery, function_test) {
 
   vector< Selector* > args;
   Environment env;
-  Value& retval = helloWorldFun(&env, args);
+  Value retval;
+  helloWorldFun(&env, retval, args);
 
   ASSERT_TRUE(retval.IsString());
   ASSERT_TRUE(strcmp("hello to you", retval.GetString()) == 0);
@@ -70,8 +69,8 @@ TEST(viewquery, simple_assign) {
 
   auto& x = env.GetVar("x");
 
-  //ASSERT_TRUE(x.IsString());
-  //ASSERT_TRUE(strcmp("hello world", x.GetString()) == 0);
+  ASSERT_TRUE(x.IsString());
+  ASSERT_TRUE(strcmp("hello world", x.GetString()) == 0);
 
 }
 

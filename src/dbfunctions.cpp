@@ -11,24 +11,22 @@ using namespace rapidjson;
 
 namespace microdb {
 
-    
-    rapidjson::Value& hash(Environment* env, const std::vector< Selector* >& args) {
-        Value retval;
-        
+
+    void hash(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args) {
+
         if(args.size() >= 1) {
             StringBuffer keyBuffer;
             Writer<StringBuffer> keyWriter(keyBuffer);
-            args[0]->select(env).Accept(keyWriter);
-            
+            rapidjson::Value argValue;
+            args[0]->select(env, argValue);
+            argValue.Accept(keyWriter);
+
             std::string hashStr = sha256(keyBuffer.GetString());
-            
+
             retval.SetString(hashStr.c_str(), hashStr.size(), env->getGlobalAllocator());
         } else {
             retval.SetNull();
         }
-        
-        return retval.Move();
     }
-    
-}
 
+}
