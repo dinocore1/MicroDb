@@ -17,6 +17,7 @@
 
 #define SAVE_STRING yylval->sval = new std::string(yytext, yyleng)
 #define SAVE_INT yylval->ival = atoi(yytext)
+#define SAVE_FLOAT yylval->fval = atof(yytext);
 
 %}
 
@@ -40,6 +41,7 @@
 ">"                 { return TGT; }
 "="                 { return TASSIGN; }
 \"(\\.|[^"])*\"     { yylval->sval = new std::string(&yytext[1], yyleng-2); return TSTRLITERAL; }
+[0-9]+\.[0-9]+      { SAVE_FLOAT; return TFLOAT; }
 [0-9]+              { SAVE_INT; return TINT; }
 [a-zA-Z0-9_]+       { SAVE_STRING; return TID; }
 [ \n\t]             ;

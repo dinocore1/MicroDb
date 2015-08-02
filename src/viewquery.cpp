@@ -139,6 +139,12 @@ namespace microdb {
         return buf.str();
     }
 
+    std::string FloatLiteralSelector::toString() {
+      std::stringstream buf;
+      buf << mValue;
+      return buf.str();
+    }
+
     void find_and_replace(std::string& source, const std::string& find, const std::string& replace) {
         for(std::string::size_type i = 0; (i = source.find(find, i)) != std::string::npos;) {
             source.replace(i, find.length(), replace);

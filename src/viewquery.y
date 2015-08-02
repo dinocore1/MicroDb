@@ -16,6 +16,7 @@
 %union {
     std::string* sval;
     int ival;
+    double fval;
     microdb::Statement* stmtval;
     microdb::Selector* selval;
     microdb::stmtList* stmtlistval;
@@ -26,6 +27,7 @@
 %token TPATHSTART TCOMMA
 %token TASSIGN TEQUALS TLEQ TGEQ TGT TLT TNEQ
 %token <ival> TINT
+%token <fval> TFLOAT
 %token <sval> TID TSTRLITERAL
 
 %type <stmtlistval> stmtlist
@@ -76,11 +78,11 @@ ifstmt
 
 condition
     : expr TEQUALS expr { $$ = new Condition($1, $3, microdb::Condition::Equals); }
-    | expr TLEQ expr
-    | expr TGEQ expr
-    | expr TGT expr
-    | expr TLT expr
-    | expr TNEQ expr
+    | expr TLEQ expr { $$ = new Condition($1, $3, microdb::Condition::LessThanOrEqual); }
+    | expr TGEQ expr { $$ = new Condition($1, $3, microdb::Condition::GreaterOrEqual); }
+    | expr TGT expr { $$ = new Condition($1, $3, microdb::Condition::GreaterThan); }
+    | expr TLT expr { $$ = new Condition($1, $3, microdb::Condition::LessThan); }
+    | expr TNEQ expr { $$ = new Condition($1, $3, microdb::Condition::NotEqual); }
     ;
 
 expr
@@ -92,6 +94,7 @@ expr
 literal
     : TSTRLITERAL { $$ = new StrLiteralSelector(*$1); delete $1; }
     | TINT { $$ = new IntLiteralSelector($1); }
+    | TFLOAT { $$ = new FloatLiteralSelector($1); }
     ;
 
 funCall

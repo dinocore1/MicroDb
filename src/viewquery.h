@@ -304,8 +304,22 @@ namespace microdb {
             retval.SetInt(mValue);
         }
 
-
         std::string toString();
+    };
+
+    class FloatLiteralSelector : public Selector {
+    private:
+      const double mValue;
+
+    public:
+      FloatLiteralSelector(double value)
+      : mValue(value) { }
+
+      void select(Environment* env, rapidjson::Value& retval) {
+        retval.SetDouble(mValue);
+      }
+
+      std::string toString();
     };
 
     typedef struct ParserStruct {
