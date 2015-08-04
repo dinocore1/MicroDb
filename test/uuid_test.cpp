@@ -53,3 +53,13 @@ TEST(uuidtests, testnotequals) {
 
   ASSERT_TRUE(id1 != id2);
 }
+
+TEST(uuidtests, testgenrandom) {
+  UUID id1 = UUID::createRandom();
+  UUID id2 = UUID::createRandom();
+
+  printf("id1 : %s\n", id1.getString().c_str());
+  printf("id2 : %s\n", id2.getString().c_str());
+
+  ASSERT_TRUE(id1 != id2);
+}

@@ -11,18 +11,20 @@ bisongen = generator(
 							arguments : ['-d', '-o', '@OUTPUT0@', '@INPUT@']
 							)
 
-sources = [ 'dbfunctions.cpp', 'dbimpl.cpp', 'indexutils.cpp',
+port_src = [ 'dbfunctions.cpp', 'dbimpl.cpp', 'indexutils.cpp',
 'membuffer.cpp', 'sha256.cpp', 'uuid.cpp', 'viewquery.cpp',
 flexgen.process('viewquery.l'), flexgen.process('uuidlex.l'),
 bisongen.process('viewquery.y')
 ]
 
 if host.name() == 'darwin'
-  cpp_args = ['-DGUID_CFUUID']
-  dep = dependency('appleframeworks', modules : 'foundation')
+	dep = dependency('appleframeworks', modules : 'foundation')
+  cpp_args = []
+	sources = [port_src, 'uuid_mac.cpp']
 else
   dep = []
   cpp_args = []
+	sources = [port_src, 'uuid_generic.cpp']
 endif
 
 microdb_lib = build_target('microdb', sources,
