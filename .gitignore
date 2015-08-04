@@ -1,3 +1,7 @@
 .DS_Store
 xcuserdata
 *.pbxuser
+subprojects/packagecache
+subprojects/leveldb*
+subprojects/gtest*
+build/
