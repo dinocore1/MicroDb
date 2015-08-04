@@ -24,6 +24,7 @@
 %%
 
 "if"                { return TIF; }
+"else"              { return TELSE; }
 "("                 { return TLPAREN; }
 ")"                 { return TRPAREN; }
 "{"                 { return TLBRACE; }

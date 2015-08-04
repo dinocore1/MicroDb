@@ -183,3 +183,20 @@ TEST(viewquery, negitive_if_condition) {
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsNull());
 }
+
+TEST(viewquery, if_condition_else) {
+  ViewQuery query("test");
+  ASSERT_TRUE(query.compile("if(obj == \"hello\") { x = \"world\" } else { x = \"foo\"}"));
+
+  Environment env;
+
+  Value obj;
+  obj.SetString("goodbye");
+  env.SetVar("obj", obj);
+
+  query.execute(&env);
+
+  Value& x = env.GetVar("x");
+  ASSERT_TRUE(x.IsString());
+  ASSERT_TRUE(strcmp("foo", x.GetString()) == 0);
+}

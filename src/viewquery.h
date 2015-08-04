@@ -112,29 +112,54 @@ namespace microdb {
     class IfStatement : public Statement {
     private:
         Selector* mCondition;
-        stmtList mThenStmts;
+        Statement* mThenStmt;
+        Statement* mElseStmt;
 
     public:
 
-        IfStatement(Selector* condition, const stmtList& thenStatements)
-        : mCondition(condition), mThenStmts(thenStatements) { }
+        IfStatement(Selector* condition, Statement* thenStmt, Statement* elseStmt = nullptr)
+        : mCondition(condition), mThenStmt(thenStmt), mElseStmt(elseStmt) { }
 
         ~IfStatement() {
             delete mCondition;
-            destroyStmtList(mThenStmts);
+            delete mThenStmt;
+            if(mElseStmt != nullptr) {
+              delete mElseStmt;
+            }
         }
 
         void execute(Environment* env) {
           rapidjson::Value conditionVal;
           mCondition->select(env, conditionVal);
           if(conditionVal.IsBool() && conditionVal.IsTrue()) {
-              for(Statement* stmt : mThenStmts) {
-                  stmt->execute(env);
-            }
+            mThenStmt->execute(env);
+          } else if(mElseStmt != nullptr) {
+            mElseStmt->execute(env);
           }
         }
 
         std::string toString();
+    };
+
+    class BlockStatement : public Statement {
+    private:
+      stmtList mStatements;
+
+    public:
+      BlockStatement(const stmtList& stmts)
+      : mStatements(stmts) { }
+
+      ~BlockStatement() {
+        destroyStmtList(mStatements);
+      }
+
+      void execute(Environment* env) {
+        for(Statement* stmt : mStatements) {
+            stmt->execute(env);
+        }
+      }
+
+      std::string toString();
     };
 
     class FunctionCall : public Selector {

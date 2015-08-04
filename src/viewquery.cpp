@@ -33,12 +33,22 @@ namespace microdb {
 
     std::string IfStatement::toString() {
         std::stringstream buf;
-        buf << "if(" << mCondition->toString() << ") {" << std::endl;
-        for(Statement* stmt : mThenStmts) {
-            buf << "  " << stmt->toString() << std::endl;
+        buf << "if(" << mCondition->toString() << ")";
+        buf << "  " << mThenStmt->toString() << std::endl;
+        if(mElseStmt != nullptr) {
+          buf << "else " << mElseStmt->toString() << std::endl;
         }
-        buf << "}" << std::endl;
         return buf.str();
+    }
+
+    std::string BlockStatement::toString() {
+      std::stringstream buf;
+      buf << "{" << std::endl;
+      for(Statement* stmt : mStatements) {
+          buf << "  " << stmt->toString() << std::endl;
+      }
+      buf << "}" << std::endl;
+      return buf.str();
     }
 
     std::string FunctionCall::toString() {

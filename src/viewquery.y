@@ -24,17 +24,18 @@
 }
 
 %token TIF TLPAREN TRPAREN TLBRACE TRBRACE TLSBRACE TRSBRACE TDOT
-%token TPATHSTART TCOMMA
+%token TPATHSTART TCOMMA TELSE
 %token TASSIGN TEQUALS TLEQ TGEQ TGT TLT TNEQ
 %token <ival> TINT
 %token <fval> TFLOAT
 %token <sval> TID TSTRLITERAL
 
 %type <stmtlistval> stmtlist
-%type <stmtval> stmt ifstmt assign
+%type <stmtval> stmt ifstmt assign block
 %type <arglist> arglist
 %type <selval> path var literal expr condition funCall
 
+%right ELSE TELSE
 
 %start query
 
@@ -65,14 +66,20 @@ stmtlist
     | { $$ = new stmtList(); }
     ;
 
+block
+    : TLBRACE stmtlist TRBRACE { $$ = new BlockStatement(*$2); delete $2; }
+    ;
+
 stmt
     : ifstmt
     | funCall { $$ = $1; }
     | assign
+    | block
     ;
 
 ifstmt
-    : TIF TLPAREN condition TRPAREN TLBRACE stmtlist TRBRACE { $$ = new IfStatement($3, *$6); delete $6; }
+    : TIF TLPAREN expr TRPAREN stmt { $$ = new IfStatement($3, $5); } %prec ELSE
+    | TIF TLPAREN expr TRPAREN stmt TELSE stmt { $$ = new IfStatement($3, $5, $7); }
     ;
 
 
@@ -89,6 +96,8 @@ expr
     : path
     | literal
     | funCall
+    | condition
+    | TLPAREN expr TRPAREN { $$ = $2; }
     ;
 
 literal
