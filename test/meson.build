@@ -9,12 +9,14 @@ main_incdir = [ include_directories('../src'), incdir, gtestinc]
 
 test('uuid_test', executable('uuid_test', ['uuid_test.cpp', gtestmain],
     include_directories : main_incdir,
-    link_with : [microdb_lib, gtest_lib],
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
 
 test('viewquery_test', executable('viewquery_test', ['viewquery.cpp', gtestmain],
     include_directories : main_incdir,
-    link_with : [microdb_lib, gtest_lib],
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))

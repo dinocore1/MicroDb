@@ -29,6 +29,11 @@ endif
 
 microdb_lib = build_target('microdb', sources,
 	include_directories : incdir,
-	dependencies : leveldb_dep,
+	dependencies : [dep, leveldb_dep],
 	target_type : libtype
 	)
+
+microdb_dep = declare_dependency(
+		link_with : microdb_lib,
+	  include_directories : incdir
+		)
