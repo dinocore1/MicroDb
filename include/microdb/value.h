@@ -44,7 +44,7 @@ private:
     StringType String;
 
     ValueHolder() {};
-    ~ValueHolder() {}
+    ~ValueHolder() {};
   };
 
   ValueHolder mValue;
