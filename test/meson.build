@@ -20,3 +20,10 @@ test('viewquery_test', executable('viewquery_test', ['viewquery.cpp', gtestmain]
     link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
+
+test('value_test', executable('value_test', ['value_tests.cpp', gtestmain],
+    include_directories : main_incdir,
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
+    link_args : '-lpthread'
+    ))
