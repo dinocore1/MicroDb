@@ -40,6 +40,22 @@ namespace microdb {
     return (min <= value and value <= max);
   }
 
+  void Value::construct_fromString(std::string&& s) {
+    new( &(mValue.String)) std::string(std::move(s));
+  }
+
+  void Value::construct_fromBinary(BinaryType&& b) {
+    new( &(mValue.Data)) BinaryType(std::move(b));
+  }
+
+  void Value::construct_fromArray(ArrayType&& a) {
+    new( &(mValue.Array)) ArrayType(std::move(a));
+  }
+
+  void Value::construct_fromObject(ObjectType&& m) {
+    new( &(mValue.Object)) ObjectType(std::move(m));
+  }
+
   Value::Value(const Value& v)
   : Value() {
     Copy(v);
@@ -72,13 +88,13 @@ namespace microdb {
         construct_fromString( std::string( v.mValue.String ));
         break;
     case Type::Binary:
-        construct_fromBinary( BinaryType(  v.mValue.Data ));
+        construct_fromBinary( BinaryType( v.mValue.Data ));
         break;
     case Type::Array:
         construct_fromArray( ArrayType(unique_ptr_copy(v.mValue.Array)));
         break;
-    case Type::Map:
-        construct_fromMap( MapType(unique_ptr_copy(v.mValue.Map)));
+    case Type::Object:
+        construct_fromObject( ObjectType(unique_ptr_copy(v.mValue.Object)));
         break;
     default:
         break;
@@ -114,49 +130,52 @@ namespace microdb {
     mType = Type::Null;
   }
 
-  Value::Value() {
-    mType = Type::Null;
+  Value::Value()
+  : mType(Type::Null) {
   }
 
-  Value::Value(int value) {
-    mType = Type::SignedInt;
+  Value::Value(int value)
+  : mType(Type::SignedInt) {
     mValue.SignedInt = value;
   }
 
-  Value::Value(bool value) {
-    mType = Type::Bool;
+  Value::Value(bool value)
+  : mType(Type::Bool) {
     mValue.Bool = value;
   }
 
-  Value::Value(char value) {
-    mType = Type::Char;
+  Value::Value(char value)
+  : mType(Type::Char) {
     mValue.Char = value;
   }
 
-  Value::Value(double value) {
-    mType = Type::Float;
+  Value::Value(double value)
+  : mType(Type::Float) {
     mValue.Float = value;
   }
 
-  Value::Value(int64_t value) {
-    mType = Type::SignedInt;
+  Value::Value(int64_t value)
+  : mType(Type::SignedInt) {
     mValue.SignedInt = value;
   }
 
-  Value::Value(uint64_t value) {
-    mType = Type::UnsignedInt;
+  Value::Value(uint64_t value)
+  : mType(Type::UnsignedInt) {
     mValue.UnsignedInt = value;
   }
 
-  Value::Value(const std::string& str) {
-    mType = Type::String;
-    mValue.String = str;
+  Value::Value(const char* str)
+  : Value(std::string(str)) { }
+
+  Value::Value(std::string str)
+  : mType(Type::String) {
+    construct_fromString( std::move(str) );
   }
 
-  Value::Value(const void* ptr, size_t len) {
-    mType = Type::Binary;
+  Value::Value(const void* ptr, size_t len)
+  : mType(Type::Binary) {
     const uint8_t* begin = static_cast<const uint8_t*>(ptr);
-    mValue.Data.assign(begin, begin + len);
+    construct_fromBinary( BinaryType(begin, begin + len) );
   }
 
   bool Value::IsNull() const {
@@ -173,6 +192,10 @@ namespace microdb {
 
   bool Value::IsArray() const {
     return mType == Type::Array;
+  }
+
+  bool Value::IsBinary() const {
+    return mType == Type::Binary;
   }
 
   bool Value::IsString() const {
@@ -209,6 +232,8 @@ namespace microdb {
         return mValue.String.size();
       case Type::Object:
         return mValue.Object.size();
+      case Type::Binary:
+        return mValue.Data.size();
       default:
         return 1;
     }

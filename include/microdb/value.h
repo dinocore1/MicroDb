@@ -51,6 +51,10 @@ private:
   Type mType;
 
   void destruct();
+  void construct_fromString(std::string&& s);
+  void construct_fromBinary(BinaryType&& b);
+  void construct_fromArray(ArrayType&& a);
+  void construct_fromObject(ObjectType&& o);
 
 public:
 
@@ -69,7 +73,8 @@ public:
   Value(double);
   Value(int64_t);
   Value(uint64_t);
-  Value(const std::string&);
+  Value(const char*);
+  Value(std::string);
   Value(const void* ptr, size_t len);
 
   bool IsNull() const;
