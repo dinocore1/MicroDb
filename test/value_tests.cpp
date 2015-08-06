@@ -106,3 +106,20 @@ TEST(value, array) {
   ASSERT_TRUE(strcmp("neato", v1[1].asString().c_str()) == 0);
 
 }
+
+TEST(value, obj) {
+  Value v1;
+  v1["hello"] = "world";
+
+  ASSERT_TRUE(v1.IsObject());
+  ASSERT_TRUE(strcmp("world", v1["hello"].asString().c_str()) == 0);
+
+  v1["hello"] = 54;
+  ASSERT_EQ(54, v1["hello"].asInt());
+
+  v1.Set("cool", -30);
+  ASSERT_EQ(-30, v1["cool"].asInt());
+
+  ASSERT_EQ(54, v1.Get("hello").asInt());
+
+}

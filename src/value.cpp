@@ -234,6 +234,10 @@ namespace microdb {
     return mType == Type::Bool;
   }
 
+  bool Value::IsObject() const {
+    return mType == Type::Object;
+  }
+
   bool Value::IsArray() const {
     return mType == Type::Array;
   }
@@ -400,6 +404,7 @@ namespace microdb {
     return *this;
   }
 
+  //Array Operations
   Value& Value::operator[] (int i) {
     if(mType == Type::Array) {
         return *(mValue.Array[i]);
@@ -414,38 +419,6 @@ namespace microdb {
     } else {
       throw std::logic_error("Attempt to index 'Value'; 'Value' is not an Array!");
     }
-  }
-
-  Value& Value::operator[] (const std::string& key) {
-    if(mType == Type::Object) {
-      if(mValue.Object.find(key) == mValue.Object.end()) {
-        mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
-      }
-      return *(mValue.Object[key]);
-    } else if(mType == Type::Null){
-      construct_fromObject( ObjectType() );
-      mType = Type::Object;
-      mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
-      return *(mValue.Object[key]);
-    } else {
-      throw std::logic_error("not an object type");
-    }
-  }
-
-  Value const& Value::operator[] (const std::string& key) const {
-    if(mType == Type::Object) {
-      return *(const_cast<const ObjectType&>(mValue.Object).at(key));
-    } else {
-      throw std::logic_error("not an object type");
-    }
-  }
-
-  Value& Value::operator[] (const char* key) {
-    return operator[] (std::string(key));
-  }
-
-  Value const& Value::operator[] (const char* key) const {
-    return operator[] (std::string(key));
   }
 
   void Value::Add(const Value& v) {
@@ -474,6 +447,8 @@ namespace microdb {
     }
   }
 
+  //Object Operations
+
   bool Value::HasKey(const std::string& key) {
     switch(mType) {
       case Type::Object:
@@ -481,6 +456,72 @@ namespace microdb {
       default:
         return false;
     }
+  }
+
+  Value const& Value::Get(const std::string& key) const {
+    if(mType == Type::Object) {
+      return *(const_cast<const ObjectType&>(mValue.Object).at(key));
+    } else {
+      throw std::logic_error("not an object type");
+    }
+  }
+
+  Value const& Value::Get(const char* key) const {
+    return Get( std::string(key) );
+  }
+
+  void Value::Set(const std::string& key, const Value& value) {
+    switch(mType) {
+      case Type::Null:
+        construct_fromObject( ObjectType() );
+        mType = Type::Object;
+      case Type::Object:
+        mValue.Object[key] = make_unique<Value>(value);
+        break;
+      default:
+        throw std::logic_error("not an object type");
+    }
+  }
+
+  void Value::Set(const std::string& key, Value&& value) {
+    switch(mType) {
+      case Type::Null:
+        construct_fromObject( ObjectType() );
+        mType = Type::Object;
+      case Type::Object:
+        mValue.Object[key] = make_unique<Value>( std::move(value) );
+        break;
+      default:
+        throw std::logic_error("not an object type");
+    }
+  }
+
+  Value& Value::operator[] (const std::string& key) {
+    if(mType == Type::Object) {
+      if(mValue.Object.find(key) == mValue.Object.end()) {
+        mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
+      }
+      return *(mValue.Object[key]);
+    } else if(mType == Type::Null){
+      construct_fromObject( ObjectType() );
+      mType = Type::Object;
+      mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
+      return *(mValue.Object[key]);
+    } else {
+      throw std::logic_error("not an object type");
+    }
+  }
+
+  Value const& Value::operator[] (const std::string& key) const {
+    return Get(key);
+  }
+
+  Value& Value::operator[] (const char* key) {
+    return operator[] (std::string(key));
+  }
+
+  Value const& Value::operator[] (const char* key) const {
+    return operator[] (std::string(key));
   }
 
 }

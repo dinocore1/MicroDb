@@ -140,6 +140,10 @@ public:
 
   //Object Operations
   bool HasKey(const std::string& key);
+  Value const& Get(const std::string&) const;
+  Value const& Get(const char*) const;
+  void Set(const std::string& key, const Value& value);
+  void Set(const std::string& key, Value&& value);
   Value& operator [] (const char*);
   Value const& operator [] (const char*) const;
   Value& operator [] (const std::string&);
