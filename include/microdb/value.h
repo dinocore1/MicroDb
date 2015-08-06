@@ -59,9 +59,11 @@ private:
 public:
 
   Value(const Value&);
+  Value(Value&&);
   ~Value();
 
-  void Copy(const Value&);
+  void CopyFrom(const Value&);
+  void MoveFrom(Value&&);
 
   /**
   * create null value
@@ -122,7 +124,26 @@ public:
 
   uint64_t asUint64() const;
 
+  double asFloat() const;
+
+  std::string asString() const;
+
+  Value& operator= (const Value&);
+  Value& operator= (Value&&);
+
+  //Array Operations
+  Value& operator[] (int);
+  Value const& operator[] (int) const;
   void Add(const Value& v);
+  void Add(Value&&);
+
+
+  //Object Operations
+  bool HasKey(const std::string& key);
+  Value& operator [] (const char*);
+  Value const& operator [] (const char*) const;
+  Value& operator [] (const std::string&);
+  Value const& operator [] (const std::string&) const;
 
 
 };

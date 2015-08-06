@@ -58,14 +58,19 @@ namespace microdb {
 
   Value::Value(const Value& v)
   : Value() {
-    Copy(v);
+    CopyFrom(v);
+  }
+
+  Value::Value(Value&& v)
+  : Value() {
+    MoveFrom( std::move(v) );
   }
 
   Value::~Value() {
     destruct();
   }
 
-  void Value::Copy(const Value& v) {
+  void Value::CopyFrom(const Value& v) {
     destruct();
 
     switch (v.mType) {
@@ -100,6 +105,45 @@ namespace microdb {
         break;
     }
     mType = v.mType;
+  }
+
+  void Value::MoveFrom(Value&& v) {
+    destruct();
+
+    switch (v.mType) {
+    case Type::Char:
+        mValue.Char = v.mValue.Char;
+        break;
+    case Type::Bool:
+        mValue.Bool = v.mValue.Bool;
+        break;
+    case Type::SignedInt:
+        mValue.SignedInt = v.mValue.SignedInt;
+        break;
+    case Type::UnsignedInt:
+        mValue.UnsignedInt = v.mValue.UnsignedInt;
+        break;
+    case Type::Float:
+        mValue.Float = v.mValue.Float;
+        break;
+    case Type::String:
+        construct_fromString( std::move(v.mValue.String) );
+        break;
+    case Type::Binary:
+        construct_fromBinary( std::move(v.mValue.Data) );
+        break;
+    case Type::Array:
+        construct_fromArray( std::move(v.mValue.Array) );
+        break;
+    case Type::Object:
+        construct_fromObject( std::move(v.mValue.Object) );
+        break;
+    default:
+        break;
+    }
+
+    mType = v.mType;
+    v.destruct();
   }
 
   void Value::destruct() {
@@ -297,9 +341,145 @@ namespace microdb {
     return Size();
   }
 
+  double Value::asFloat() const {
+    if(IsFloat()) {
+      return mValue.Float;
+    } else if(IsString()){
+      try { return std::stod(mValue.String); }
+      catch (std::invalid_argument&) {}
+      catch (std::out_of_range&) {}
+      return 0;
+    } else {
+      double k1 = asUint64();
+      double k2 = asInt64();
+      return k1 > k2 ? k1 : k2;
+    }
+  }
+
+  bool Value::asBool() const {
+    if(IsBool())
+        return mValue.Bool;
+    if(IsUnsignedInteger())
+        return mValue.UnsignedInt != 0;
+    if(IsSignedInteger())
+        return mValue.SignedInt != 0;
+    if(IsFloat())
+        return mValue.Float != 0;
+    if(IsChar())
+        return mValue.Char != '\0';
+    return Size() != 0;
+  }
+
+  std::string Value::asString() const {
+    if(IsString())
+        return mValue.String;
+    if(IsBool())
+        return mValue.Bool ? "true" : "false";
+    // if(isBinary())
+        //What should we do for Binary? Base64? or what?
+    if(IsChar())
+        return {mValue.Char};
+    if(IsSignedInteger())
+        return std::to_string(mValue.SignedInt);
+    if(IsUnsignedInteger())
+        return std::to_string(mValue.UnsignedInt);
+    if(IsFloat())
+        return std::to_string(mValue.Float);
+    return "";
+  }
+
+  Value& Value::operator= (const Value& v) {
+    if(this != &v) {
+      CopyFrom(v);
+    }
+    return *this;
+  }
+
+  Value& Value::operator= (Value&& v) {
+    MoveFrom( std::move(v) );
+    return *this;
+  }
+
+  Value& Value::operator[] (int i) {
+    if(mType == Type::Array) {
+        return *(mValue.Array[i]);
+    } else {
+      throw std::logic_error("Attempt to index 'Value'; 'Value' is not an Array!");
+    }
+  }
+
+  Value const& Value::operator[] (int i) const {
+    if(mType == Type::Array) {
+        return *(mValue.Array[i]);
+    } else {
+      throw std::logic_error("Attempt to index 'Value'; 'Value' is not an Array!");
+    }
+  }
+
+  Value& Value::operator[] (const std::string& key) {
+    if(mType == Type::Object) {
+      if(mValue.Object.find(key) == mValue.Object.end()) {
+        mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
+      }
+      return *(mValue.Object[key]);
+    } else if(mType == Type::Null){
+      construct_fromObject( ObjectType() );
+      mType = Type::Object;
+      mValue.Object.emplace( std::make_pair(key, make_unique<Value>(Value())));
+      return *(mValue.Object[key]);
+    } else {
+      throw std::logic_error("not an object type");
+    }
+  }
+
+  Value const& Value::operator[] (const std::string& key) const {
+    if(mType == Type::Object) {
+      return *(const_cast<const ObjectType&>(mValue.Object).at(key));
+    } else {
+      throw std::logic_error("not an object type");
+    }
+  }
+
+  Value& Value::operator[] (const char* key) {
+    return operator[] (std::string(key));
+  }
+
+  Value const& Value::operator[] (const char* key) const {
+    return operator[] (std::string(key));
+  }
+
   void Value::Add(const Value& v) {
-    if(IsArray()) {
-      mValue.Array.push_back( make_unique<Value>(v) );
+    switch(mType) {
+      case Type::Null:
+        construct_fromArray( ArrayType() );
+        mType = Type::Array;
+      case Type::Array:
+        mValue.Array.emplace_back( make_unique<Value>(v) );
+        break;
+      default:
+        throw std::logic_error("not an array type");
+    }
+  }
+
+  void Value::Add(Value&& v) {
+    switch(mType) {
+      case Type::Null:
+        construct_fromArray( ArrayType() );
+        mType = Type::Array;
+      case Type::Array:
+        mValue.Array.emplace_back( make_unique<Value>( std::move(v) ));
+        break;
+      default:
+        throw std::logic_error("not an array type");
+    }
+  }
+
+  bool Value::HasKey(const std::string& key) {
+    switch(mType) {
+      case Type::Object:
+        return mValue.Object.find(key) != mValue.Object.end();
+      default:
+        return false;
     }
   }
 
