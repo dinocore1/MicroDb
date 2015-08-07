@@ -2,6 +2,7 @@
 #define SERIALIZERHELPER_H_
 
 #include <cstdint>
+#include <cstring>
 #include "portable_endian.h"
 
 namespace microdb {

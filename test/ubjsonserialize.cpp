@@ -19,9 +19,7 @@ public:
 
 TEST(ubjsonserialize, write_simple) {
   SSOutputStream out;
-
   UBJSONWriter writer(out);
-
 
   writer.write(Value());
   writer.write(Value(true));
@@ -30,4 +28,19 @@ TEST(ubjsonserialize, write_simple) {
 
   std::string output = out.mStream.str();
   ASSERT_TRUE(strcmp("ZTFCT", output.c_str()) == 0);
+}
+
+TEST(ubjsonserialize, write_int) {
+  SSOutputStream out;
+  UBJSONWriter writer(out);
+
+  writer.write(Value(15));
+  writer.write(Value(255));
+
+  std::string output = out.mStream.str();
+  const char* buf = output.data();
+  ASSERT_EQ('i', buf[0]);
+  ASSERT_EQ(15, buf[1]);
+  ASSERT_EQ('U', buf[2]);
+  ASSERT_EQ('\xFF', buf[3]);
 }

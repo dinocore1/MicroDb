@@ -4,9 +4,30 @@
 #include "serializerhelper.h"
 #include "ubjsonhelper.h"
 
-
+#include <limits>
 
 namespace microdb {
+
+  template<typename V, typename T>
+  bool in_range(V value);
+
+  template<typename T>
+  bool in_range(uint64_t value) {
+    bool retval = value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max();
+    return retval;
+  }
+
+  template<typename T>
+  bool in_range(int64_t value) {
+    bool retval = value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max();
+    return retval;
+  }
+
+  template<typename T>
+  bool in_range(double value) {
+    bool retval = value >= std::numeric_limits<T>::min() && value <= std::numeric_limits<T>::max();
+    return retval;
+  }
 
 UBJSONWriter::UBJSONWriter(OutputStream& out)
 : mOutput(out) { }
@@ -31,10 +52,37 @@ void writeChar(OutputStream& out, const char v) {
 }
 
 void writeSignedInt(OutputStream& out, const int64_t v) {
-
+  if(in_range<int8_t>(v)) {
+    out.Write(&ubjson::Int8, 1);
+    int8_t buf = static_cast<int8_t>(v);
+    out.Write(&buf, 1);
+  } else if(in_range<uint8_t>(v)) {
+    out.Write(&ubjson::Uint8, 1);
+    uint8_t buf = static_cast<uint8_t>(v);
+    out.Write(&buf, 1);
+  } else if(in_range<int16_t>(v)) {
+    out.Write(&ubjson::Int16, 1);
+    int16_t buf = htobe16(static_cast<int16_t>(v));
+    out.Write(&buf, 2);
+  }
 }
 
 void writeUnsignedInt(OutputStream& out, const uint64_t v) {
+
+  if(in_range<int8_t>(v)) {
+    out.Write(&ubjson::Int8, 1);
+    int8_t buf = static_cast<int8_t>(v);
+    out.Write(&buf, 1);
+  } else if(in_range<uint8_t>(v)) {
+    out.Write(&ubjson::Uint8, 1);
+    uint8_t buf = static_cast<uint8_t>(v);
+    out.Write(&buf, 1);
+  } else if(in_range<int16_t>(v)) {
+    out.Write(&ubjson::Int16, 1);
+    int16_t buf = htobe16(static_cast<int16_t>(v));
+    out.Write(&buf, 2);
+  }
+
 
 }
 

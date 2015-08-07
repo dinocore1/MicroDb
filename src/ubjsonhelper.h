@@ -9,6 +9,9 @@ const byte Null = 'Z';
 const byte True = 'T';
 const byte False = 'F';
 const byte Char = 'C';
+const byte Int8 = 'i';
+const byte Uint8 = 'U';
+const byte Int16 = 'I';
 
 enum class Marker : byte {
     Invalid = '\0',
