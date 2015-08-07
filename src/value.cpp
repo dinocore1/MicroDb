@@ -222,6 +222,10 @@ namespace microdb {
     construct_fromBinary( BinaryType(begin, begin + len) );
   }
 
+  Value::Type Value::GetType() const {
+    return mType;
+  }
+
   bool Value::IsNull() const {
     return mType == Type::Null;
   }
@@ -372,6 +376,13 @@ namespace microdb {
     if(IsChar())
         return mValue.Char != '\0';
     return Size() != 0;
+  }
+
+  char Value::asChar() const {
+    if(IsChar()) {
+      return mValue.Char;
+    
+    }
   }
 
   std::string Value::asString() const {

@@ -9,32 +9,6 @@ namespace microdb {
     static const int kMajorVersion = 1;
     static const int kMinorVersion = 0;
 
-    typedef uint8_t byte;
-
-    class InputStream {
-    public:
-      virtual ~InputStream() = 0;
-
-      /**
-      * Reads up to max bytes of data from the stream
-      * into the buf.
-      *
-      * returns the total number of bytes read into the buffer
-      */
-      virtual int Read(byte* buf, const size_t max) = 0;
-    };
-
-    class OutputStream {
-    public:
-      virtual ~OutputStream() = 0;
-
-      /**
-      * Writes {@code len} bytes from the buf into the stream
-      */
-      virtual void Write(byte* buf, const size_t len) = 0;
-    };
-
-
 
     class Iterator {
     public:

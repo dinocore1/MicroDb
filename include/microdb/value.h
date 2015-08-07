@@ -16,8 +16,6 @@ public:
   typedef std::vector<uint8_t> BinaryType;
   typedef std::string StringType;
 
-private:
-
   enum class Type {
         Null,
         Char,
@@ -31,6 +29,7 @@ private:
         String
   };
 
+private:
 
   union ValueHolder {
     char Char;
@@ -79,6 +78,7 @@ public:
   Value(std::string);
   Value(const void* ptr, size_t len);
 
+  Value::Type GetType() const;
   bool IsNull() const;
   bool IsChar() const;
   bool IsBool() const;
@@ -105,6 +105,8 @@ public:
   * - if string, object, array, or binary, return true if size() > 0
   */
   bool asBool() const;
+
+  char asChar() const;
 
   /**
   * convert to int

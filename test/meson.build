@@ -27,3 +27,10 @@ test('value_test', executable('value_test', ['value_tests.cpp', gtestmain],
     link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
+
+test('ubjsonserialize', executable('ubjsonserialize', ['ubjsonserialize.cpp', gtestmain],
+    include_directories : main_incdir,
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
+    link_args : '-lpthread'
+    ))

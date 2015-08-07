@@ -13,6 +13,7 @@ bisongen = generator(
 
 port_src = [ 'dbfunctions.cpp', 'dbimpl.cpp', 'indexutils.cpp',
 'membuffer.cpp', 'sha256.cpp', 'uuid.cpp', 'value.cpp', 'viewquery.cpp',
+'ubjsonwriter.cpp',
 flexgen.process('viewquery.l'), flexgen.process('uuidlex.l'),
 bisongen.process('viewquery.y')
 ]
