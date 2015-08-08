@@ -34,3 +34,10 @@ test('ubjsonserialize', executable('ubjsonserialize', ['ubjsonserialize.cpp', gt
     link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
+
+test('vectorclock', executable('vectorclock', ['vectorclock_test.cpp', gtestmain],
+    include_directories : main_incdir,
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
+    link_args : '-lpthread'
+    ))
