@@ -12,6 +12,11 @@ const byte Char = 'C';
 const byte Int8 = 'i';
 const byte Uint8 = 'U';
 const byte Int16 = 'I';
+const byte Int32 = 'l';
+const byte Int64 = 'L';
+const byte Float32 = 'd';
+const byte Float64 = 'D';
+const byte String = 'S';
 
 enum class Marker : byte {
     Invalid = '\0',
