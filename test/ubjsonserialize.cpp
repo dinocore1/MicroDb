@@ -117,3 +117,19 @@ TEST(ubjsonserialize, write_array) {
 
   ASSERT_EQ(']', buf[++i]);
 }
+
+TEST(ubjsonserialize, write_object) {
+  SSOutputStream out;
+  UBJSONWriter writer(out);
+
+  Value v;
+  v["hello"] = "world";
+
+  writer.write(v);
+
+  std::string output = out.mStream.str();
+  const char* buf = output.data();
+  ASSERT_EQ('{', buf[0]);
+  ASSERT_EQ('i', buf[1]);
+  ASSERT_EQ(5, buf[2]);
+}

@@ -381,7 +381,8 @@ namespace microdb {
   char Value::asChar() const {
     if(IsChar()) {
       return mValue.Char;
-    
+    } else {
+      return 0;
     }
   }
 
@@ -467,6 +468,18 @@ namespace microdb {
       default:
         return false;
     }
+  }
+
+  Value::KeysType Value::GetKeys() const {
+    Value::KeysType retval;
+    if(mType == Type::Object) {
+      retval.reserve(mValue.Object.size());
+      for(const auto& entry : mValue.Object) {
+        retval.push_back(entry.first);
+      }
+    }
+
+    return retval;
   }
 
   Value const& Value::Get(const std::string& key) const {

@@ -15,6 +15,7 @@ public:
   typedef std::vector<UqPtr> ArrayType;
   typedef std::vector<uint8_t> BinaryType;
   typedef std::string StringType;
+  typedef std::vector<std::string> KeysType;
 
   enum class Type {
         Null,
@@ -141,6 +142,7 @@ public:
 
 
   //Object Operations
+  KeysType GetKeys() const;
   bool HasKey(const std::string& key);
   Value const& Get(const std::string&) const;
   Value const& Get(const char*) const;

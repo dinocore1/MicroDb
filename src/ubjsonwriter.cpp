@@ -131,6 +131,21 @@ void writeArray(OutputStream& out, const Value& v) {
   out.Write(&ubjson::Array_End, 1);
 }
 
+void writeObject(OutputStream& out, const Value& v) {
+  out.Write(&ubjson::Object_Start, 1);
+  for(const auto& key : v.GetKeys()) {
+
+    //write string key (no 'S' because it is redundant)
+    const size_t strLen = key.size();
+    writeUnsignedInt(out, strLen);
+    const char* rawStr = key.data();
+    out.Write(rawStr, strLen);
+
+    writeValue(out, v.Get(key));
+  }
+  out.Write(&ubjson::Object_End, 1);
+}
+
 void writeValue(OutputStream& out, const Value& value) {
   switch(value.GetType()) {
     case Value::Type::Null:
@@ -156,6 +171,9 @@ void writeValue(OutputStream& out, const Value& value) {
       break;
     case Value::Type::Array:
       writeArray(out, value);
+      break;
+    case Value::Type::Object:
+      writeObject(out, value);
       break;
 
     break;
