@@ -17,6 +17,8 @@ const byte Int64 = 'L';
 const byte Float32 = 'd';
 const byte Float64 = 'D';
 const byte String = 'S';
+const byte Array_Start = '[';
+const byte Array_End = ']';
 
 enum class Marker : byte {
     Invalid = '\0',

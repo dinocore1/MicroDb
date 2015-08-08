@@ -36,6 +36,8 @@ UBJSONWriter::UBJSONWriter(OutputStream& out)
 
 UBJSONWriter::~UBJSONWriter() {}
 
+void writeValue(OutputStream& out, const Value& value);
+
 void writeNull(OutputStream& out) {
   out.Write(&ubjson::Null, 1);
 }
@@ -120,6 +122,15 @@ void writeString(OutputStream& out, const std::string& v) {
 
 }
 
+void writeArray(OutputStream& out, const Value& v) {
+  out.Write(&ubjson::Array_Start, 1);
+  const uint64_t size = v.Size();
+  for(uint64_t i=0;i<size;i++) {
+    writeValue(out, v[i]);
+  }
+  out.Write(&ubjson::Array_End, 1);
+}
+
 void writeValue(OutputStream& out, const Value& value) {
   switch(value.GetType()) {
     case Value::Type::Null:
@@ -142,6 +153,9 @@ void writeValue(OutputStream& out, const Value& value) {
       break;
     case Value::Type::String:
       writeString(out, value.asString());
+      break;
+    case Value::Type::Array:
+      writeArray(out, value);
       break;
 
     break;

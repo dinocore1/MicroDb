@@ -78,3 +78,42 @@ TEST(ubjsonserialize, write_string) {
   ASSERT_EQ('l', buf[5]);
   ASSERT_EQ('l', buf[6]);
 }
+
+TEST(ubjsonserialize, write_array) {
+  SSOutputStream out;
+  UBJSONWriter writer(out);
+
+  Value array;
+  array.Add("1");
+  array.Add("2");
+  array.Add("3");
+
+  writer.write(array);
+
+  std::string output = out.mStream.str();
+  const char* buf = output.data();
+
+  int i = 1;
+  ASSERT_EQ('[', buf[0]);
+  if(buf[1] == '#') {
+    ASSERT_EQ('i', buf[2]);
+    ASSERT_EQ(3, buf[3]);
+    i += 3;
+  }
+  ASSERT_EQ('S', buf[i]);
+  ASSERT_EQ('i', buf[++i]);
+  ASSERT_EQ(1, buf[++i]);
+  ASSERT_EQ('1', buf[++i]);
+
+  ASSERT_EQ('S', buf[++i]);
+  ASSERT_EQ('i', buf[++i]);
+  ASSERT_EQ(1, buf[++i]);
+  ASSERT_EQ('2', buf[++i]);
+
+  ASSERT_EQ('S', buf[++i]);
+  ASSERT_EQ('i', buf[++i]);
+  ASSERT_EQ(1, buf[++i]);
+  ASSERT_EQ('3', buf[++i]);
+
+  ASSERT_EQ(']', buf[++i]);
+}
