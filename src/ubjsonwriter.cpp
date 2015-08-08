@@ -103,11 +103,12 @@ void writeUnsignedInt(OutputStream& out, const uint64_t v) {
 
 }
 
+#define DOUBLE_CONV(x) *reinterpret_cast<const uint64_t*>(&x)
+
 void writeFloat(OutputStream& out, const double v) {
   out.Write(&ubjson::Float64, 1);
-  uint64_t buf = htobe64(v);
+  uint64_t buf = htobe64(DOUBLE_CONV(v));
   out.Write(&buf, 8);
-
 }
 
 void writeString(OutputStream& out, const std::string& v) {

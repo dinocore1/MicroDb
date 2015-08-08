@@ -55,7 +55,9 @@ TEST(ubjsonserialize, write_float) {
   const char* buf = output.data();
   ASSERT_EQ('D', buf[0]);
 
-  double v = be64toh((static_cast<uint64_t>(buf[1])));
+  uint64_t* vb = (uint64_t*)&buf[1];
+  uint64_t b2 = be64toh(*vb);
+  double v = *reinterpret_cast<double*>(&b2);
   ASSERT_EQ(3.14, v);
 }
 
