@@ -98,6 +98,8 @@ public:
   */
   size_t Size() const;
 
+  void SetNull();
+
   /**
   * convert to a bool.
   * correct value guarenteed if IsBool == true

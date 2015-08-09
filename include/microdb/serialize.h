@@ -27,7 +27,7 @@ namespace microdb {
     *
     * returns the total number of bytes read into the buffer
     */
-    virtual int Read(const void* buf, const size_t max) = 0;
+    virtual int Read(const byte* buf, const size_t max) = 0;
   };
 
   class OutputStream {
@@ -48,6 +48,17 @@ namespace microdb {
     ~UBJSONWriter();
 
     void write(const Value&);
+  };
+
+  class UBJSONReader : public ValueReader {
+  private:
+    InputStream& mInput;
+
+  public:
+    UBJSONReader(InputStream&);
+    ~UBJSONReader();
+
+    bool read(Value&);
   };
 
 

@@ -291,6 +291,10 @@ namespace microdb {
     }
   }
 
+  void Value::SetNull() {
+    destruct();
+  }
+
   int Value::asInt() const {
     using limit = std::numeric_limits<int>;
     const int retval = asInt64();

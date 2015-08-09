@@ -18,6 +18,51 @@ public:
   }
 };
 
+class SSInputStream : public InputStream {
+public:
+  stringstream mStream;
+
+  int Read(const byte* buf, const size_t max) {
+    int retval = mStream.readsome((char*)buf, max);
+    if(retval == 0 && mStream.eof()) {
+      retval = -1;
+    }
+    return retval;
+  }
+};
+
+TEST(ubjsonserialize, read_simple) {
+  SSInputStream in;
+  in.mStream << "ZTFCxi\xbU\xFF" ;
+  in.mStream.seekg(0);
+
+  UBJSONReader reader(in);
+
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsNull());
+
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsBool());
+  ASSERT_EQ(true, v1.asBool());
+
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsBool());
+  ASSERT_EQ(false, v1.asBool());
+
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsChar());
+  ASSERT_EQ('x', v1.asChar());
+
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsInteger());
+  ASSERT_EQ(11, v1.asInt());
+
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsInteger());
+  ASSERT_EQ(255, v1.asInt());
+}
+
 TEST(ubjsonserialize, write_simple) {
   SSOutputStream out;
   UBJSONWriter writer(out);
