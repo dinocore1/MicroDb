@@ -16,7 +16,7 @@ namespace microdb {
   UBJSONReader::~UBJSONReader() { }
 
   #define READ_FAIL(in, buf, size) \
-  if(in.Read(buf, size) != size) { return false; }
+  if(!in.ReadFully(buf, size)) { return false; }
 
   bool readChar(InputStream& in, Value& retval) {
     char val;
@@ -36,7 +36,7 @@ namespace microdb {
     retval = val;
   }
 
-  bool readIn16(InputStream& in, Value& retval) {
+  bool readInt16(InputStream& in, Value& retval) {
     int16_t val;
     READ_FAIL(in, (byte*)&val, 2)
   }

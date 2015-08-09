@@ -24,10 +24,34 @@ namespace microdb {
     /**
     * Reads up to max bytes of data from the stream
     * into the buf.
+    * If max is 0, then no bytes are read and 0 is returned,
+    * otherwise this method will block until at least one byte is
+    * read and stored into buf or.
     *
-    * returns the total number of bytes read into the buffer
+    * returns the total number of bytes read into the buffer or -1
+    * if EOF is detected.
     */
     virtual int Read(const byte* buf, const size_t max) = 0;
+
+    /**
+    * Reads max bytes of data from the stream and stores into
+    * buf. This method block until exactly max bytes are read or
+    * EOF is detected.
+    *
+    * return true if max bytes were read and stored into buf, false
+    * otherwise.
+    */
+    bool ReadFully(const byte* buf, const size_t max) {
+      size_t i = 0;
+      while(i != max) {
+        int bytesRead = Read(&buf[i], max - i);
+        if(bytesRead < 0) {
+          return false;
+        }
+        i += bytesRead;
+      }
+      return true;
+    }
   };
 
   class OutputStream {
