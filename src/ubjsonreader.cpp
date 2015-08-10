@@ -155,6 +155,8 @@ namespace microdb {
       }
     }
     
+    return true;
+    
   }
   
   bool readObject(InputStream& in, Value& retval) {
@@ -177,7 +179,7 @@ namespace microdb {
       for(int64_t i=0;i<size;i++) {
         CHECK_FAIL(readString(in, key));
         CHECK_FAIL(readValue(in, type, value));
-        retval[key.asString()] = std::move(value);
+        retval.Set(key.asString(), std::move(value));
       }
     } else if(control == ubjson::Optimized_Size) {
 
@@ -210,6 +212,8 @@ namespace microdb {
         READ_FAIL(in, &control, 1)
       }
     }
+    
+    return true;
   }
   
   bool readInt(InputStream& in, const byte type, int64_t& retval) {
