@@ -1,4 +1,12 @@
 
+# MicroDB #
+
+MicroDB is an embedded NoSQL Database. MicroDB emphasizes speed, low complexity,
+and synchronization. Data is stored as [UBJSON](http://ubjson.org/) objects and
+indices are created using a simple map-reduce framework. MicroDB is built on top of 
+[LevelDB](http://leveldb.org/) - a fast database engine built by some guys at 
+google. 
+
 ViewQuery has internal atomic counter that can be read/incremented by external
 api. This allows code using microdb to increment the counter and then embedded
 the result in a document that it is about to be inserted. This mechinism
