@@ -120,6 +120,11 @@ namespace microdb {
     retval = std::string( buf.get(), (size_t)size );
     return true;
   }
+  
+  bool readArray(InputStream& in, Value& retval) {
+    
+    
+  }
 
   bool readValue(InputStream& in, Value& retval) {
     byte control;
@@ -158,6 +163,9 @@ namespace microdb {
 
       case ubjson::String:
         return readString(in, retval);
+        
+      case ubjson::Array_Start:
+        return readArray(in, retval);
 
     }
     return false;
