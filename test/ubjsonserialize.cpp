@@ -93,6 +93,100 @@ TEST(ubjsonserialize, read_string) {
   ASSERT_TRUE(strcmp("hello", v1.asString().c_str()) == 0);
 }
 
+TEST(ubjsonserialize, read_array) {
+  SSInputStream in;
+  in.mStream << "[i\x1i\x2i\x3]";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsArray());
+  ASSERT_EQ(3, v1.Size());
+  ASSERT_TRUE(v1[0].IsInteger());
+  ASSERT_EQ(1, v1[0].asInt());
+}
+
+TEST(ubjsonserialize, read_array_optimize) {
+  SSInputStream in;
+  in.mStream << "[#i\x3i\x1i\x2i\x3";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsArray());
+  ASSERT_EQ(3, v1.Size());
+  ASSERT_TRUE(v1[0].IsInteger());
+  ASSERT_EQ(1, v1[0].asInt());
+}
+
+TEST(ubjsonserialize, read_array_optimize2) {
+  SSInputStream in;
+  in.mStream << "[$i#i\x3\x1\x2\x3";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsArray());
+  ASSERT_EQ(3, v1.Size());
+  ASSERT_TRUE(v1[0].IsInteger());
+  ASSERT_EQ(1, v1[0].asInt());
+}
+
+TEST(ubjsonserialize, read_object) {
+  SSInputStream in;
+  in.mStream << "{i\x3lati\x1i\x3lngi\x2}";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsObject());
+  ASSERT_TRUE(v1["lat"].IsInteger());
+  ASSERT_EQ(1, v1["lat"].asInt());
+  ASSERT_TRUE(v1["lng"].IsInteger());
+  ASSERT_EQ(2, v1["lng"].asInt());
+  
+}
+
+TEST(ubjsonserialize, read_object_optimize) {
+  SSInputStream in;
+  in.mStream << "{#i\x2i\x3lati\x1i\x3lngi\x2";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsObject());
+  ASSERT_TRUE(v1["lat"].IsInteger());
+  ASSERT_EQ(1, v1["lat"].asInt());
+  ASSERT_TRUE(v1["lng"].IsInteger());
+  ASSERT_EQ(2, v1["lng"].asInt());
+}
+
+TEST(ubjsonserialize, read_object_optimize2) {
+  SSInputStream in;
+  in.mStream << "{$i#U\x2i\x3lat\x1i\x3lng\x2";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsObject());
+  ASSERT_TRUE(v1["lat"].IsInteger());
+  ASSERT_EQ(1, v1["lat"].asInt());
+  ASSERT_TRUE(v1["lng"].IsInteger());
+  ASSERT_EQ(2, v1["lng"].asInt());
+}
+
 TEST(ubjsonserialize, write_simple) {
   SSOutputStream out;
   UBJSONWriter writer(out);
