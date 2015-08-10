@@ -39,6 +39,44 @@ namespace microdb {
   bool readInt16(InputStream& in, Value& retval) {
     int16_t val;
     READ_FAIL(in, (byte*)&val, 2)
+    val = be16toh(val);
+    retval = val;
+  }
+  
+  bool readInt32(InputStream& in, Value& retval) {
+    int32_t val;
+    READ_FAIL(in, (byte*)&val, 4);
+    val = be32toh(val);
+    retval = val;
+  }
+  
+  bool readInt64(InputStream& in, Value& retval) {
+    int64_t val;
+    READ_FAIL(in, (byte*)&val, 8);
+    val = be64toh(val);
+    retval = val;
+  }
+  
+  #define FLOAT_CONV(x) *reinterpret_cast<float*>(&x);
+  
+  bool readFloat32(InputStream& in, Value& retval) {
+    int32_t val;
+    READ_FAIL(in, (byte*)&val, 4);
+    val = be32toh(val);
+    retval = FLOAT_CONV(val);
+  }
+  
+  #define DOUBLE_CONV(x) *reinterpret_cast<double*>(&x)
+  
+  bool readFloat64(InputStream& in, Value& retval) {
+    int64_t val;
+    READ_FAIL(in, (byte*)&val, 8);
+    val = be64toh(val);
+    retval = DOUBLE_CONV(val);
+  }
+  
+  bool readString(InputStream& in, Value& retval) {
+    
   }
 
   bool readValue(InputStream& in, Value& retval) {
@@ -47,31 +85,42 @@ namespace microdb {
     switch(control) {
       case ubjson::Null:
         retval.SetNull();
-        break;
+        return true;
+        
       case ubjson::True:
         retval = true;
-        break;
+        return true;
+        
       case ubjson::False:
         retval = false;
-        break;
+        return true;
+        
       case ubjson::Char:
-        readChar(in, retval);
-        break;
-      case ubjson::Int8:
-        readInt8(in, retval);
-        break;
-      case ubjson::Uint8:
-        readUint8(in, retval);
-        break;
-      case ubjson::Int16:
-        readInt16(in, retval);
-        break;
+        return readChar(in, retval);
 
-      default:
-        return false;
+      case ubjson::Int8:
+        return readInt8(in, retval);
+
+      case ubjson::Uint8:
+        return readUint8(in, retval);
+
+      case ubjson::Int16:
+        return readInt16(in, retval);
+
+      case ubjson::Int32:
+        return readInt32(in, retval);
+
+      case ubjson::Float32:
+        return readFloat32(in, retval);
+
+      case ubjson::Float64:
+        return readFloat64(in, retval);
+
+      case ubjson::String:
+        return readString(in, retval);
 
     }
-    return true;
+    return false;
   }
 
   bool UBJSONReader::read(Value& retval) {
