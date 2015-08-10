@@ -48,7 +48,7 @@ TEST(ubjsonserialize, read_simple) {
 
   ASSERT_TRUE(reader.read(v1));
   ASSERT_TRUE(v1.IsBool());
-  ASSERT_EQ(false, v1.asBool());
+  ASSERT_TRUE(!v1.asBool());
 
   ASSERT_TRUE(reader.read(v1));
   ASSERT_TRUE(v1.IsChar());
@@ -67,7 +67,7 @@ TEST(ubjsonserialize, read_simple) {
   ASSERT_EQ(259, v1.asInt());
 }
 
-TEST(ubjsonserialize, read_double) {
+TEST(ubjsonserialize, read_float) {
   SSInputStream in;
   in.mStream << "d\x40\x48\xf5\xc3";
   in.mStream.seekg(0);
@@ -78,6 +78,19 @@ TEST(ubjsonserialize, read_double) {
   ASSERT_TRUE(reader.read(v1));
   ASSERT_TRUE(v1.IsFloat());
   ASSERT_EQ(3.14f, v1.asFloat());
+}
+
+TEST(ubjsonserialize, read_string) {
+  SSInputStream in;
+  in.mStream << "SU\5hello";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsString());
+  ASSERT_TRUE(strcmp("hello", v1.asString().c_str()) == 0);
 }
 
 TEST(ubjsonserialize, write_simple) {
