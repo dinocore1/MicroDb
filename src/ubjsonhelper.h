@@ -21,6 +21,8 @@ const byte Array_Start = '[';
 const byte Array_End = ']';
 const byte Object_Start = '{';
 const byte Object_End = '}';
+const byte Optimized_Size = '#';
+const byte Optimized_Type = '$';
 
 } //namespace ubjson
 } //namespace microdb

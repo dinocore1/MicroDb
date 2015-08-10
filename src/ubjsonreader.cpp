@@ -10,18 +10,21 @@
 #include "ubjsonhelper.h"
 
 namespace microdb {
-
+  
   UBJSONReader::UBJSONReader(InputStream& in)
   : mInput(in) { }
 
   UBJSONReader::~UBJSONReader() { }
-
+  
   #define READ_FAIL(in, buf, size) \
   if(!in.ReadFully(buf, size)) { return false; }
   
   #define CHECK_FAIL(x) \
   if(!(x)) { return false; }
-
+  
+  bool readValue(InputStream& in, const byte control, Value& retval);
+  bool readInt(InputStream& in, const byte type, int64_t& retval);
+  
   bool readChar(InputStream& in, Value& retval) {
     char val;
     READ_FAIL(in, (byte*)&val, 1)
@@ -67,6 +70,86 @@ namespace microdb {
     return true;
   }
   
+  bool readFloat32(InputStream& in, Value& retval) {
+
+    #define FLOAT_CONV(x) *reinterpret_cast<float*>(&x);
+
+    int32_t val;
+    READ_FAIL(in, (byte*)&val, 4);
+    val = be32toh(val);
+    retval = FLOAT_CONV(val);
+    return true;
+  }
+
+  bool readFloat64(InputStream& in, Value& retval) {
+    
+    #define DOUBLE_CONV(x) *reinterpret_cast<double*>(&x)
+    
+    int64_t val;
+    READ_FAIL(in, (byte*)&val, 8);
+    val = be64toh(val);
+    retval = DOUBLE_CONV(val);
+    return true;
+  }
+  
+  bool readString(InputStream& in, Value& retval) {
+    byte control;
+    READ_FAIL(in, &control, 1)
+    int64_t size;
+    CHECK_FAIL(readInt(in, control, size))
+    
+    std::unique_ptr<char> buf(new char[size]);
+    CHECK_FAIL(in.ReadFully( (byte*)buf.get(), size) != size)
+    retval = std::string( buf.get(), (size_t)size );
+    return true;
+  }
+  
+  bool readArray(InputStream& in, Value& retval) {
+    
+    Value v;
+    byte control, type;
+    READ_FAIL(in, &control, 1)
+    if(control == ubjson::Optimized_Type) {
+      READ_FAIL(in, &type, 1)
+      
+      //if optimized type appears, optimized size must come right after
+      READ_FAIL(in, &control, 1)
+      CHECK_FAIL(control == ubjson::Optimized_Size)
+      
+      //int type
+      READ_FAIL(in, &control, 1)
+      int64_t size;
+      CHECK_FAIL(readInt(in, control, size))
+      
+      for(int64_t i=0;i<size;i++) {
+        readValue(in, type, v);
+        retval.Add( std::move(v) );
+      }
+    } else if(control == ubjson::Optimized_Size) {
+      //int type
+      READ_FAIL(in, &control, 1)
+      int64_t size;
+      CHECK_FAIL(readInt(in, control, size))
+      
+      
+      for(int64_t i=0;i<size;i++) {
+        READ_FAIL(in, &type, 1)
+        readValue(in, type, v);
+        retval.Add( std::move(v) );
+      }
+    } else {
+      
+      while(control != ubjson::Array_End) {
+        
+        CHECK_FAIL(readValue(in, control, v));
+        retval.Add( std::move(v) );
+        
+        READ_FAIL(in, &control, 1)
+      }
+    }
+    
+  }
+  
   bool readInt(InputStream& in, const byte type, int64_t& retval) {
     switch(type) {
       case ubjson::Int8:
@@ -89,46 +172,7 @@ namespace microdb {
     }
   }
   
-  #define FLOAT_CONV(x) *reinterpret_cast<float*>(&x);
-  
-  bool readFloat32(InputStream& in, Value& retval) {
-    int32_t val;
-    READ_FAIL(in, (byte*)&val, 4);
-    val = be32toh(val);
-    retval = FLOAT_CONV(val);
-    return true;
-  }
-  
-  #define DOUBLE_CONV(x) *reinterpret_cast<double*>(&x)
-  
-  bool readFloat64(InputStream& in, Value& retval) {
-    int64_t val;
-    READ_FAIL(in, (byte*)&val, 8);
-    val = be64toh(val);
-    retval = DOUBLE_CONV(val);
-    return true;
-  }
-  
-  bool readString(InputStream& in, Value& retval) {
-    byte control;
-    READ_FAIL(in, &control, 1)
-    int64_t size;
-    CHECK_FAIL(readInt(in, control, size))
-    
-    std::unique_ptr<char> buf(new char[size]);
-    CHECK_FAIL(in.ReadFully( (byte*)buf.get(), size) != size)
-    retval = std::string( buf.get(), (size_t)size );
-    return true;
-  }
-  
-  bool readArray(InputStream& in, Value& retval) {
-    
-    
-  }
-
-  bool readValue(InputStream& in, Value& retval) {
-    byte control;
-    READ_FAIL(in, &control, 1)
+  bool readValue(InputStream& in, const byte control, Value& retval) {
     switch(control) {
       case ubjson::Null:
         retval.SetNull();
@@ -172,7 +216,9 @@ namespace microdb {
   }
 
   bool UBJSONReader::read(Value& retval) {
-    return readValue(mInput, retval);
+    byte type;
+    READ_FAIL(mInput, &type, 1)
+    return readValue(mInput, type, retval);
 
   }
 
