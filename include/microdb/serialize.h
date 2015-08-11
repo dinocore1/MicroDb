@@ -1,6 +1,8 @@
 #ifndef SERIALIZE_H_
 #define SERIALIZE_H_
 
+#include <memory>
+
 namespace microdb {
 
   typedef uint8_t byte;
@@ -62,6 +64,21 @@ namespace microdb {
     * Writes {@code len} bytes from the buf into the stream
     */
     virtual void Write(const void* buf, const size_t len) = 0;
+  };
+  
+  class MemOutputStream : public OutputStream {
+
+    private:
+    std::unique_ptr<int8_t[]> mBuffer;
+    uint32_t mBufSize;
+    uint32_t mWriteIndex;
+    
+    public:
+    MemOutputStream();
+    
+    void Write(const void* buf, const size_t len);
+    
+    void GetData(void*& buf, uint32_t& size) const;
   };
 
   class UBJSONWriter : public ValueWriter {
