@@ -6,12 +6,6 @@
 #include <map>
 
 
-#include <rapidjson/allocators.h>
-#include <rapidjson/encodings.h>
-
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/document.h>
-
 namespace microdb {
 
     class Environment;
@@ -26,16 +20,16 @@ namespace microdb {
     class Selector : public Statement {
     public:
         void execute(Environment* env) {
-            rapidjson::Value retval;
+            Value retval;
             select(env, retval);
         }
 
-        virtual void select(Environment* env, rapidjson::Value& retval) = 0;
+        virtual void select(Environment* env, Value& retval) = 0;
     };
 
     typedef std::vector< Statement* > stmtList;
     typedef std::vector< Selector* > argList;
-    typedef void (*dataFunction)(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args);
+    typedef void (*dataFunction)(Environment* env, Value& retval, const std::vector< Selector* >& args);
 
     inline void destroyStmtList(stmtList& list) {
         for(Statement* stmt : list) {
@@ -51,23 +45,19 @@ namespace microdb {
 
     class Environment {
 
-    private:
-        rapidjson::MemoryPoolAllocator<> mEnvAllocator;
-
     protected:
-        std::map< std::string, rapidjson::Document > mVariables;
+        std::map< std::string, Value > mVariables;
         std::map< std::string, dataFunction > mFunctions;
 
     public:
 
-        rapidjson::Document& GetVar(const std::string& name) {
-            rapidjson::Document& retval = mVariables[name];
+        Value& GetVar(const std::string& name) {
+            Value& retval = mVariables[name];
             return retval;
         }
 
-        void SetVar(std::string name, rapidjson::Value& value) {
-            rapidjson::Document& target = mVariables[name];
-            target.CopyFrom(value, target.GetAllocator());
+        void SetVar(std::string name, const Value& value) {
+            mVariables = value;
         }
 
         dataFunction GetFunction(const std::string& name) {
@@ -76,10 +66,6 @@ namespace microdb {
 
         void SetFunction(const std::string& name, dataFunction fun) {
             mFunctions[name] = fun;
-        }
-
-        rapidjson::Document::AllocatorType& getGlobalAllocator() {
-            return mEnvAllocator;
         }
 
     };
@@ -99,7 +85,7 @@ namespace microdb {
         : mVarName(varName), mSelector(selector) { }
 
         void execute(Environment* env) {
-          rapidjson::Value value;
+          Value value;
           mSelector->select(env, value);
           env->SetVar(mVarName, value);
         }
@@ -129,7 +115,7 @@ namespace microdb {
         }
 
         void execute(Environment* env) {
-          rapidjson::Value conditionVal;
+          Value conditionVal;
           mCondition->select(env, conditionVal);
           if(conditionVal.IsBool() && conditionVal.IsTrue()) {
             mThenStmt->execute(env);
@@ -176,7 +162,7 @@ namespace microdb {
             destroyArgList(mArgList);
         }
 
-        void select(Environment* env, rapidjson::Value& retval) {
+        void select(Environment* env, Value& retval) {
             dataFunction fun = env->GetFunction(mFunctionName);
             if(fun != nullptr) {
                 fun(env, retval, mArgList);
@@ -213,8 +199,8 @@ namespace microdb {
             delete mRHS;
         }
 
-        void select(Environment* env, rapidjson::Value& retval) {
-            rapidjson::Value left, right;
+        void select(Environment* env, Value& retval) {
+            Value left, right;
             mLHS->select(env, left);
             mRHS->select(env, right);
 
@@ -246,9 +232,8 @@ namespace microdb {
         VarSelector(const std::string& name)
         : mVarName(name) {}
 
-        void select(Environment* env, rapidjson::Value& retval) {
-            rapidjson::Document& storage = env->GetVar(mVarName);
-            retval.CopyFrom(storage, storage.GetAllocator());
+        void select(Environment* env, Value& retval) {
+            retval = env->GetVar(mVarName);
         }
 
         std::string toString() {
@@ -270,10 +255,10 @@ namespace microdb {
             delete mParent;
         }
 
-        void select(Environment* env, rapidjson::Value& retval) {
+        void select(Environment* env, Value& retval) {
 
             if(mParent != nullptr){
-                rapidjson::Value parent;
+                Value parent;
                 mParent->select(env, parent);
                 const char* memberName = mMemberName.c_str();
                 if(parent.IsObject() && parent.HasMember(memberName)){
@@ -297,7 +282,7 @@ namespace microdb {
       ArraySelector(Selector* index, Selector* parent);
       ~ArraySelector();
 
-      void select(Environment* env, rapidjson::Value& retval);
+      void select(Environment* env, Value& retval);
       std::string toString();
     };
 
@@ -310,8 +295,8 @@ namespace microdb {
         StrLiteralSelector(const std::string& value)
         : mStrValue(value) { }
 
-        void select(Environment* env, rapidjson::Value& retval) {
-          retval.SetString(rapidjson::StringRef(mStrValue.data(), mStrValue.size()));
+        void select(Environment* env, Value& retval) {
+          retval.SetString(StringRef(mStrValue.data(), mStrValue.size()));
         }
 
         std::string toString();
@@ -325,7 +310,7 @@ namespace microdb {
         IntLiteralSelector(int value)
         : mValue(value) { }
 
-        void select(Environment* env, rapidjson::Value& retval) {
+        void select(Environment* env, Value& retval) {
             retval.SetInt(mValue);
         }
 
@@ -340,7 +325,7 @@ namespace microdb {
       FloatLiteralSelector(double value)
       : mValue(value) { }
 
-      void select(Environment* env, rapidjson::Value& retval) {
+      void select(Environment* env, Value& retval) {
         retval.SetDouble(mValue);
       }
 
@@ -366,7 +351,7 @@ namespace microdb {
         void setStatements(const stmtList& stmts);
 
         bool compile(const char* code);
-        void map(rapidjson::Document& input, Environment* env) const;
+        void map(Value& input, Environment* env) const;
         void execute(Environment* env) const;
 
         std::string toString() const;

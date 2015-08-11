@@ -1,4 +1,5 @@
 
+#include <microdb/value.h>
 #include "viewquery.h"
 
 #include <sstream>
@@ -111,9 +112,9 @@ namespace microdb {
       delete mIndex;
     }
 
-    void ArraySelector::select(Environment* env, rapidjson::Value& retval) {
+    void ArraySelector::select(Environment* env, Value& retval) {
       if(mParent != nullptr && mIndex != nullptr) {
-        rapidjson::Value parent, index;
+        Value parent, index;
 
         mParent->select(env, parent);
         if(parent.IsArray()) {

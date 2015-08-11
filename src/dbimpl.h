@@ -15,8 +15,6 @@
 #include "viewquery.h"
 #include "membuffer.h"
 
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/document.h>
 
 #define TYPE_MASK 0xE0
 #define LENG_MASK 0x1F

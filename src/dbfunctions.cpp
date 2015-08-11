@@ -1,23 +1,18 @@
 
+#include <microdb/value.h>
 #include "dbfunctions.h"
 #include "dbimpl.h"
 #include "sha256.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
-using namespace rapidjson;
-
 namespace microdb {
 
 
-    void hash(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args) {
+    void hash(Environment* env, Value& retval, const std::vector< Selector* >& args) {
 
         if(args.size() >= 1) {
             StringBuffer keyBuffer;
             Writer<StringBuffer> keyWriter(keyBuffer);
-            rapidjson::Value argValue;
+            Value argValue;
             args[0]->select(env, argValue);
             argValue.Accept(keyWriter);
 

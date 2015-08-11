@@ -1,20 +1,16 @@
 #include <gtest/gtest.h>
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
+#include <microdb/value.h>
 #include "viewquery.h"
 
 using namespace std;
 using namespace microdb;
-using namespace rapidjson;
 
 class HelloWorld : public ::testing::Test {
 
 };
 
-void printValue(rapidjson::Value& value) {
+void printValue(Value& value) {
   StringBuffer buffer;
   Writer<StringBuffer> writer(buffer);
   value.Accept(writer);
@@ -23,7 +19,7 @@ void printValue(rapidjson::Value& value) {
   printf("doc: %s", output);
 }
 
-void helloWorldFun(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args) {
+void helloWorldFun(Environment* env, Value& retval, const std::vector< Selector* >& args) {
   retval.SetString("hello to you");
 }
 

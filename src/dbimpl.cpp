@@ -7,10 +7,7 @@
 #include <leveldb/write_batch.h>
 #include <leveldb/comparator.h>
 
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
+#include <microdb/value.h>
 #include <microdb/status.h>
 #include <microdb/microdb.h>
 #include "dbimpl.h"
@@ -19,7 +16,6 @@
 
 
 using namespace std;
-using namespace rapidjson;
 using namespace leveldb;
 
 
@@ -52,7 +48,7 @@ namespace microdb {
         return &MICRODBCOMPARATOR;
     }
 
-    void indexMapEnvEmit(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args);
+    void indexMapEnvEmit(Environment* env, Value& retval, const std::vector< Selector* >& args);
 
     class IndexMapEnv : public Environment {
 
@@ -63,7 +59,7 @@ namespace microdb {
         WriteBatch* mWriteBatch;
 
 
-        inline void generateKey(IndexDataumBuilder& builder, rapidjson::Value& key) {
+        inline void generateKey(IndexDataumBuilder& builder, Value& key) {
             builder.addString("i");
             builder.addString(mView->mName);
 
@@ -92,7 +88,7 @@ namespace microdb {
 
         virtual ~IndexMapEnv() {}
 
-        void execute(const std::string& objId, rapidjson::Value& obj, const ViewQuery* view, WriteBatch* writeBatch = nullptr) {
+        void execute(const std::string& objId, Value& obj, const ViewQuery* view, WriteBatch* writeBatch = nullptr) {
             mWriteBatch = writeBatch;
             mObjId = &objId;
             mView = view;
@@ -117,7 +113,7 @@ namespace microdb {
             if(!args.empty()) {
                 IndexDataumBuilder builder;
                 {
-                rapidjson::Value argValue;
+                Value argValue;
                 args[0]->select(this, argValue);
                 generateKey(builder, argValue);
                 }
@@ -125,7 +121,7 @@ namespace microdb {
                 StringBuffer valueBuffer;
                 Writer<StringBuffer> valueWriter(valueBuffer);
                 if(args.size() >= 2) {
-                    rapidjson::Value argValue;
+                    Value argValue;
                     args[1]->select(this, argValue);
                     argValue.Accept(valueWriter);
                 }
@@ -144,7 +140,7 @@ namespace microdb {
         void emit(const std::vector< Selector* >& args) {
             if(!args.empty()) {
                 IndexDataumBuilder builder;
-                rapidjson::Value argValue;
+                Value argValue;
                 args[0]->select(this, argValue);
                 generateKey(builder, argValue);
                 mWriteBatch->Delete(builder.getSlice());
@@ -152,7 +148,7 @@ namespace microdb {
         }
     };
 
-    void indexMapEnvEmit(Environment* env, rapidjson::Value& retval, const std::vector< Selector* >& args) {
+    void indexMapEnvEmit(Environment* env, Value& retval, const std::vector< Selector* >& args) {
         IndexMapEnv* mapEnv = (IndexMapEnv*)env;
         mapEnv->emit(args);
         retval.SetNull();
@@ -234,7 +230,7 @@ namespace microdb {
 
             Slice value = it->value();
 
-            rapidjson::Document queryValue;
+            Value queryValue;
             queryValue.Parse(value.data());
 
             ViewQuery query(keyValue.ToString());
@@ -275,7 +271,7 @@ namespace microdb {
             std::string objId(indexIt->key().data(), indexIt->key().size());
             std::string objStrValue(indexIt->value().data(), indexIt->value().size());
 
-            rapidjson::Document objValue;
+            Value objValue;
             objValue.ParseInsitu((char*)objStrValue.c_str());
 
             WriteBatch batch;
@@ -283,7 +279,7 @@ namespace microdb {
             mLevelDB->Write(WriteOptions(), &batch);
         }
 
-        rapidjson::Document viewDoc;
+        Value viewDoc;
         viewDoc.SetObject();
 
         viewDoc.AddMember("map", StringRef(mapQuery.data(), mapQuery.length()), viewDoc.GetAllocator());

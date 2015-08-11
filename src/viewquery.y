@@ -8,6 +8,7 @@
 %{
 #include <string>
 
+#include <microdb/value.h>
 #include "viewquery.h"
 
 
