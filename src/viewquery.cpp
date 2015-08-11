@@ -120,10 +120,8 @@ namespace microdb {
         if(parent.IsArray()) {
           mIndex->select(env, index);
           int64_t indexValue = -1;
-          if(index.IsInt()) {
+          if(index.IsInterger()) {
             indexValue = index.GetInt();
-          } else if(index.IsUint()) {
-            indexValue = index.GetUint();
           } else if(index.IsDouble()) {
             indexValue = (int64_t) index.GetDouble();
           }

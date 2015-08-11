@@ -8,6 +8,7 @@
 #include <leveldb/comparator.h>
 
 #include <microdb/value.h>
+#include <microdb/serialize.h>
 #include <microdb/status.h>
 #include <microdb/microdb.h>
 #include "dbimpl.h"
@@ -64,12 +65,16 @@ namespace microdb {
             builder.addString(mView->mName);
 
             if(key.IsNumber()) {
-                builder.addNumber(key.GetDouble());
+                builder.addNumber(key.asFloat());
             } else {
-                StringBuffer keyBuffer;
-                Writer<StringBuffer> keyWriter(keyBuffer);
-                key.Accept(keyWriter);
-                builder.addString(keyBuffer.GetString());
+                char* buf;
+                uint32_t size;
+        
+                MemOutputStream out;
+                UBJSONWriter writer(out);
+                writer.write(key);
+                out.GetData((void*&)buf, size);
+                builder.addString(buf, size);
             }
 
             builder.addString(*mObjId);
@@ -118,15 +123,21 @@ namespace microdb {
                 generateKey(builder, argValue);
                 }
 
-                StringBuffer valueBuffer;
-                Writer<StringBuffer> valueWriter(valueBuffer);
+                char* buf = nullptr;
+                uint32_t size = 0;
+        
+                MemOutputStream out;
+                UBJSONWriter writer(out);
+                    
                 if(args.size() >= 2) {
                     Value argValue;
                     args[1]->select(this, argValue);
-                    argValue.Accept(valueWriter);
+                    
+                    writer.write(argValue);
+                    out.GetData((void*&)buf, size);
                 }
 
-                mWriteBatch->Put(builder.getSlice(), valueBuffer.GetString());
+                mWriteBatch->Put(builder.getSlice(), leveldb::Slice(buf, size));
             }
         }
     };
@@ -199,7 +210,7 @@ namespace microdb {
     Status DBImpl::init(leveldb::DB* db) {
         mLevelDB = unique_ptr<leveldb::DB>(db);
 
-        Document metaDoc;
+        Value metaDoc;
         string value;
         leveldb::Status status = mLevelDB->Get(leveldb::ReadOptions(), META_KEY_SLICE, &value);
         if(status.ok()){

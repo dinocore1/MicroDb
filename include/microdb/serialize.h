@@ -33,7 +33,7 @@ namespace microdb {
     * returns the total number of bytes read into the buffer or -1
     * if EOF is detected.
     */
-    virtual int Read(const byte* buf, const size_t max) = 0;
+    virtual int Read(byte* buf, const size_t max) = 0;
 
     /**
     * Reads max bytes of data from the stream and stores into
@@ -43,7 +43,7 @@ namespace microdb {
     * return true if max bytes were read and stored into buf, false
     * otherwise.
     */
-    bool ReadFully(const byte* buf, const size_t max) {
+    bool ReadFully(byte* buf, const size_t max) {
       size_t i = 0;
       while(i != max) {
         int bytesRead = Read(&buf[i], max - i);
@@ -79,6 +79,18 @@ namespace microdb {
     void Write(const void* buf, const size_t len);
     
     void GetData(void*& buf, uint32_t& size) const;
+  };
+  
+  class MemInputStream : public InputStream {
+    private:
+    const byte* mBuffer;
+    const uint32_t mBufSize;
+    uint32_t mReadIndex;
+    
+    public:
+    MemInputStream(const byte* buf, const uint32_t size);
+    
+    int Read(byte* buf, const size_t max);
   };
 
   class UBJSONWriter : public ValueWriter {

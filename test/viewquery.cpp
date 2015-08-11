@@ -10,15 +10,6 @@ class HelloWorld : public ::testing::Test {
 
 };
 
-void printValue(Value& value) {
-  StringBuffer buffer;
-  Writer<StringBuffer> writer(buffer);
-  value.Accept(writer);
-  const char* output = buffer.GetString();
-
-  printf("doc: %s", output);
-}
-
 void helloWorldFun(Environment* env, Value& retval, const std::vector< Selector* >& args) {
   retval.SetString("hello to you");
 }

@@ -3,6 +3,7 @@
 #include <microdb/serialize.h>
 
 #include <cstring>
+#include <algorithm>
 
 using namespace std;
 
@@ -32,6 +33,24 @@ namespace microdb {
 	void MemOutputStream::GetData(void*& buf, uint32_t& size) const {
 		buf = mBuffer.get();
 		size = mWriteIndex;
+	}
+	
+	MemInputStream::MemInputStream(const byte* buf, const uint32_t size)
+	: mBuffer(buf), mBufSize(size), mReadIndex(0) {
+	}
+	
+	int MemInputStream::Read(byte* buf, const size_t max) {
+		if(max == 0) {
+			return 0;
+		}
+		const size_t bytesLeft = mBufSize - mReadIndex;
+		const size_t bytesToRead = min(bytesLeft, max);
+		if(bytesToRead == 0) {
+			return -1;
+		}
+		memcpy(buf, &mBuffer[mReadIndex], bytesToRead);
+		mReadIndex += bytesToRead;
+		return bytesToRead;
 	}
 	
 	
