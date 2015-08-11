@@ -57,7 +57,7 @@ namespace microdb {
         }
 
         void SetVar(std::string name, const Value& value) {
-            mVariables = value;
+            mVariables[name] = value;
         }
 
         dataFunction GetFunction(const std::string& name) {
@@ -117,7 +117,7 @@ namespace microdb {
         void execute(Environment* env) {
           Value conditionVal;
           mCondition->select(env, conditionVal);
-          if(conditionVal.IsBool() && conditionVal.IsTrue()) {
+          if(conditionVal.IsBool() && conditionVal.asBool()) {
             mThenStmt->execute(env);
           } else if(mElseStmt != nullptr) {
             mElseStmt->execute(env);
@@ -203,7 +203,8 @@ namespace microdb {
             Value left, right;
             mLHS->select(env, left);
             mRHS->select(env, right);
-
+            
+            /*
             switch(mOp) {
                 case Equals:
                     retval = left == right;
@@ -220,6 +221,8 @@ namespace microdb {
                     retval = left != right;
                     return;
             }
+            */
+            retval = false;
         }
 
         std::string toString();
@@ -261,7 +264,7 @@ namespace microdb {
                 Value parent;
                 mParent->select(env, parent);
                 const char* memberName = mMemberName.c_str();
-                if(parent.IsObject() && parent.HasMember(memberName)){
+                if(parent.IsObject() && parent.HasKey(memberName)){
                     retval = parent[memberName];
                     return;
                 }
@@ -296,7 +299,7 @@ namespace microdb {
         : mStrValue(value) { }
 
         void select(Environment* env, Value& retval) {
-          retval.SetString(StringRef(mStrValue.data(), mStrValue.size()));
+            retval = mStrValue;
         }
 
         std::string toString();
@@ -311,7 +314,7 @@ namespace microdb {
         : mValue(value) { }
 
         void select(Environment* env, Value& retval) {
-            retval.SetInt(mValue);
+            retval = mValue;
         }
 
         std::string toString();
@@ -326,7 +329,7 @@ namespace microdb {
       : mValue(value) { }
 
       void select(Environment* env, Value& retval) {
-        retval.SetDouble(mValue);
+        retval = mValue;
       }
 
       std::string toString();

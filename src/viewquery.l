@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include <microdb/value.h>
 #include "viewquery.h"
 #include "viewquery.yy.hpp"
 
