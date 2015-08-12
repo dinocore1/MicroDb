@@ -154,9 +154,6 @@ public:
   Value const& operator [] (const char*) const;
   Value& operator [] (const std::string&);
   Value const& operator [] (const std::string&) const;
-  
-  bool IsComparable(const Value&) const;
-
 
 };
 

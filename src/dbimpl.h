@@ -6,100 +6,41 @@
 #include <set>
 #include <memory>
 
-#include <leveldb/db.h>
-
 #include <microdb/status.h>
+#include <microdb/value.h>
 #include <microdb/microdb.h>
 
+#include "index.h"
 #include "uuid.h"
-#include "viewquery.h"
-#include "membuffer.h"
-
-
-#define TYPE_MASK 0xE0
-#define LENG_MASK 0x1F
-
-#define TYPE_LONG 0x80
-
-#define TYPE_NUMBER 0x09
-#define TYPE_STRING 0x20
-#define TYPE_SHORT_STRING 0x20
-#define TYPE_LONG_STRING 0xA0
-
-#define MAX_SHORT_STRING 0x1F
-#define MAX_LONG_STRING 0x1FFF
 
 using namespace std;
 
 namespace microdb {
     
-
-    class IndexDataumBuilder {
-    private:
-        MemBuffer mData;
-        size_t mLocation;
-        
-    public:
-        IndexDataumBuilder();
-        
-        IndexDataumBuilder& move();
-        
-        IndexDataumBuilder& addString(const char* cstr);
-        IndexDataumBuilder& addString(const char* cstr, unsigned int len);
-        IndexDataumBuilder& addString(const std::string& str);
-        IndexDataumBuilder& addNumber(double value);
-        
-        std::string build();
-        leveldb::Slice getSlice();
-        
-    };
-    
-    class IndexDataum {
-    private:
-        const uint8_t* mData;
-        const size_t mSize;
-        size_t mLocation;
-        
-        IndexDataum(const void* data, const size_t size, size_t location);
-        
-    public:
-        IndexDataum(const void* data, const size_t size);
-        IndexDataum(const leveldb::Slice& a);
-        
-        void reset();
-        bool hasNext();
-        void next();
-        uint8_t getType();
-        
-        bool starts_with(IndexDataum& value);
-        
-        IndexDataum getString(leveldb::Slice& retval);
-        IndexDataum getNumber(double& retval);
-        
-        int compare(IndexDataum& other);
-    };
-
     class DBImpl : public DB {
     private:
         UUID mInstanceId;
-        unique_ptr<leveldb::DB> mLevelDB;
-        set< ViewQuery > mViews;
+        set< Index > mIndices;
         
     public:
         
         DBImpl();
         virtual ~DBImpl();
         
-        static const leveldb::Slice& metaKey();
-        
-        Status init(leveldb::DB* db);
-        
-        Status AddView(const std::string& viewName, const std::string& mapQuery);
-        Status DeleteView(const std::string& viewName);
+        //CRUD API
+        virtual Status Insert(const Value& value, std::string& key) = 0;
+        virtual Status Update(const std::string& key, const Value& value) = 0;
+        virtual Status Delete(const std::string& key) = 0;
 
-        Status Insert(const std::string& value, std::string* key);
-        Status Update(const std::string& key, const std::string& value);
-        Status Delete(const std::string& key);
+        //Query API
+        virtual Status Query(const std::string& query, Iterator& it) = 0;
+        virtual Status AddIndex(const std::string& query) = 0;
+        virtual Status DeleteIndex(const std::string& query) = 0;
+
+        //Syncing API        
+        //virtual Value GetHead() = 0;
+        //virtual Status GetChangesSince(const Value& checkpoint, const std::string& query, Iterator& it) = 0;
+        //virtual Status ApplyChanges(Iterator& changes) = 0;
         
     };
     
