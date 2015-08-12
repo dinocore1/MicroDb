@@ -154,6 +154,15 @@ public:
   Value const& operator [] (const char*) const;
   Value& operator [] (const std::string&);
   Value const& operator [] (const std::string&) const;
+  
+  //Sorting
+  bool operator< (const Value&) const;
+  bool operator<= (const Value&) const;
+  bool operator> (const Value&) const;
+  bool operator>= (const Value&) const;
+  bool operator== (const Value&) const;
+  bool operator!= (const Value&) const;
+  
 
 };
 

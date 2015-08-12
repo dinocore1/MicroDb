@@ -551,5 +551,94 @@ namespace microdb {
   Value const& Value::operator[] (const char* key) const {
     return operator[] (std::string(key));
   }
+  
+
+  
+  #define ORDER_NULL 0
+  #define ORDER_CHAR 1
+  #define ORDER_NUM 2
+  #define ORDER_STR 3
+  #define ORDER_ARRAY 4
+  #define ORDER_OBJ 5
+  
+  int getTypeOrder(const Value& v) {
+    int retval = ORDER_NULL;
+    
+    if(v.IsNull()) {
+      retval = ORDER_NULL;
+    } else if(v.IsChar()) {
+      retval = ORDER_CHAR;
+    } else if(v.IsNumber()) {
+      retval = ORDER_NUM;
+    } else if(v.IsString() || v.IsBinary()) {
+      retval = ORDER_STR;
+    } else if(v.IsArray()) {
+      retval = ORDER_ARRAY;
+    } else {
+      retval = ORDER_OBJ;
+    }
+    return retval;
+  }
+  
+  
+  int comparator(const Value& a, const Value& b) {
+    int retval = getTypeOrder(a) - getTypeOrder(b);
+    if(retval == 0) {
+      if(a.IsNumber()) {
+        double af = a.asFloat();
+        double bf = b.asFloat();
+        
+        if(std::fabs(af - bf) < std::numeric_limits<double>::epsilon()) {
+          retval = 0;
+        } else if(af < bf) {
+          retval = -1;
+        } else {
+          retval = 1;
+        }
+      } else if(a.IsString()) {
+        retval = a.asString().compare(b.asString());
+      } else if(a.IsArray()) {
+        retval = a.Size() - b.Size();
+        if(retval == 0) {
+          for(unsigned int i=0;i<a.Size();i++) {
+            retval = comparator(a[i], b[i]);
+            if(retval != 0) {
+              break;
+            }
+          }
+        }
+      } else {
+        //TODO: handle compareing objects
+      }
+    }
+    return retval;
+  }
+  
+  bool Value::operator< (const Value& v) const {
+    return comparator(this, v) < 0;
+    
+  }
+  
+  bool Value::operator<= (const Value& v) const {
+    int c = comparator(this, v);
+    return c < 1;
+  }
+  
+  bool Value::operator> (const Value& v) const {
+    return comparator(this, v) > 0;
+  }
+  
+  bool Value::operator>= (const Value& v) const {
+    int c = comparator(this, v);
+    return c > -1;
+  }
+  
+  bool Value::operator== (const Value& v) const {
+    return comparator(this, v) == 0;
+  }
+  
+  bool Value::operator!= (const Value& v) const {
+    return comparator(this, v) != 0;
+  }
 
 }

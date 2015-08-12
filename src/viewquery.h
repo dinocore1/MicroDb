@@ -204,25 +204,32 @@ namespace microdb {
             mLHS->select(env, left);
             mRHS->select(env, right);
             
-            /*
             switch(mOp) {
                 case Equals:
-                    retval = left == right;
-                    return;
+                    retval = (left == right);
+                    break;
                 case GreaterThan:
+                    retval = (left > right);
                     break;
                 case LessThan:
+                    retval = (left < right);
                     break;
                 case GreaterOrEqual:
+                    retval = left >= right;
                     break;
                 case LessThanOrEqual:
+                    retval = left <= right;
                     break;
                 case NotEqual:
                     retval = left != right;
-                    return;
+                    break;
+                    
+                default:
+                    retval = false;
+                
             }
-            */
-            retval = false;
+            
+            retval = retval;
         }
 
         std::string toString();
@@ -346,9 +353,7 @@ namespace microdb {
         stmtList mStatements;
 
     public:
-        const std::string mName;
-
-        ViewQuery(const std::string& name);
+        ViewQuery();
         ~ViewQuery();
 
         void setStatements(const stmtList& stmts);
@@ -358,8 +363,6 @@ namespace microdb {
         void execute(Environment* env) const;
 
         std::string toString() const;
-
-        bool operator<(const ViewQuery& other) const;
 
     };
 }

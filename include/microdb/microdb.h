@@ -22,8 +22,8 @@ namespace microdb {
       virtual void Next() = 0;
       virtual void Prev() = 0;
 
-      virtual std::string& Key() const = 0;
-      virtual Value& Value() const = 0;
+      virtual std::string& GetKey() const = 0;
+      virtual Value& GetValue() const = 0;
     };
 
     class DB {

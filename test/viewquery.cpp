@@ -11,12 +11,12 @@ class HelloWorld : public ::testing::Test {
 };
 
 void helloWorldFun(Environment* env, Value& retval, const std::vector< Selector* >& args) {
-  retval.SetString("hello to you");
+  retval = "hello to you";
 }
 
 TEST(viewquery, simple_assign) {
 
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = \"hello world\""));
 
   Environment env;
@@ -25,36 +25,36 @@ TEST(viewquery, simple_assign) {
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("hello world", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("hello world", x.asString().c_str()) == 0);
 }
 
 TEST(viewquery, float_literal) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = 3.14"));
 
   Environment env;
   query.execute(&env);
 
   Value& x = env.GetVar("x");
-  ASSERT_TRUE(x.IsDouble());
-  ASSERT_EQ(3.14, x.GetDouble());
+  ASSERT_TRUE(x.IsFloat());
+  ASSERT_EQ(3.14, x.asFloat());
 }
 
 TEST(viewquery, int_literal) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = 123"));
 
   Environment env;
   query.execute(&env);
 
   Value& x = env.GetVar("x");
-  ASSERT_TRUE(x.IsInt());
-  ASSERT_EQ(123, x.GetInt());
+  ASSERT_TRUE(x.IsInteger());
+  ASSERT_EQ(123, x.asInt());
 }
 
 TEST(viewquery, simple_functioncall) {
 
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = hello()"));
 
   Environment env;
@@ -64,19 +64,18 @@ TEST(viewquery, simple_functioncall) {
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("hello to you", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("hello to you", x.asString().c_str()) == 0);
 
 }
 
 TEST(viewquery, member_access) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = obj.hello"));
 
   Environment env;
 
   Value obj;
-  obj.SetObject();
-  obj.AddMember("hello", Value("world"), env.getGlobalAllocator());
+  obj.Set("hello", Value("world"));
 
   env.SetVar("obj", obj);
 
@@ -84,11 +83,11 @@ TEST(viewquery, member_access) {
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("world", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("world", x.asString().c_str()) == 0);
 }
 
 TEST(viewquery, nullobj_access) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = obj.hello"));
 
   Environment env;
@@ -100,14 +99,13 @@ TEST(viewquery, nullobj_access) {
 }
 
 TEST(viewquery, array_access) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = obj[0]"));
 
   Environment env;
 
   Value obj;
-  obj.SetArray();
-  obj.PushBack(Value("hello"), env.getGlobalAllocator());
+  obj.Add(Value("hello"));
 
   env.SetVar("obj", obj);
 
@@ -115,18 +113,17 @@ TEST(viewquery, array_access) {
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("hello", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("hello", x.asString().c_str()) == 0);
 }
 
 TEST(viewquery, array_access_sizeerror) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("x = obj[1]"));
 
   Environment env;
 
   Value obj;
-  obj.SetArray();
-  obj.PushBack(Value("hello"), env.getGlobalAllocator());
+  obj.Add(Value("hello"));
 
   env.SetVar("obj", obj);
 
@@ -137,13 +134,13 @@ TEST(viewquery, array_access_sizeerror) {
 }
 
 TEST(viewquery, if_condition) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("if(obj == \"hello\") { x = \"world\" }"));
 
   Environment env;
 
   Value obj;
-  obj.SetString("hello");
+  obj = "hello";
 
   env.SetVar("obj", obj);
 
@@ -151,17 +148,17 @@ TEST(viewquery, if_condition) {
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("world", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("world", x.asString().c_str()) == 0);
 }
 
 TEST(viewquery, negitive_if_condition) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("if(obj == \"hello\") { x = \"world\" }"));
 
   Environment env;
 
   Value obj;
-  obj.SetString("foo");
+  obj = "foo";
 
   env.SetVar("obj", obj);
 
@@ -172,18 +169,18 @@ TEST(viewquery, negitive_if_condition) {
 }
 
 TEST(viewquery, if_condition_else) {
-  ViewQuery query("test");
+  ViewQuery query;
   ASSERT_TRUE(query.compile("if(obj == \"hello\") { x = \"world\" } else { x = \"foo\"}"));
 
   Environment env;
 
   Value obj;
-  obj.SetString("goodbye");
+  obj = "goodbye";
   env.SetVar("obj", obj);
 
   query.execute(&env);
 
   Value& x = env.GetVar("x");
   ASSERT_TRUE(x.IsString());
-  ASSERT_TRUE(strcmp("foo", x.GetString()) == 0);
+  ASSERT_TRUE(strcmp("foo", x.asString().c_str()) == 0);
 }

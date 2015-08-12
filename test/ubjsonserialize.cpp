@@ -22,7 +22,7 @@ class SSInputStream : public InputStream {
 public:
   stringstream mStream;
 
-  int Read(const byte* buf, const size_t max) {
+  int Read(byte* buf, const size_t max) {
     int retval = mStream.readsome((char*)buf, max);
     if(retval == 0 && mStream.eof()) {
       retval = -1;

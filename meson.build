@@ -11,14 +11,8 @@ else
 endif
 
 
-leveldb_dep = dependency('leveldb', required : false)
-if leveldb_dep.found()
-	inc = []
-	link = []
-else
-	leveldb_proj = subproject('leveldb')
-	leveldb_dep = leveldb_proj.get_variable('dep')
-endif
+unqlite_proj = subproject('unqlite')
+unqlite_dep = unqlite_proj.get_variable('dep')
 
 gtest_sp = subproject('gtest')
 

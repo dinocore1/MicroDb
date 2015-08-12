@@ -7,8 +7,7 @@
 
 namespace microdb {
 
-    ViewQuery::ViewQuery(const std::string& name)
-    : mName(name) { }
+    ViewQuery::ViewQuery() { }
 
     ViewQuery::~ViewQuery() {
         destroyStmtList(mStatements);
@@ -26,10 +25,6 @@ namespace microdb {
         buf << stmt->toString() << std::endl;
       }
       return buf.str();
-    }
-
-    bool ViewQuery::operator<(const ViewQuery& other) const {
-        return mName < other.mName;
     }
 
     std::string IfStatement::toString() {
@@ -120,10 +115,10 @@ namespace microdb {
         if(parent.IsArray()) {
           mIndex->select(env, index);
           int64_t indexValue = -1;
-          if(index.IsInterger()) {
-            indexValue = index.GetInt();
-          } else if(index.IsDouble()) {
-            indexValue = (int64_t) index.GetDouble();
+          if(index.IsInteger()) {
+            indexValue = index.asInt();
+          } else if(index.IsFloat()) {
+            indexValue = (int64_t) index.asFloat();
           }
 
           if(indexValue >= 0 && indexValue < parent.Size()) {
