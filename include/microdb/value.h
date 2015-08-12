@@ -154,18 +154,13 @@ public:
   Value const& operator [] (const char*) const;
   Value& operator [] (const std::string&);
   Value const& operator [] (const std::string&) const;
-  
-  //Sorting
-  bool operator< (const Value&) const;
-  bool operator<= (const Value&) const;
-  bool operator> (const Value&) const;
-  bool operator>= (const Value&) const;
-  bool operator== (const Value&) const;
-  bool operator!= (const Value&) const;
-  
 
 };
 
 } // namespace microdb
+
+bool operator< (const microdb::Value& lhs, const microdb::Value& rhs);
+bool operator== (const microdb::Value& lhs, const microdb::Value& rhs);
+bool operator!= (const microdb::Value& lhs, const microdb::Value& rhs);
 
 #endif // VALUE_H_

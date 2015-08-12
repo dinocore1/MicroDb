@@ -123,3 +123,17 @@ TEST(value, obj) {
   ASSERT_EQ(54, v1.Get("hello").asInt());
 
 }
+
+TEST(value, compare) {
+  
+  Value v1;
+  Value v2;
+  
+  v1 = 4;
+  v2 = 6;
+  
+  ASSERT_TRUE(v1 < v2);
+  ASSERT_TRUE(v2 > v1);
+  ASSERT_TRUE(v1 != v2);
+  ASSERT_TRUE(v1 == v1);
+}

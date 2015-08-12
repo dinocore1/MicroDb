@@ -614,31 +614,18 @@ namespace microdb {
     return retval;
   }
   
-  bool Value::operator< (const Value& v) const {
-    return comparator(this, v) < 0;
-    
-  }
-  
-  bool Value::operator<= (const Value& v) const {
-    int c = comparator(this, v);
-    return c < 1;
-  }
-  
-  bool Value::operator> (const Value& v) const {
-    return comparator(this, v) > 0;
-  }
-  
-  bool Value::operator>= (const Value& v) const {
-    int c = comparator(this, v);
-    return c > -1;
-  }
-  
-  bool Value::operator== (const Value& v) const {
-    return comparator(this, v) == 0;
-  }
-  
-  bool Value::operator!= (const Value& v) const {
-    return comparator(this, v) != 0;
-  }
 
+
+} //namespace microdb
+
+bool operator< (const microdb::Value& lhs, const microdb::Value& rhs) {
+  return comparator(lhs, rhs) < 0;
+}
+
+bool operator==(const microdb::Value& lhs, const microdb::Value& rhs) {
+  return comparator(lhs, rhs) == 0;
+}
+
+bool operator==(const microdb::Value& lhs, const microdb::Value& rhs) {
+  return comparator(lhs, rhs) != 0;
 }
