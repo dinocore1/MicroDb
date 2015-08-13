@@ -14,17 +14,16 @@ namespace microdb {
 		
 		public:
 		
+		virtual ~MemSlice();
 		MemSlice();
 		MemSlice(const std::string&);
 		MemSlice(const byte*, const size_t);
 		
-		virtual ~MemSlice() {};
-		
-		virtual const byte* get();
-		virtual const size_t size();
+		virtual byte* get() const;
+		virtual size_t size() const;
 		
 		
-		virtual bool IsValid();
+		virtual bool IsValid() const;
 		operator bool() const;
 		
 	};
@@ -39,13 +38,13 @@ namespace microdb {
 		MemBuffer(const std::string&);
 		MemBuffer(const byte*, const size_t);
 		
-		virtual ~MemBuffer();
+		virtual ~MemBuffer() {};
 		
-		virtual const byte* get();
-		virtual const size_t size();
+		virtual byte* get() const;
+		virtual size_t size() const;
 		
 		
-		virtual bool IsValid();
+		virtual bool IsValid() const;
 	};
 }
 

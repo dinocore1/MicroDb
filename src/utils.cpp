@@ -3,20 +3,32 @@
 
 namespace microdb {
 	
-	MemSlice()
+	MemSlice::~MemSlice() {
+		
+	}
+	
+	MemSlice::MemSlice()
 	: mPtr(nullptr), mSize(0) { }
 	
-	MemSlice(const std::string& str)
-	: mPtr(str.data()), mSize(str.size()) { }
+	MemSlice::MemSlice(const std::string& str)
+	: mPtr((byte*)str.data()), mSize(str.size()) { }
 	
-	MemSlice(const byte* ptr, const size_t size)
-	: mPtr(ptr), mSize(size) { }
+	MemSlice::MemSlice(const byte* ptr, const size_t size)
+	: mPtr((byte*)ptr), mSize(size) { }
 	
-	bool MemSlice::IsValid() {
+	byte* MemSlice::get() const {
+		return mPtr;
+	}
+	
+	size_t MemSlice::size() const {
+		return mSize;
+	}
+	
+	bool MemSlice::IsValid() const {
 		return mSize > 0;
 	}
 	
-	operator MemSlice::bool() const {
+	MemSlice::operator bool() const {
 		return IsValid();
 	}
 	
