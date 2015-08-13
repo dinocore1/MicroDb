@@ -10,9 +10,6 @@
 #include <microdb/value.h>
 #include <microdb/microdb.h>
 
-#include "index.h"
-#include "uuid.h"
-
 using namespace std;
 
 namespace microdb {
@@ -20,6 +17,8 @@ namespace microdb {
     class DBImpl : public DB {
     private:
         UUID mInstanceId;
+        unique_ptr< Driver > mDBDriver;
+        set< Index > mIndicies;
         
     public:
         

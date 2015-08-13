@@ -3,13 +3,9 @@
 #include <string>
 #include <iostream>
 
-#include <microdb/value.h>
-#include <microdb/serialize.h>
-#include <microdb/status.h>
-#include <microdb/microdb.h>
+#include "microdb.h"
+
 #include "dbimpl.h"
-#include "uuid.h"
-#include "dbfunctions.h"
 
 
 using namespace std;
@@ -18,6 +14,13 @@ using namespace std;
 #define KEY_INSTANCEID "id"
 
 namespace microdb {
+    
+     Status DB::Open(const std::string& dburl, DB** dbptr) {
+         
+
+        
+        return OK;
+    }
 
 
 /*
@@ -108,11 +111,7 @@ namespace microdb {
     }
 */
 
-    Status DB::Open(const std::string& dburl, DB** dbptr) {
 
-        
-        return OK;
-    }
 
     DB::~DB() {
 
@@ -121,9 +120,6 @@ namespace microdb {
     DBImpl::DBImpl() { }
 
     DBImpl::~DBImpl() {
-        //if(mLevelDB != nullptr){
-        //  delete mLevelDB;
-        //}
     }
 
 }

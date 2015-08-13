@@ -46,7 +46,7 @@ namespace microdb {
 		
 		
 		virtual bool IsValid();
-	}
+	};
 }
 
 #endif // UTILS_H

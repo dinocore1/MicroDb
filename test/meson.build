@@ -5,7 +5,7 @@ gtestmain = gtest_sp.get_variable('mainsources')
 
 gtest_lib = static_library('gtest', gtestlibsrc, include_directories : gtestinc)
 
-main_incdir = [ include_directories('../src'), incdir, gtestinc]
+main_incdir = [ include_directories('../src'), incdir, gtestinc, unqlite_incdir]
 
 test('uuid_test', executable('uuid_test', ['uuid_test.cpp', gtestmain],
     include_directories : main_incdir,
@@ -36,6 +36,13 @@ test('ubjsonserialize', executable('ubjsonserialize', ['ubjsonserialize.cpp', gt
     ))
 
 test('vectorclock', executable('vectorclock', ['vectorclock_test.cpp', gtestmain],
+    include_directories : main_incdir,
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
+    link_args : '-lpthread'
+    ))
+
+test('unqlitedriver', executable('unqlitedriver', ['unqlitedriver.cpp', gtestmain],
     include_directories : main_incdir,
     dependencies : microdb_dep,
     link_with : [ gtest_lib ],

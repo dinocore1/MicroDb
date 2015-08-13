@@ -2,9 +2,9 @@
 #include <microdb/value.h>
 #include <microdb/serialize.h>
 
-#include "dbfunctions.h"
-#include "dbimpl.h"
 #include "sha256.h"
+
+#include "dbfunctions.h"
 
 namespace microdb {
 

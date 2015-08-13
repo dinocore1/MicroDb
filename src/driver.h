@@ -5,33 +5,41 @@ namespace microdb {
 	
 	typedef int(*compareFun)(const MemSlice& a, const MemSlice& b);
 	
-	class Iterator {
-		public:
-		virtual ~Iterator() {}
-		
-		
-		Status GetKey(MemBuffer& key) = 0;
-		Status GetValue(MemBuffer& value) = 0;
-		
-		Status Seek(const MemSlice& key) = 0;
-		Status Next() = 0;
-		Status Prev() = 0;
-	}
-	
 	class Driver {
 		public:
 		
-		void SetCompareFunction(compareFun) = 0;
+		class Iterator {
+			public:
+			virtual ~Iterator() {}
+			
+			virtual Status GetKey(MemBuffer& key) const = 0;
+			virtual Status GetValue(MemBuffer& value) const = 0;
+			
+			/**
+			* place the iterator on the first occurance of key, 
+			* or if key does not exist, the key location right
+			* before where key would be inserted.
+			*/
+			virtual Status Seek(const MemSlice& key) = 0;
+			virtual bool IsValid() const = 0;
+			virtual Status Next() = 0;
+			virtual Status Prev() = 0;
+		};
 		
-		Status Insert(const MemSlice& key, const MemSlice& value) = 0;
-		Status Get(const MemSlice* key) = 0;
-		Status Delete(const MemSlice& key) = 0;
+		virtual ~Driver() {}
+		virtual void SetCompareFunction(compareFun) = 0;
 		
-		Status BeginTransactions() = 0;
-		Status CommitTransaction() = 0;
-		Status RollBackTransaction() = 0;
+		virtual Status Insert(const MemSlice& key, const MemSlice& value) = 0;
+		virtual Status Get(const MemSlice* key) = 0;
+		virtual Status Delete(const MemSlice& key) = 0;
+		
+		virtual Status CreateIterator(Iterator& it) = 0;
+		
+		virtual Status BeginTransactions() = 0;
+		virtual Status CommitTransaction() = 0;
+		virtual Status RollBackTransaction() = 0;
 		
 	};
-}
+} // namespace microdb
 
 #endif // DRIVER_H_

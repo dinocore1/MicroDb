@@ -12,6 +12,7 @@ endif
 
 
 unqlite_proj = subproject('unqlite')
+unqlite_incdir = unqlite_proj.get_variable('incdir')
 unqlite_dep = unqlite_proj.get_variable('dep')
 
 gtest_sp = subproject('gtest')
