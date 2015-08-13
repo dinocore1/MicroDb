@@ -580,52 +580,84 @@ namespace microdb {
     return retval;
   }
   
+  int compareArray(const Value& a, const Value& b) {
+    const size_t aSize = a.Size();
+    const size_t bSize = b.Size();
+    int retval;
+    const size_t min = std::min(aSize, bSize);
+    for(size_t i=0;i<min;i++) {
+      retval = compareValue(a[i], b[i]);
+      if(retval != 0) {
+        return retval;
+      }
+    }
+    if(aSize == bSize) {
+        return 0;
+    } else if(aSize < bSize) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
   
-  int comparator(const Value& a, const Value& b) {
+  int compareValue(const microdb::Value& a, const microdb::Value& b){
     int retval = getTypeOrder(a) - getTypeOrder(b);
     if(retval == 0) {
       if(a.IsNumber()) {
         double af = a.asFloat();
         double bf = b.asFloat();
         
-        if(std::fabs(af - bf) < std::numeric_limits<double>::epsilon()) {
+        if(af < bf) {
+          retval = -1;
+        } else if(af > bf) {
+          retval = 1;
+        } else {
+          retval = 0;
+        }
+        
+        /*
+        if(std::fabs(af - bf) < std::numeric_limits<float>::epsilon()) {
           retval = 0;
         } else if(af < bf) {
           retval = -1;
         } else {
           retval = 1;
         }
+        */
+        
       } else if(a.IsString()) {
         retval = a.asString().compare(b.asString());
       } else if(a.IsArray()) {
-        retval = a.Size() - b.Size();
-        if(retval == 0) {
-          for(unsigned int i=0;i<a.Size();i++) {
-            retval = comparator(a[i], b[i]);
-            if(retval != 0) {
-              break;
-            }
-          }
-        }
+        retval = compareArray(a, b);
       } else {
         //TODO: handle compareing objects
       }
     }
     return retval;
   }
-  
-
 
 } //namespace microdb
 
 bool operator< (const microdb::Value& lhs, const microdb::Value& rhs) {
-  return comparator(lhs, rhs) < 0;
+  return compareValue(lhs, rhs) < 0;
+}
+
+bool operator<= (const microdb::Value& lhs, const microdb::Value& rhs) {
+  return compareValue(lhs, rhs) < 1;
+}
+
+bool operator> (const microdb::Value& lhs, const microdb::Value& rhs) {
+  return compareValue(lhs, rhs) > 0;
+}
+
+bool operator>= (const microdb::Value& lhs, const microdb::Value& rhs) {
+  return compareValue(lhs, rhs) > -1;
 }
 
 bool operator==(const microdb::Value& lhs, const microdb::Value& rhs) {
-  return comparator(lhs, rhs) == 0;
+  return compareValue(lhs, rhs) == 0;
 }
 
-bool operator==(const microdb::Value& lhs, const microdb::Value& rhs) {
-  return comparator(lhs, rhs) != 0;
+bool operator!=(const microdb::Value& lhs, const microdb::Value& rhs) {
+  return compareValue(lhs, rhs) != 0;
 }

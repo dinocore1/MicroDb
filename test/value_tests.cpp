@@ -137,3 +137,60 @@ TEST(value, compare) {
   ASSERT_TRUE(v1 != v2);
   ASSERT_TRUE(v1 == v1);
 }
+
+TEST(value, compare_string) {
+  
+  Value v1 = "abb";
+  Value v2 = "abba";
+  
+  ASSERT_TRUE(v1 < v2);
+  ASSERT_TRUE(v2 > v1);
+  ASSERT_TRUE(v1 != v2);
+  ASSERT_TRUE(v1 == v1);
+}
+
+TEST(value, compare_array) {
+  
+  Value v1;
+  Value v2;
+  
+  v1.Add("hello");
+  v1.Add(4);
+  
+  v2.Add("hello");
+  v2.Add(4);
+  v2.Add(8);
+  
+  ASSERT_TRUE(v1 < v2);
+  ASSERT_TRUE(v2 > v1);
+  ASSERT_TRUE(v1 != v2);
+  ASSERT_TRUE(v1 == v1);
+}
+
+TEST(value, compare_float) {
+  
+  
+  printf("float32: %.20f\nfloat64: %.20f\n", 3.14f, 3.14);
+  Value v1 = 3.14f;
+  Value v2 = 3.14;
+  
+  ASSERT_TRUE(v1 > v2);
+  
+  v1 = 3.14f;
+  v2 = 3.14f;
+  
+  ASSERT_TRUE(v1 == v2);
+  
+  v1 = 1/(double)3;
+  v2 = 1/(double)3;
+  
+  printf("1/3: %.20f\n", 1/(double)3);
+  
+  ASSERT_TRUE(v1 == v2);
+  
+  v1 = "3.14";
+  v2 = "3.14";
+  
+  ASSERT_TRUE(v1.asFloat() == v2.asFloat());
+  
+}

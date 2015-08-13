@@ -157,9 +157,15 @@ public:
 
 };
 
+int compareValue(const microdb::Value& lhs, const microdb::Value& rhs);
+
 } // namespace microdb
 
+
 bool operator< (const microdb::Value& lhs, const microdb::Value& rhs);
+bool operator<= (const microdb::Value& lhs, const microdb::Value& rhs);
+bool operator> (const microdb::Value& lhs, const microdb::Value& rhs);
+bool operator>= (const microdb::Value& lhs, const microdb::Value& rhs);
 bool operator== (const microdb::Value& lhs, const microdb::Value& rhs);
 bool operator!= (const microdb::Value& lhs, const microdb::Value& rhs);
 
