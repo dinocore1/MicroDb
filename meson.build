@@ -11,9 +11,15 @@ else
 endif
 
 
-unqlite_proj = subproject('unqlite')
-unqlite_incdir = unqlite_proj.get_variable('incdir')
-unqlite_dep = unqlite_proj.get_variable('dep')
+leveldb_dep = dependency('leveldb', required : false)
+if leveldb_dep.found()
+	inc = []
+	link = []
+else
+	leveldb_proj = subproject('leveldb')
+	leveldb_dep = leveldb_proj.get_variable('dep')
+	leveldb_inc = leveldb_proj.get_variable('incdir')
+endif
 
 gtest_sp = subproject('gtest')
 

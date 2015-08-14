@@ -5,7 +5,7 @@ gtestmain = gtest_sp.get_variable('mainsources')
 
 gtest_lib = static_library('gtest', gtestlibsrc, include_directories : gtestinc)
 
-main_incdir = [ include_directories('../src'), incdir, gtestinc, unqlite_incdir]
+main_incdir = [ include_directories('../src'), incdir, gtestinc, leveldb_inc]
 
 test('uuid_test', executable('uuid_test', ['uuid_test.cpp', gtestmain],
     include_directories : main_incdir,
@@ -42,7 +42,7 @@ test('vectorclock', executable('vectorclock', ['vectorclock_test.cpp', gtestmain
     link_args : '-lpthread'
     ))
 
-test('unqlitedriver', executable('unqlitedriver', ['unqlitedriver.cpp', gtestmain],
+test('leveldbdriver', executable('leveldbdriver', ['leveldbdriver.cpp', gtestmain],
     include_directories : main_incdir,
     dependencies : microdb_dep,
     link_with : [ gtest_lib ],

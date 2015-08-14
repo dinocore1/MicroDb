@@ -14,7 +14,7 @@ bisongen = generator(
 port_src = [ 'dbfunctions.cpp', 'dbimpl.cpp',
 'membuffer.cpp', 'sha256.cpp', 'uuid.cpp', 'value.cpp', 'viewquery.cpp',
 'ubjsonwriter.cpp', 'ubjsonreader.cpp', 'vectorclock.cpp', 'serialize.cpp',
-'unqlitedriver.cpp', 'utils.cpp',
+'utils.cpp', 'leveldbdriver.cpp',
 flexgen.process('viewquery.l'), flexgen.process('uuidlex.l'),
 bisongen.process('viewquery.y')
 ]
@@ -31,9 +31,9 @@ endif
 
 microdb_lib = build_target('microdb', sources,
 	include_directories : incdir,
-	dependencies : [dep, unqlite_dep],
+	dependencies : [dep, leveldb_dep],
 	target_type : libtype
-)
+	)
 
 microdb_dep = declare_dependency(
 	link_with : microdb_lib,
