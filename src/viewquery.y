@@ -34,7 +34,7 @@
 %type <stmtlistval> stmtlist
 %type <stmtval> stmt ifstmt assign block
 %type <arglist> arglist
-%type <selval> path var literal expr condition funCall
+%type <selval> path var literal expr condition primary funCall
 
 %right ELSE TELSE
 
@@ -83,23 +83,28 @@ ifstmt
     | TIF TLPAREN expr TRPAREN stmt TELSE stmt { $$ = new IfStatement($3, $5, $7); }
     ;
 
+expr
+    : condition
+    ;
+
 
 condition
-    : expr TEQUALS expr { $$ = new Condition($1, $3, microdb::Condition::Equals); }
-    | expr TLEQ expr { $$ = new Condition($1, $3, microdb::Condition::LessThanOrEqual); }
-    | expr TGEQ expr { $$ = new Condition($1, $3, microdb::Condition::GreaterOrEqual); }
-    | expr TGT expr { $$ = new Condition($1, $3, microdb::Condition::GreaterThan); }
-    | expr TLT expr { $$ = new Condition($1, $3, microdb::Condition::LessThan); }
-    | expr TNEQ expr { $$ = new Condition($1, $3, microdb::Condition::NotEqual); }
+    : primary TEQUALS primary { $$ = new Condition($1, $3, microdb::Condition::Equals); }
+    | primary TLEQ primary { $$ = new Condition($1, $3, microdb::Condition::LessThanOrEqual); }
+    | primary TGEQ primary { $$ = new Condition($1, $3, microdb::Condition::GreaterOrEqual); }
+    | primary TGT primary { $$ = new Condition($1, $3, microdb::Condition::GreaterThan); }
+    | primary TLT primary { $$ = new Condition($1, $3, microdb::Condition::LessThan); }
+    | primary TNEQ primary { $$ = new Condition($1, $3, microdb::Condition::NotEqual); }
+    | primary
     ;
 
-expr
-    : path
+primary
+    : TLPAREN expr TRPAREN { $$ = $2; }
+    | path
     | literal
     | funCall
-    | condition
-    | TLPAREN expr TRPAREN { $$ = $2; }
     ;
+    
 
 literal
     : TSTRLITERAL { $$ = new StrLiteralSelector(*$1); delete $1; }
