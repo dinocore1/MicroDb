@@ -11,11 +11,15 @@ namespace microdb {
 		private:
 		const std::string mName;
 		std::atomic<uint64_t> mSequence;
-		ViewQuery mQuery;
+		std::unique_ptr< ViewQuery > mQuery;
 		
 		public:
 		Index(const std::string& name)
 		: mName(name) {}
+		
+		void setQuery(std::unique_ptr< ViewQuery >& ptr) {
+			mQuery = std::move(ptr);
+		}
 		
 		const std::string getName() {
 			return mName;
