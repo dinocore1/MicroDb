@@ -16,10 +16,10 @@ namespace microdb {
 	}
 	
 	void MemOutputStream::Write(const void* buf, const size_t len) {
-		const uint32_t available = mBufSize - mWriteIndex;
+		const size_t available = mBufSize - mWriteIndex;
 		if(len > available) {
 			//resize
-			const uint32_t newBufSize = mBufSize*2;
+			const size_t newBufSize = mBufSize*2;
 			unique_ptr<int8_t[]> newBuf(new int8_t[newBufSize]);
 			memcpy(newBuf.get(), mBuffer.get(), mWriteIndex);
 			mBuffer = move(newBuf);
@@ -30,12 +30,12 @@ namespace microdb {
 		mWriteIndex += len;
 	}
 	
-	void MemOutputStream::GetData(void*& buf, uint32_t& size) const {
+	void MemOutputStream::GetData(void*& buf, size_t& size) const {
 		buf = mBuffer.get();
 		size = mWriteIndex;
 	}
 	
-	MemInputStream::MemInputStream(const byte* buf, const uint32_t size)
+	MemInputStream::MemInputStream(const byte* buf, const size_t size)
 	: mBuffer(buf), mBufSize(size), mReadIndex(0) {
 	}
 	

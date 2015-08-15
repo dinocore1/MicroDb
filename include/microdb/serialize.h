@@ -70,25 +70,25 @@ namespace microdb {
 
     private:
     std::unique_ptr<int8_t[]> mBuffer;
-    uint32_t mBufSize;
-    uint32_t mWriteIndex;
+    size_t mBufSize;
+    size_t mWriteIndex;
     
     public:
     MemOutputStream();
     
     void Write(const void* buf, const size_t len);
     
-    void GetData(void*& buf, uint32_t& size) const;
+    void GetData(void*& buf, size_t& size) const;
   };
   
   class MemInputStream : public InputStream {
     private:
     const byte* mBuffer;
-    const uint32_t mBufSize;
-    uint32_t mReadIndex;
+    const size_t mBufSize;
+    size_t mReadIndex;
     
     public:
-    MemInputStream(const byte* buf, const uint32_t size);
+    MemInputStream(const byte* buf, const size_t size);
     
     int Read(byte* buf, const size_t max);
   };

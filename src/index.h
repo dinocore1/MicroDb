@@ -12,6 +12,7 @@ namespace microdb {
 		const std::string mName;
 		std::atomic<uint64_t> mSequence;
 		std::unique_ptr< ViewQuery > mQuery;
+		Driver* mDriver;
 		
 		public:
 		Index(const std::string& name);
@@ -20,11 +21,15 @@ namespace microdb {
 			mQuery = std::move(ptr);
 		}
 		
+		void setDriver(Driver* driver) {
+			mDriver = driver;
+		}
+		
 		const std::string getName() {
 			return mName;
 		}
 		
-		void emit(Value& key, Value& obj);
+		void emit(Value& key, Value& value);
 		
 		bool operator< (const Index& o) {
 			return mName.compare(o.mName) < 0;

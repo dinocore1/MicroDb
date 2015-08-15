@@ -13,7 +13,7 @@ namespace microdb {
 
     void hash(Environment* env, Value& retval, const std::vector< Selector* >& args) {
         char* buf;
-        uint32_t size;
+        size_t size;
             
         if(args.size() >= 1) {
             MemOutputStream out;
