@@ -1,6 +1,7 @@
 #ifndef LEVELDBDRIVER_H_
 #define LEVELDBDRIVER_H_
 
+#include <memory>
 #include <leveldb/db.h>
 
 namespace microdb {
@@ -8,6 +9,7 @@ namespace microdb {
 	class LevelDBDriver : public Driver {
 		private:
 		leveldb::DB* mDB;
+		std::unique_ptr< leveldb::WriteBatch > mWriteBatch;
 		
 		public:
 		LevelDBDriver();
@@ -22,9 +24,9 @@ namespace microdb {
 		
 		virtual Status CreateIterator(Iterator& it);
 		
-		virtual Status BeginTransactions();
-		virtual Status CommitTransaction();
-		virtual Status RollBackTransaction();
+		virtual void BeginTransactions();
+		virtual void CommitTransaction();
+		virtual void RollBackTransaction();
 		
 	};
 	
