@@ -17,7 +17,7 @@ namespace microdb {
 		virtual void SetCompareFunction(compareFun);
 		
 		virtual Status Insert(const MemSlice& key, const MemSlice& value);
-		virtual Status Get(const MemSlice* key);
+		virtual Status Get(const MemSlice& key, MemSlice& value);
 		virtual Status Delete(const MemSlice& key);
 		
 		virtual Status CreateIterator(Iterator& it);

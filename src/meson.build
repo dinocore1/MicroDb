@@ -12,21 +12,28 @@ bisongen = generator(
 							)
 
 port_src = [ 'dbfunctions.cpp', 'dbimpl.cpp',
-'membuffer.cpp', 'sha256.cpp', 'uuid.cpp', 'value.cpp', 'viewquery.cpp',
+'sha256.cpp', 'uuid.cpp', 'value.cpp', 'viewquery.cpp',
 'ubjsonwriter.cpp', 'ubjsonreader.cpp', 'vectorclock.cpp', 'serialize.cpp',
 'utils.cpp', 'leveldbdriver.cpp',
 flexgen.process('viewquery.l'), flexgen.process('uuidlex.l'),
 bisongen.process('viewquery.y')
 ]
 
-if host.name() == 'darwin'
-	dep = dependency('appleframeworks', modules : 'foundation')
-  cpp_args = []
-	sources = [port_src, 'uuid_mac.cpp']
-else
-  dep = []
-  cpp_args = []
+dep = []
+cpp_args = []
+	
+if meson.is_cross_build()
+  if host.name() == 'mingw'
+    cpp_args = [ '-D_WIN32_WINNT=0x0600' ]
 	sources = [port_src, 'uuid_generic.cpp']
+  endif
+else
+  if host.name() == 'darwin'
+    dep = dependency('appleframeworks', modules : 'foundation')
+    sources = [port_src, 'uuid_mac.cpp']
+  else
+    sources = [port_src, 'uuid_generic.cpp']
+  endif
 endif
 
 microdb_lib = build_target('microdb', sources,

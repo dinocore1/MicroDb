@@ -12,8 +12,8 @@ namespace microdb {
 			public:
 			virtual ~Iterator() {}
 			
-			virtual Status GetKey(MemBuffer& key) const = 0;
-			virtual Status GetValue(MemBuffer& value) const = 0;
+			virtual Status GetKey(MemSlice& key) const = 0;
+			virtual Status GetValue(MemSlice& value) const = 0;
 			
 			/**
 			* place the iterator on the first occurance of key, 
@@ -30,7 +30,7 @@ namespace microdb {
 		virtual void SetCompareFunction(compareFun) = 0;
 		
 		virtual Status Insert(const MemSlice& key, const MemSlice& value) = 0;
-		virtual Status Get(const MemSlice* key) = 0;
+		virtual Status Get(const MemSlice& key, MemSlice& value) = 0;
 		virtual Status Delete(const MemSlice& key) = 0;
 		
 		virtual Status CreateIterator(Iterator& it) = 0;

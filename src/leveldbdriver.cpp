@@ -29,7 +29,17 @@ namespace microdb {
 		
 	}
 	
-	Status LevelDBDriver::Get(const MemSlice* key) {
+	Status LevelDBDriver::Get(const MemSlice& key, MemSlice& value) {
+		leveldb::Slice lkey((const char*)key.get(), key.size());
+		
+		std::string strVal;
+		leveldb::Status s = mDB->Get(leveldb::ReadOptions(), lkey, &strVal);
+		if(s.ok()) {
+			value = STDStrSlice( std::move(strVal) );
+			return OK;
+		} else {
+			return ERROR;
+		}
 		
 	}
 	Status LevelDBDriver::Delete(const MemSlice& key) {

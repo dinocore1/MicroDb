@@ -11,15 +11,15 @@ else
 endif
 
 
-leveldb_dep = dependency('leveldb', required : false)
-if leveldb_dep.found()
-	inc = []
-	link = []
-else
+#leveldb_dep = dependency('leveldb', required : false)
+#if leveldb_dep.found()
+#	inc = []
+#	link = []
+#else
 	leveldb_proj = subproject('leveldb')
 	leveldb_dep = leveldb_proj.get_variable('dep')
 	leveldb_inc = leveldb_proj.get_variable('incdir')
-endif
+#endif
 
 gtest_sp = subproject('gtest')
 

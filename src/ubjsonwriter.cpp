@@ -1,6 +1,8 @@
+#include "portable_endian.h"
+
 #include <cstdint>
 #include <cstring>
-#include "portable_endian.h"
+
 
 #include <microdb/value.h>
 #include <microdb/serialize.h>
