@@ -7,15 +7,14 @@
 
 namespace microdb {
 	
-	class Index {
-		private:
+	class Index : public Environment {
+		protected:
 		const std::string mName;
 		std::atomic<uint64_t> mSequence;
 		std::unique_ptr< ViewQuery > mQuery;
 		
 		public:
-		Index(const std::string& name)
-		: mName(name) {}
+		Index(const std::string& name);
 		
 		void setQuery(std::unique_ptr< ViewQuery >& ptr) {
 			mQuery = std::move(ptr);
@@ -30,6 +29,10 @@ namespace microdb {
 		}
 		
 	};
+	
+	static Index& getPrimaryIndex();
+	
+	
 }
 
 #endif // INDEX_H_

@@ -138,6 +138,20 @@ TEST(value, compare) {
   ASSERT_TRUE(v1 == v1);
 }
 
+TEST(value, compare_null) {
+  Value v1;
+  Value v2;
+  
+  ASSERT_TRUE(v1 == v2);
+  
+  v2 = "string";
+  
+  ASSERT_TRUE(v1 != v2);
+  
+  v2.SetNull();
+  ASSERT_TRUE(v1 == v2);
+}
+
 TEST(value, compare_string) {
   
   Value v1 = "abb";

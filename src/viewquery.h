@@ -340,6 +340,19 @@ namespace microdb {
 
       std::string toString();
     };
+    
+    class NullLiteralSelector : public Selector {
+        public:
+        NullLiteralSelector() {}
+        
+        void select(Environment*, Value& retval) {
+            retval.SetNull();
+        }
+        
+        std::string toString() {
+            return "null";
+        }
+    };
 
     typedef struct ParserStruct {
         void* svt;

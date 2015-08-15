@@ -29,5 +29,21 @@ namespace microdb {
             retval.SetNull();
         }
     }
+    
+    void setValue(Environment* env, Value& retval, const std::vector< Selector* >& args) {
+        
+        if(args.size() == 3) {
+            Value obj, key, value;
+            args[0]->select(env, obj);
+            
+            if(obj.IsObject()) {
+                args[1]->select(env, key);
+                if(key.IsString()) {
+                    args[2]->select(env, value);
+                    obj[key.asString()] = value;
+                }
+            }
+        }
+    }
 
-}
+} // namespace microdb

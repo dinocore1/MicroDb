@@ -25,7 +25,7 @@
 }
 
 %token TIF TLPAREN TRPAREN TLBRACE TRBRACE TLSBRACE TRSBRACE TDOT
-%token TPATHSTART TCOMMA TELSE
+%token TPATHSTART TCOMMA TELSE TNULL
 %token TASSIGN TEQUALS TLEQ TGEQ TGT TLT TNEQ
 %token <ival> TINT
 %token <fval> TFLOAT
@@ -110,6 +110,7 @@ literal
     : TSTRLITERAL { $$ = new StrLiteralSelector(*$1); delete $1; }
     | TINT { $$ = new IntLiteralSelector($1); }
     | TFLOAT { $$ = new FloatLiteralSelector($1); }
+    | TNULL { $$ = new NullLiteralSelector(); }
     ;
 
 funCall
