@@ -11,6 +11,7 @@ namespace microdb {
 		private:
 		const std::string mName;
 		std::atomic<uint64_t> mSequence;
+		ViewQuery mQuery;
 		
 		public:
 		Index(const std::string& name)
@@ -23,8 +24,6 @@ namespace microdb {
 		bool operator< (const Index& o) {
 			return mName.compare(o.mName) < 0;
 		}
-		
-		ViewQuery mQuery;
 		
 	};
 }

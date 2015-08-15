@@ -33,9 +33,9 @@ namespace microdb {
         virtual ~DB();
         
         //CRUD API
-        virtual Status Insert(const Value& value, std::string& key) = 0;
-        virtual Status Update(const std::string& key, const Value& value) = 0;
-        virtual Status Delete(const std::string& key) = 0;
+        virtual Status Insert(Value& key, Value& value) = 0;
+        virtual Status Update(Value& key, Value& value) = 0;
+        virtual Status Delete(const Value& key) = 0;
 
         //Query API
         virtual Status Query(const std::string& query, Iterator& it) = 0;

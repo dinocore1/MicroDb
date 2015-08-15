@@ -270,9 +270,8 @@ namespace microdb {
             if(mParent != nullptr){
                 Value parent;
                 mParent->select(env, parent);
-                const char* memberName = mMemberName.c_str();
-                if(parent.IsObject() && parent.HasKey(memberName)){
-                    retval = parent[memberName];
+                if(parent.IsObject() && parent.HasKey(mMemberName)){
+                    retval = parent[mMemberName];
                     return;
                 }
             }
@@ -365,6 +364,6 @@ namespace microdb {
         std::string toString() const;
 
     };
-}
+} // namespace microdb
 
-#endif
+#endif // MicroDB_viewquery_h
