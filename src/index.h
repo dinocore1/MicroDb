@@ -24,6 +24,8 @@ namespace microdb {
 			return mName;
 		}
 		
+		void emit(Value& key, Value& obj);
+		
 		bool operator< (const Index& o) {
 			return mName.compare(o.mName) < 0;
 		}

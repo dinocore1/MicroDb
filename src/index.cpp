@@ -6,11 +6,6 @@ using namespace std;
 
 namespace microdb {
 	
-	void createUUID(Environment* env, Value& retval, const std::vector< Selector* >& args) {
-		UUID id = UUID::createRandom();
-		retval = id.getString();
-	}
-	
 	class PrimaryIndex : public Index {
 		private:
 		void setQuery(std::unique_ptr< ViewQuery >& ptr) = delete;
@@ -18,11 +13,12 @@ namespace microdb {
 		public:
 		PrimaryIndex()
 		: Index("primary") {
-			unique_ptr< ViewQuery> query(new ViewQuery());
-			query->compile("if(obj.id == null) { setValue(obj, \"id\", createUUID() }");
-			mQuery = std::move(query);
-			
+			SetFunction("setValue", setValue);
 			SetFunction("createUUID", createUUID);
+			
+			unique_ptr< ViewQuery> query(new ViewQuery());
+			query->compile("if(obj.id == null) { setValue(obj, \"id\", createUUID() } emit(obj.id)");
+			mQuery = std::move(query);
 		}
 		
 		
@@ -34,9 +30,17 @@ namespace microdb {
 		return mPrimaryIndex;
 	}
 	
+	void indexEmit(Environment* env, Value& retval, const std::vector< Selector* >& args) {
+		Index* index = reinterpret_cast<Index*>(env);
+		Value& obj = env->GetVar("obj");
+		index->emit(args, obj);
+		
+		//TODO mSequence++
+	}
+	
 	Index::Index(const std::string& name)
 	: mName(name) {
-		
+		SetFunction("emit", indexEmit);
 	}
 	
 	

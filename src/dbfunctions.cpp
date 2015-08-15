@@ -1,13 +1,15 @@
 
-#include <microdb/value.h>
-#include <microdb/serialize.h>
+#include "microdb.h"
 
-#include "sha256.h"
 
 #include "dbfunctions.h"
 
 namespace microdb {
 
+    void createUUID(Environment* env, Value& retval, const std::vector< Selector* >& args) {
+		UUID id = UUID::createRandom();
+		retval = id.getString();
+	}
 
     void hash(Environment* env, Value& retval, const std::vector< Selector* >& args) {
         char* buf;
@@ -43,6 +45,7 @@ namespace microdb {
                     obj[key.asString()] = value;
                 }
             }
+            retval = std::move(obj);
         }
     }
 

@@ -6,7 +6,7 @@
 
 namespace microdb {
 
-
+	void createUUID(Environment* env, Value& retval, const std::vector< Selector* >& args);
 	void hash(Environment* env, Value& retval, const std::vector< Selector* >& args);
 		
 	/**

@@ -8,6 +8,7 @@
 #include <microdb/microdb.h>
 
 #include "utils.h"
+#include "sha256.h"
 #include "uuid.h"
 #include "driver.h"
 #include "viewquery.h"
