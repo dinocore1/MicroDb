@@ -29,7 +29,7 @@ namespace microdb {
 
     typedef std::vector< Statement* > stmtList;
     typedef std::vector< Selector* > argList;
-    typedef void (*dataFunction)(Environment* env, Value& retval, const std::vector< Selector* >& args);
+    typedef std::function<void(Environment*env, Value& retval, const std::vector< Selector* >& args)> dataFunction;
 
     inline void destroyStmtList(stmtList& list) {
         for(Statement* stmt : list) {

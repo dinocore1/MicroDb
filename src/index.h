@@ -7,6 +7,9 @@
 
 namespace microdb {
 	
+	typedef std::function<void(Value& key, Value& value)> emitCallback;
+	
+	
 	class Index : public Environment, public Serializable {
 		private:
 		std::string mName;
@@ -14,33 +17,22 @@ namespace microdb {
 		protected:
 		std::atomic<uint64_t> mSequence;
 		std::unique_ptr< ViewQuery > mQuery;
-		Driver* mDriver;
+		
+		void emit(Value& retval, const std::vector< Selector* >& args, emitCallback);
 		
 		public:
 		Index() {};
 		Index(const std::string& name);
 		virtual ~Index() {}
 		
-		void setQuery(std::unique_ptr< ViewQuery >& ptr) {
-			mQuery = std::move(ptr);
-		}
+		const std::string getName() const;
+		void setQuery(std::unique_ptr< ViewQuery > ptr);
 		
-		void setDriver(Driver* driver) {
-			mDriver = driver;
-		}
+		void index(Value&, emitCallback);
 		
-		const std::string getName() {
-			return mName;
-		}
-		
-		void index(Value&);
-		
-		void emit(Value& key, Value& value);
-		
+		//Serializable API
 		Value toValue();
 		void fromValue(const Value&);
-		
-		
 	};
 	
 	static Index& getPrimaryIndex();

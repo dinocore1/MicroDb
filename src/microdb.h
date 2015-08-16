@@ -2,6 +2,11 @@
 #ifndef MICRODB_INC_H_
 #define MICRODB_INC_H_
 
+#define META_KEY "meta"
+#define KEY_INSTANCEID "instance"
+#define KEY_INDICIES "indicies"
+#define KEY_ID "id"
+
 #include <microdb/value.h>
 #include <microdb/serialize.h>
 #include <microdb/status.h>

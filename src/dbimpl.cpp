@@ -10,6 +10,7 @@
 
 
 using namespace std;
+using namespace std::placeholders;
 
 namespace microdb {
     
@@ -33,11 +34,6 @@ namespace microdb {
 
     DBImpl::~DBImpl() {}
     
-    #define META_KEY "meta"
-    #define KEY_INSTANCEID "instance"
-    #define KEY_INDICIES "indicies"
-    #define KEY_ID "id"
-    
     void loadDBObj(Driver& driver, const CMem& key, Value& dst) {
         MemSlice dataSlice;
         if(driver.Get(key, dataSlice) == OK){
@@ -52,8 +48,7 @@ namespace microdb {
     
     Status DBImpl::init() {
         
-        Index& primaryIndex = getPrimaryIndex();
-        mIndicies[primaryIndex.getName()] = &primaryIndex;
+        mPrimaryIndex = &getPrimaryIndex();
         
         Value metaObj;
         loadDBObj(*mDBDriver, META_KEY, metaObj);
@@ -65,13 +60,12 @@ namespace microdb {
         } else {
             mInstanceId.parse(metaObj[KEY_INSTANCEID].asString().c_str());
             
-            //indicies
+            //load all secondary indicies
             Value indicies = metaObj[KEY_INDICIES];
             const int numIndicies = indicies.Size();
             for(int i=0;i<numIndicies;i++){
                 Value index = indicies[i];
                 Index* idxPtr = new Index();
-                idxPtr->setDriver(mDBDriver.get());
                 idxPtr->fromValue(index);
                 mIndicies[idxPtr->getName()] = idxPtr;
             }
@@ -80,21 +74,75 @@ namespace microdb {
         return OK;
     }
     
+    void InsertCallback(Driver* driver, Value& indexEntry, Value& value) {
+        MemSlice keySlice, valueSlice;
+		
+		MemOutputStream keyOut;
+		UBJSONWriter keyWriter(keyOut);
+		keyWriter.write(indexEntry);
+		toMemSlice(keyOut, keySlice);
+		
+		if(!value.IsNull()) {
+			MemOutputStream valueOut;
+			UBJSONWriter valueWriter(valueOut);
+			valueWriter.write(value);
+			
+			toMemSlice(valueOut, valueSlice);
+		}
+		driver->Insert(keySlice, valueSlice);
+    }
+    
     Status DBImpl::Insert(Value& key, Value& value) {
         
         if(!value.IsObject()) {
             return ERROR;
         }
         
+        auto cb = std::bind(InsertCallback, mDBDriver.get(), _1, _2);
+        
         mDBDriver->BeginTransaction();
+        
+        mPrimaryIndex->index(value, [&](Value& indexEntry, Value& obj) {
+            key = indexEntry;
+            InsertCallback(mDBDriver.get(), indexEntry, obj);
+        });
+        
         for(auto entry : mIndicies) {
-            entry.second->index(value);
+            entry.second->index(value, cb);
         }
         mDBDriver->CommitTransaction();
         
-        key = value[KEY_ID];
-        
         return OK;
+    }
+    
+    void DeleteCallback(Driver* driver, Value& indexEntry) {
+        MemSlice keySlice;
+        MemOutputStream keyOut;
+		UBJSONWriter keyWriter(keyOut);
+		keyWriter.write(indexEntry);
+		toMemSlice(keyOut, keySlice);
+        
+        driver->Delete(keySlice);
+    }
+    
+    Status DBImpl::Delete(const Value& key) {
+        
+        Value value;
+        MemSlice keySlice, valueSlice;
+        toMemSlice(key, keySlice);
+        mDBDriver->Get(keySlice, valueSlice);
+        
+        auto cb = std::bind(DeleteCallback, mDBDriver.get(), _1);
+        
+        mDBDriver->BeginTransaction();
+        for(auto entry : mIndicies) {
+            entry.second->index(value, cb);
+        }
+        
+        mPrimaryIndex->index(value, cb);
+        
+        mDBDriver->CommitTransaction();
+        
     }
 
 }

@@ -16,6 +16,7 @@ namespace microdb {
     private:
         UUID mInstanceId;
         std::unique_ptr< Driver > mDBDriver;
+        Index* mPrimaryIndex;
         std::map<std::string, Index* > mIndicies;
         
     public:

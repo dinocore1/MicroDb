@@ -97,6 +97,21 @@ namespace microdb {
 		
 	};
 	
+	inline void toMemSlice(MemOutputStream& out, MemSlice& retval) {
+		void* ptr;
+		size_t size;
+		out.GetData(ptr, size);
+		retval = CMem(ptr, size, false);
+	}
+	
+	inline Value MemSliceToValue(MemSlice& slice) {
+		MemInputStream in(slice.get(), slice.size());
+		UBJSONReader reader(in);
+		Value retval;
+		reader.read(retval);
+		return std::move(retval);
+	}
+	
 }
 
 #endif // UTILS_H_
