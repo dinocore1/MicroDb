@@ -7,19 +7,32 @@ using namespace std::placeholders;
 
 namespace microdb {
 	
+	Value createPrimaryIndexEntry(const Value& primaryKey) {
+		Value retval;
+		
+		retval.Add("o");
+		retval.Add(primaryKey);
+		
+		return retval;
+	}
+	
 	class PrimaryIndex : public Index {
 		private:
 		void setQuery(std::unique_ptr< ViewQuery >& ptr) = delete;
 			
 		public:
 		PrimaryIndex()
-		: Index("primary") {
-			SetFunction("setValue", setValue);
-			SetFunction("createUUID", createUUID);
+		: Index("primary") { }
+		
+		void index(Value& obj, emitCallback cb) {
+			Value key = obj.Get(KEY_ID);
+			if(key.IsNull()) {
+				key = UUID::createRandom();
+				obj.Set(KEY_ID, key);
+			}
 			
-			unique_ptr< ViewQuery> query(new ViewQuery());
-			query->compile("if(obj.KEY_ID == null) { setValue(obj, \"KEY_ID\", createUUID() } emit(obj.KEY_ID, obj)");
-			mQuery = std::move(query);
+			Value indexEntry = createPrimaryIndexEntry(key);
+			cb(key, obj, indexEntry);
 		}
 		
 	};
@@ -28,6 +41,17 @@ namespace microdb {
 	
 	Index& getPrimaryIndex() {
 		return mPrimaryIndex;
+	}
+	
+	Index::Index(const std::string& name)
+	: mName(name) { }
+	
+	const std::string Index::getName() const {
+		return mName;
+	}
+	
+	void Index::setQuery(std::unique_ptr<ViewQuery> ptr) {
+		mQuery = std::move( ptr );
 	}
 	
 	void Index::emit(Value& retval, const std::vector< Selector* >& args, emitCallback cb) {
@@ -46,26 +70,16 @@ namespace microdb {
 				indexEntry.Add("i");
 				indexEntry.Add(mName);
 				indexEntry.Add(key);
-				indexEntry.Add(value[KEY_ID]);
 				
-				cb(indexEntry, value);
+				Value obj = GetVar("obj");
+				indexEntry.Add(obj[KEY_ID]);
+				
+				cb(key, value, indexEntry);
 			}
 		}
 	}
 	
-	Index::Index(const std::string& name)
-	: mName(name) { }
-	
-	const std::string Index::getName() const {
-		return mName;
-	}
-	
-	void Index::setQuery(std::unique_ptr<ViewQuery> ptr) {
-		mQuery = std::move( ptr );
-	}
-	
 	void Index::index(Value& obj, emitCallback cb) {
-		
 		mVariables.clear();
 		SetVar("obj", obj);
 		SetFunction("emit", std::bind(&Index::emit, this, _2, _3, cb) );

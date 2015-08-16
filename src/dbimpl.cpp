@@ -92,21 +92,20 @@ namespace microdb {
 		driver->Insert(keySlice, valueSlice);
     }
     
-    Status DBImpl::Insert(Value& key, Value& value) {
+    Status DBImpl::Insert(Value& returnKey, Value& value) {
         
         if(!value.IsObject()) {
             return ERROR;
         }
         
-        auto cb = std::bind(InsertCallback, mDBDriver.get(), _1, _2);
-        
         mDBDriver->BeginTransaction();
         
-        mPrimaryIndex->index(value, [&](Value& indexEntry, Value& obj) {
-            key = indexEntry;
+        mPrimaryIndex->index(value, [&](Value key, Value obj, Value indexEntry) {
+            returnKey = key;
             InsertCallback(mDBDriver.get(), indexEntry, obj);
         });
         
+        auto cb = std::bind(InsertCallback, mDBDriver.get(), _3, _2);
         for(auto entry : mIndicies) {
             entry.second->index(value, cb);
         }

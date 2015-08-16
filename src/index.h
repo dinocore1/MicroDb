@@ -7,7 +7,7 @@
 
 namespace microdb {
 	
-	typedef std::function<void(Value& key, Value& value)> emitCallback;
+	typedef std::function<void(Value key, Value value, Value indexEntry)> emitCallback;
 	
 	
 	class Index : public Environment, public Serializable {
@@ -28,7 +28,7 @@ namespace microdb {
 		const std::string getName() const;
 		void setQuery(std::unique_ptr< ViewQuery > ptr);
 		
-		void index(Value&, emitCallback);
+		virtual void index(Value&, emitCallback);
 		
 		//Serializable API
 		Value toValue();
@@ -36,6 +36,7 @@ namespace microdb {
 	};
 	
 	static Index& getPrimaryIndex();
+	static Value createPrimaryIndexEntry(const Value& primaryKey);
 	
 	
 }
