@@ -134,5 +134,21 @@ namespace microdb {
         
         return OK;
     }
+    
+    Status DBImpl::Update(Value& key, Value& value) {
+        return ERROR;
+    }
+    
+    Status DBImpl::Query(const std::string& query, Iterator& it) {
+        return ERROR;
+    }
+    
+    Status DBImpl::AddIndex(const std::string& query) {
+        
+    }
+    
+    Status DBImpl::DeleteIndex(const std::string& query) {
+        
+    }
 
 }

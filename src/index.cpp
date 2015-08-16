@@ -86,5 +86,28 @@ namespace microdb {
 		mQuery->execute(this);
 	}
 	
+	#define KEY_NAME "name"
+	#define KEY_SEQUENCE "sequence"
+	#define KEY_QUERY "query"
+	
+	Value Index::toValue() {
+		Value retval;
+		retval.Set(KEY_NAME, mName);
+		retval.Set(KEY_SEQUENCE, mSequence.load());
+		retval.Set(KEY_QUERY, mQuery->toString());
+		
+		return retval;
+	}
+	
+	void Index::fromValue(const Value& v) {
+		
+		mName = v.Get(KEY_NAME).asString();
+		mSequence = v.Get(KEY_SEQUENCE).asUint();
+		
+		unique_ptr<ViewQuery> query(new ViewQuery());
+		query->compile(v.Get(KEY_QUERY).asString().c_str());
+		mQuery = std::move(query);
+	}
+	
 	
 } // namespace microdb

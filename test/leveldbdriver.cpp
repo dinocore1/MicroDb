@@ -10,14 +10,14 @@ TEST(leveldbdriver, open_write_read) {
 	{
 		LevelDBDriver driver;
 		
-		ASSERT_EQ(OK, driver.open("test.db"));
+		ASSERT_EQ(OK, driver.open("leveldbtest.db"));
 		ASSERT_EQ(OK, driver.Insert(CMem("hello"), CMem("world")));
 	}
 	
 	{
 		LevelDBDriver driver;
 		
-		ASSERT_EQ(OK, driver.open("test.db"));
+		ASSERT_EQ(OK, driver.open("leveldbtest.db"));
 		
 		MemSlice value;
 		ASSERT_EQ(OK, driver.Get(CMem("hello"), value) );

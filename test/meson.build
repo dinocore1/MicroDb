@@ -48,3 +48,10 @@ test('leveldbdriver', executable('leveldbdriver', ['leveldbdriver.cpp', gtestmai
     link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
+
+test('db', executable('db', ['db.cpp', gtestmain],
+    include_directories : main_incdir,
+    dependencies : microdb_dep,
+    link_with : [ gtest_lib ],
+    link_args : '-lpthread'
+    ))
