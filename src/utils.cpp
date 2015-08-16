@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "microdb.h"
 #include "utils.h"
 
 namespace microdb {
@@ -78,6 +79,11 @@ namespace microdb {
 	MemSlice::MemSlice()
 	: mType(TYPE_NULL) {
 		
+	}
+	
+	MemSlice::MemSlice(const CMem& o)
+	: mType(TYPE_CMEM) {
+		new ( &(mData.CMemObj)) CMem(o);
 	}
 	
 	MemSlice::MemSlice(CMem&& o)

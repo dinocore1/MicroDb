@@ -7,15 +7,19 @@
 
 namespace microdb {
 	
-	class Index : public Environment {
+	class Index : public Environment, public Serializable {
+		private:
+		std::string mName;
+		
 		protected:
-		const std::string mName;
 		std::atomic<uint64_t> mSequence;
 		std::unique_ptr< ViewQuery > mQuery;
 		Driver* mDriver;
 		
 		public:
+		Index() {};
 		Index(const std::string& name);
+		virtual ~Index() {}
 		
 		void setQuery(std::unique_ptr< ViewQuery >& ptr) {
 			mQuery = std::move(ptr);
@@ -29,11 +33,13 @@ namespace microdb {
 			return mName;
 		}
 		
+		void index(Value&);
+		
 		void emit(Value& key, Value& value);
 		
-		bool operator< (const Index& o) {
-			return mName.compare(o.mName) < 0;
-		}
+		Value toValue();
+		void fromValue(const Value&);
+		
 		
 	};
 	

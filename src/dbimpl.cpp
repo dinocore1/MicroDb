@@ -6,120 +6,95 @@
 #include "microdb.h"
 
 #include "dbimpl.h"
+#include "leveldbdriver.h"
 
 
 using namespace std;
-
-#define DOC_META "microdb_meta"
-#define KEY_INSTANCEID "id"
 
 namespace microdb {
     
      Status DB::Open(const std::string& dburl, DB** dbptr) {
          
+         unique_ptr< LevelDBDriver > driver(new LevelDBDriver());
+         Status retcode = driver->open(dburl);
+         if(retcode == OK) {
+             DBImpl* db = new DBImpl( std::move(driver) );
+             retcode = db->init();
+             *dbptr = db;
+         }
 
+        return retcode;
+    }
+
+    DB::~DB() {}
+
+    DBImpl::DBImpl(unique_ptr<Driver> ptr)
+    : mDBDriver(std::move(ptr)) { }
+
+    DBImpl::~DBImpl() {}
+    
+    #define META_KEY "meta"
+    #define KEY_INSTANCEID "instance"
+    #define KEY_INDICIES "indicies"
+    #define KEY_ID "id"
+    
+    void loadDBObj(Driver& driver, const CMem& key, Value& dst) {
+        MemSlice dataSlice;
+        if(driver.Get(key, dataSlice) == OK){
+            byte* ptr = dataSlice.get();
+            size_t size = dataSlice.size();
+            
+            MemInputStream in(ptr, size);
+            UBJSONReader reader(in);
+            reader.read(dst);   
+        }   
+    }
+    
+    Status DBImpl::init() {
+        
+        Index& primaryIndex = getPrimaryIndex();
+        mIndicies[primaryIndex.getName()] = &primaryIndex;
+        
+        Value metaObj;
+        loadDBObj(*mDBDriver, META_KEY, metaObj);
+        
+        if(metaObj.IsNull()) {
+            mInstanceId = UUID::createRandom();
+            metaObj.Set(KEY_INSTANCEID, mInstanceId.getString());
+            metaObj.Set(KEY_INDICIES, Value());
+        } else {
+            mInstanceId.parse(metaObj[KEY_INSTANCEID].asString().c_str());
+            
+            //indicies
+            Value indicies = metaObj[KEY_INDICIES];
+            const int numIndicies = indicies.Size();
+            for(int i=0;i<numIndicies;i++){
+                Value index = indicies[i];
+                Index* idxPtr = new Index();
+                idxPtr->setDriver(mDBDriver.get());
+                idxPtr->fromValue(index);
+                mIndicies[idxPtr->getName()] = idxPtr;
+            }
+        }
         
         return OK;
     }
-
-
-/*
-    void indexMapEnvEmit(Environment* env, Value& retval, const std::vector< Selector* >& args);
-
-    class IndexMapEnv : public Environment {
-
-    protected:
-        unsigned int mCount;
-        const std::string* mObjId;
-        const ViewQuery* mView;
-
-    public:
-        IndexMapEnv() {
-            mFunctions["emit"] = indexMapEnvEmit;
-            mFunctions["hash"] = hash;
-        }
-
-        virtual ~IndexMapEnv() {}
-
-        void execute(const std::string& objId, Value& obj, const ViewQuery* view) {
-            mObjId = &objId;
-            mView = view;
-            mVariables.clear();
-            SetVar("obj", obj);
-            mCount = 0;
-            mView->execute(this);
-        }
-
-        virtual void emit(const std::vector< Selector* >& args) = 0;
-
-
-    };
-
-    class CreateIndexMapEnv : public IndexMapEnv {
-    public:
-
-        CreateIndexMapEnv()
-        : IndexMapEnv() { }
-
-        void emit(const std::vector< Selector* >& args) {
-            if(!args.empty()) {
-                {
-                Value argValue;
-                args[0]->select(this, argValue);
-                }
-
-                char* buf = nullptr;
-                uint32_t size = 0;
+    
+    Status DBImpl::Insert(Value& key, Value& value) {
         
-                MemOutputStream out;
-                UBJSONWriter writer(out);
-                    
-                if(args.size() >= 2) {
-                    Value argValue;
-                    args[1]->select(this, argValue);
-                    
-                    writer.write(argValue);
-                    out.GetData((void*&)buf, size);
-                }
-
-                mWriteBatch->Put(builder.getSlice(), leveldb::Slice(buf, size));
-            }
+        if(!value.IsObject()) {
+            return ERROR;
         }
-    };
-
-    class DeleteIndexMapEnv : public IndexMapEnv {
-    public:
-
-        DeleteIndexMapEnv()
-        : IndexMapEnv() { }
-
-        void emit(const std::vector< Selector* >& args) {
-            if(!args.empty()) {
-                IndexDataumBuilder builder;
-                Value argValue;
-                args[0]->select(this, argValue);
-                generateKey(builder, argValue);
-                mWriteBatch->Delete(builder.getSlice());
-            }
+        
+        mDBDriver->BeginTransaction();
+        for(auto entry : mIndicies) {
+            entry.second->index(value);
         }
-    };
-
-    void indexMapEnvEmit(Environment* env, Value& retval, const std::vector< Selector* >& args) {
-        IndexMapEnv* mapEnv = (IndexMapEnv*)env;
-        mapEnv->emit(args);
-        retval.SetNull();
-    }
-*/
-
-
-
-    DB::~DB() {
-
-    }
-
-    DBImpl::DBImpl() { }
-
-    DBImpl::~DBImpl() {
+        mDBDriver->CommitTransaction();
+        
+        key = value[KEY_ID];
+        
+        return OK;
     }
 
 }

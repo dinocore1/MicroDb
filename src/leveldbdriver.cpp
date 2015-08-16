@@ -68,7 +68,7 @@ namespace microdb {
 		
 	}
 	
-	void LevelDBDriver::BeginTransactions() {
+	void LevelDBDriver::BeginTransaction() {
 		if(!mWriteBatch) {
 			mWriteBatch = std::unique_ptr< leveldb::WriteBatch > (new leveldb::WriteBatch());
 		}

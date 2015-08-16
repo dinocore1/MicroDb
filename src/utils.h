@@ -5,6 +5,13 @@
 
 namespace microdb {
 	
+	class Serializable {
+		public:
+		virtual ~Serializable() {};
+		virtual Value toValue() = 0;
+		virtual void fromValue(const Value&) = 0;
+	};
+	
 	typedef uint8_t byte;
 	
 	class slice_t {
@@ -74,6 +81,7 @@ namespace microdb {
 		
 		MemSlice();
 		virtual ~MemSlice();
+		MemSlice(const CMem&);
 		MemSlice(CMem&&);
 		MemSlice(STDStrSlice&&);
 		

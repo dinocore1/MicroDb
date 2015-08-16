@@ -10,20 +10,20 @@
 #include <microdb/value.h>
 #include <microdb/microdb.h>
 
-using namespace std;
-
 namespace microdb {
     
     class DBImpl : public DB {
     private:
         UUID mInstanceId;
-        unique_ptr< Driver > mDBDriver;
-        set< Index > mIndicies;
+        std::unique_ptr< Driver > mDBDriver;
+        std::map<std::string, Index* > mIndicies;
         
     public:
         
-        DBImpl();
+        DBImpl(std::unique_ptr<Driver> ptr);
         virtual ~DBImpl();
+        
+        Status init();
         
         //CRUD API
         virtual Status Insert(Value& key, Value& value);

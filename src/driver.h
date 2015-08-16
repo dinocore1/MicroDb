@@ -35,7 +35,7 @@ namespace microdb {
 		
 		virtual Status CreateIterator(Iterator& it) = 0;
 		
-		virtual void BeginTransactions() = 0;
+		virtual void BeginTransaction() = 0;
 		virtual void CommitTransaction() = 0;
 		virtual void RollBackTransaction() = 0;
 		
