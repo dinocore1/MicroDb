@@ -7,7 +7,7 @@ using namespace std::placeholders;
 
 namespace microdb {
 	
-	Value createPrimaryIndexEntry(const Value& primaryKey) {
+	Value Index::createPrimaryIndexEntry(const Value& primaryKey) {
 		Value retval;
 		
 		retval.Add("o");
@@ -27,7 +27,7 @@ namespace microdb {
 		void index(Value& obj, emitCallback cb) {
 			Value key = obj.Get(KEY_ID);
 			if(key.IsNull()) {
-				key = UUID::createRandom();
+				key = UUID::createRandom().getString();
 				obj.Set(KEY_ID, key);
 			}
 			
@@ -39,7 +39,7 @@ namespace microdb {
 	
 	PrimaryIndex mPrimaryIndex;
 	
-	Index& getPrimaryIndex() {
+	Index& Index::getPrimaryIndex() {
 		return mPrimaryIndex;
 	}
 	

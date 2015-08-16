@@ -33,11 +33,10 @@ namespace microdb {
 		//Serializable API
 		Value toValue();
 		void fromValue(const Value&);
+		
+		static Index& getPrimaryIndex();
+		static Value createPrimaryIndexEntry(const Value& primaryKey);
 	};
-	
-	static Index& getPrimaryIndex();
-	static Value createPrimaryIndexEntry(const Value& primaryKey);
-	
 	
 }
 

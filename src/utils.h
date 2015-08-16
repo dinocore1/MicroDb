@@ -81,6 +81,7 @@ namespace microdb {
 		
 		MemSlice();
 		virtual ~MemSlice();
+		MemSlice(MemSlice&&);
 		MemSlice(const CMem&);
 		MemSlice(CMem&&);
 		MemSlice(STDStrSlice&&);
@@ -97,14 +98,18 @@ namespace microdb {
 		
 	};
 	
-	inline void toMemSlice(MemOutputStream& out, MemSlice& retval) {
+	inline MemSlice ValueToMemSlice(const Value& value, MemOutputStream& out) {
 		void* ptr;
 		size_t size;
+		
+		UBJSONWriter writer(out);
+		writer.write(value);
+		
 		out.GetData(ptr, size);
-		retval = CMem(ptr, size, false);
+		return MemSlice( CMem(ptr, size, false) );
 	}
 	
-	inline Value MemSliceToValue(MemSlice& slice) {
+	inline Value MemSliceToValue(const MemSlice& slice) {
 		MemInputStream in(slice.get(), slice.size());
 		UBJSONReader reader(in);
 		Value retval;
