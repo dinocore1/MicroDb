@@ -25,8 +25,8 @@ namespace microdb {
 		: Index("primary") { }
 		
 		void index(Value& obj, emitCallback cb) {
-			Value key = obj.Get(KEY_ID);
-			if(key.IsNull()) {
+			Value key;
+			if(!obj.HasKey(KEY_ID) || !(key = obj[KEY_ID]).IsString()) {
 				key = UUID::createRandom().getString();
 				obj.Set(KEY_ID, key);
 			}
