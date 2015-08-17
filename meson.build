@@ -1,4 +1,4 @@
-project('MicroDB an Embedded Object Database', 'cpp')
+project('MicroDB an Embedded Object Database', ['cpp', 'java'])
 add_global_arguments('-std=c++11', language : 'cpp')
 
 flex = find_program('flex')
@@ -27,4 +27,5 @@ incdir = include_directories('include')
 
 subdir('include')
 subdir('src')
+subdir('java')
 subdir('test')

@@ -1,1 +1,3 @@
 option('shared_lib', type : 'boolean', value : false)
+option('build_jni', type : 'boolean', value : false)
+option('jdk_home_inc', type : 'string', description : 'path to where the jdk jni headers are located ($JAVA_HOME/include)')
