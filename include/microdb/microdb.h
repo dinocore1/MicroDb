@@ -12,18 +12,18 @@ namespace microdb {
 
     class Iterator {
     public:
-      Iterator();
-      virtual ~Iterator();
+      
+      virtual ~Iterator() {};
 
       virtual void SeekToFirst() = 0;
       virtual void SeekToLast() = 0;
 
-      virtual bool Valid() const = 0;
+      virtual bool Valid() = 0;
       virtual void Next() = 0;
       virtual void Prev() = 0;
 
-      virtual std::string& GetKey() const = 0;
-      virtual Value& GetValue() const = 0;
+      virtual Value GetKey() = 0;
+      virtual Value GetValue() = 0;
     };
 
     class DB {

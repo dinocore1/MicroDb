@@ -14,14 +14,59 @@ using namespace std::placeholders;
 
 namespace microdb {
     
+    bool startsWith(const MemSlice& value, const MemSlice& prefix) {
+        const size_t size = prefix.size() - 1;
+        if(value.size() < size) {
+            return false;
+        }
+        byte* valuePtr = value.get();
+        byte* prefixPtr = prefix.get();
+        for(size_t i=0;i<size;i++){
+            if(valuePtr[i] != prefixPtr[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
     
     IteratorImpl::IteratorImpl(Driver::Iterator* it)
     : mIt(it) {}
     
     IteratorImpl::~IteratorImpl() {}
     
+    bool IteratorImpl::Valid() {
+        bool retval = mIt->IsValid();
+        if(retval) {
+            mIt->GetKey(mKeySlice);
+            retval = startsWith(mKeySlice, mPrefix);
+        }
+        return retval;
+    }
+    
     void IteratorImpl::SeekToFirst() {
         mIt->Seek(mPrefix);
+    }
+    
+    void IteratorImpl::SeekToLast() {
+        
+    }
+    
+    void IteratorImpl::Next() {
+        mIt->Next();
+    }
+    
+    void IteratorImpl::Prev() {
+        mIt->Prev();
+    }
+    
+    Value IteratorImpl::GetKey() {
+        mIt->GetKey(mKeySlice);
+        return MemSliceToValue(mKeySlice);
+    }
+    
+    Value IteratorImpl::GetValue() {
+        mIt->GetValue(mValueSlice);
+        return MemSliceToValue(mValueSlice);
     }
     
     
@@ -151,23 +196,27 @@ namespace microdb {
     }
     
     Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
+        
         IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator() );
         retval->mQuery.compile(query.c_str());
         
-        {
         Value prefixValue;
-		prefixValue.Add('i');
-		prefixValue.Add(index);
-        MemOutputStream out;
+        if(index == "primary") {
+            prefixValue.Add('o');
+        } else {
+		  prefixValue.Add('i');
+		  prefixValue.Add(index);
+        }
+        
         void* ptr;
         size_t size;
-        
+        MemOutputStream out;
         UBJSONWriter writer(out);
-		writer.write(prefixValue);
-		out.GetData(ptr, size);
         
+        writer.write(prefixValue);
+        out.GetData(ptr, size);
         retval->mPrefix = CMem::copy(ptr, size);
-        }
+        retval->SeekToFirst();
         
         return retval;
         

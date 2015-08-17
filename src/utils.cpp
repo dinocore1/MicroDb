@@ -6,7 +6,7 @@
 
 namespace microdb {
 	
-	CMem copy(void* ptr, const size_t size) {
+	CMem CMem::copy(void* ptr, const size_t size) {
 		void* cpy = malloc(size);
 		memcpy(cpy, ptr, size);
 		return CMem(cpy, size, true);

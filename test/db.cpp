@@ -21,10 +21,14 @@ TEST(db, insert) {
 	ASSERT_TRUE(!key.IsNull());
 	ASSERT_TRUE(key.IsString());
 	
-	std::stringbuf queryStr;
+	std::stringstream queryStr;
 	queryStr << "if(obj.id==\"" << key.asString() << "\")emit(obj)";
-	Iterator it;
+	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary", queryStr.str()) );
 	
-	ASSERT_TRUE(OK, dbPtr->Query(queryStr.str(), it);
+	it->SeekToFirst();
+	ASSERT_TRUE(it->Valid());
+	Value v2 = it->GetValue();
+	ASSERT_TRUE(v2.IsObject());
+	ASSERT_TRUE(v2["hello"].asString().compare("world") == 0);
 	
 }

@@ -2,6 +2,7 @@
 #include "leveldbdriver.h"
 
 #include <leveldb/write_batch.h>
+#include <leveldb/comparator.h>
 
 using namespace std;
 
@@ -13,11 +14,13 @@ namespace microdb {
 	Status LevelDBDriver::Iterator::GetKey(MemSlice& key) const {
 		leveldb::Slice keySlice = mIt->key();
 		key = CMem((void*)keySlice.data(), keySlice.size(), false);
+		return OK;
 	}
 	
 	Status LevelDBDriver::Iterator::GetValue(MemSlice& value) const {
 		leveldb::Slice valueSlice = mIt->value();
 		value = CMem((void*)valueSlice.data(), valueSlice.size(), false);
+		return OK;
 	}
 	
 	Status LevelDBDriver::Iterator::Seek(const MemSlice& key) {
@@ -48,9 +51,30 @@ namespace microdb {
 		}
 	}
 	
+	class LevelDBComparator : public leveldb::Comparator {
+		public:
+		int Compare(const leveldb::Slice& a, const leveldb::Slice& b) const {
+			Value av = MemSliceToValue( CMem((void*)a.data(), a.size(), false) );
+			Value bv = MemSliceToValue( CMem((void*)b.data(), b.size(), false) );
+			
+			return compareValue(av, bv);
+		}
+		
+		// Ignore the following methods for now:
+    	const char* Name() const { return "MicroDBComparator"; }
+    	void FindShortestSeparator(std::string*, const leveldb::Slice&) const { }
+    	void FindShortSuccessor(std::string*) const { }	
+	};
+	
+	LevelDBComparator COMPARATOR;
+	LevelDBComparator* getComparator() {
+		return &COMPARATOR;
+	}
+	
 	Status LevelDBDriver::open(const std::string& dbpath) {
 		leveldb::Options options;
   		options.create_if_missing = true;
+		options.comparator = getComparator();
   		leveldb::Status status = leveldb::DB::Open(options, dbpath.c_str(), &mDB);
 		return status.ok() ? OK : ERROR;
 	}
@@ -98,7 +122,7 @@ namespace microdb {
 		}
 	}
 	
-	Iterator* LevelDBDriver::CreateIterator() {
+	Driver::Iterator* LevelDBDriver::CreateIterator() {
 		return new LevelDBDriver::Iterator(mDB->NewIterator(leveldb::ReadOptions()));
 	}
 	

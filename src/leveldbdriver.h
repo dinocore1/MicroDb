@@ -45,7 +45,7 @@ namespace microdb {
 		virtual Status Get(const MemSlice& key, MemSlice& value);
 		virtual Status Delete(const MemSlice& key);
 		
-		virtual Iterator* CreateIterator();
+		virtual Driver::Iterator* CreateIterator();
 		
 		virtual void BeginTransaction();
 		virtual void CommitTransaction();

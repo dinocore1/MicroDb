@@ -15,6 +15,7 @@ namespace microdb {
     class IteratorImpl : public Iterator {
       private:
       std::unique_ptr<Driver::Iterator> mIt;
+      MemSlice mKeySlice, mValueSlice;
 
       public:
       MemSlice mPrefix;
@@ -26,12 +27,12 @@ namespace microdb {
       virtual void SeekToFirst();
       virtual void SeekToLast();
 
-      virtual bool Valid() const;
+      virtual bool Valid();
       virtual void Next();
       virtual void Prev();
 
-      virtual std::string& GetKey() const;
-      virtual Value& GetValue() const;  
+      virtual Value GetKey();
+      virtual Value GetValue();  
     };
     
     class DBImpl : public DB {
