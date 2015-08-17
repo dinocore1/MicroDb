@@ -14,7 +14,10 @@ using namespace std::placeholders;
 
 namespace microdb {
     
-     Status DB::Open(const std::string& dburl, DB** dbptr) {
+    
+    Iterator::Iterator() {}
+    
+    Status DB::Open(const std::string& dburl, DB** dbptr) {
          
          unique_ptr< LevelDBDriver > driver(new LevelDBDriver());
          Status retcode = driver->open(dburl);
@@ -139,8 +142,8 @@ namespace microdb {
         return ERROR;
     }
     
-    Status DBImpl::Query(const std::string& query, Iterator& it) {
-        return ERROR;
+    Iterator* DBImpl::Query(const std::string& query) {
+        
     }
     
     Status DBImpl::AddIndex(const std::string& query) {

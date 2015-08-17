@@ -3,7 +3,41 @@
 
 #include <leveldb/write_batch.h>
 
+using namespace std;
+
 namespace microdb {
+	
+	LevelDBDriver::Iterator::Iterator(leveldb::Iterator* it)
+	: mIt(it) {}
+	
+	Status LevelDBDriver::Iterator::GetKey(MemSlice& key) const {
+		leveldb::Slice keySlice = mIt->key();
+		key = CMem((void*)keySlice.data(), keySlice.size(), false);
+	}
+	
+	Status LevelDBDriver::Iterator::GetValue(MemSlice& value) const {
+		leveldb::Slice valueSlice = mIt->value();
+		value = CMem((void*)valueSlice.data(), valueSlice.size(), false);
+	}
+	
+	Status LevelDBDriver::Iterator::Seek(const MemSlice& key) {
+		mIt->Seek( leveldb::Slice((const char*)key.get(), key.size()) );
+		return OK;
+	}
+	
+	bool LevelDBDriver::Iterator::IsValid() const {
+		return mIt->Valid();
+	}
+	
+	Status LevelDBDriver::Iterator::Next() {
+		mIt->Next();
+		return OK;
+	}
+	
+	Status LevelDBDriver::Iterator::Prev() {
+		mIt->Prev();
+		return OK;
+	}
 	
 	LevelDBDriver::LevelDBDriver()
 	: mDB(nullptr) { }
@@ -64,8 +98,8 @@ namespace microdb {
 		}
 	}
 	
-	Status LevelDBDriver::CreateIterator(Iterator& it) {
-		
+	Iterator* LevelDBDriver::CreateIterator() {
+		return new LevelDBDriver::Iterator(mDB->NewIterator(leveldb::ReadOptions()));
 	}
 	
 	void LevelDBDriver::BeginTransaction() {

@@ -7,6 +7,29 @@
 namespace microdb {
 	
 	class LevelDBDriver : public Driver {
+		public:
+		class Iterator : public Driver::Iterator {
+			private:
+			std::unique_ptr<leveldb::Iterator> mIt;
+			
+			public:
+			Iterator(leveldb::Iterator* it);
+			virtual ~Iterator() {};
+			
+			virtual Status GetKey(MemSlice& key) const;
+			virtual Status GetValue(MemSlice& value) const;
+			
+			/**
+			* place the iterator on the first occurance of key, 
+			* or if key does not exist, the key location right
+			* before where key would be inserted.
+			*/
+			virtual Status Seek(const MemSlice& key);
+			virtual bool IsValid() const;
+			virtual Status Next();
+			virtual Status Prev();
+		};
+		
 		private:
 		leveldb::DB* mDB;
 		std::unique_ptr< leveldb::WriteBatch > mWriteBatch;
@@ -22,7 +45,7 @@ namespace microdb {
 		virtual Status Get(const MemSlice& key, MemSlice& value);
 		virtual Status Delete(const MemSlice& key);
 		
-		virtual Status CreateIterator(Iterator& it);
+		virtual Iterator* CreateIterator();
 		
 		virtual void BeginTransaction();
 		virtual void CommitTransaction();

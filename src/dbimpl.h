@@ -12,6 +12,27 @@
 
 namespace microdb {
     
+    class IteratorImpl : public Iterator {
+      private:
+      
+        
+      public:
+      ViewQuery mQuery;
+      
+      IteratorImpl();
+      virtual ~IteratorImpl();
+
+      virtual void SeekToFirst();
+      virtual void SeekToLast();
+
+      virtual bool Valid() const;
+      virtual void Next();
+      virtual void Prev();
+
+      virtual std::string& GetKey() const;
+      virtual Value& GetValue() const;  
+    };
+    
     class DBImpl : public DB {
     private:
         UUID mInstanceId;
@@ -32,7 +53,7 @@ namespace microdb {
         virtual Status Delete(const Value& key);
 
         //Query API
-        virtual Status Query(const std::string& query, Iterator& it);
+        virtual Iterator* Query(const std::string& query);
         virtual Status AddIndex(const std::string& query);
         virtual Status DeleteIndex(const std::string& query);
 

@@ -33,7 +33,7 @@ namespace microdb {
 		virtual Status Get(const MemSlice& key, MemSlice& value) = 0;
 		virtual Status Delete(const MemSlice& key) = 0;
 		
-		virtual Status CreateIterator(Iterator& it) = 0;
+		virtual Iterator* CreateIterator() = 0;
 		
 		virtual void BeginTransaction() = 0;
 		virtual void CommitTransaction() = 0;
