@@ -15,23 +15,25 @@ namespace microdb {
     class IteratorImpl : public Iterator {
       private:
       std::unique_ptr<Driver::Iterator> mIt;
+      const std::string mIndexName;
       MemSlice mKeySlice, mValueSlice;
 
       public:
-      Value mStart, mEnd;
+      
       ViewQuery mQuery;
       
-      IteratorImpl(Driver::Iterator*);
+      IteratorImpl(Driver::Iterator*, const std::string& indexName);
       virtual ~IteratorImpl();
 
       virtual void SeekToFirst();
-      virtual void SeekToLast();
+      virtual void SeekTo(const Value& key);
 
       virtual bool Valid();
       virtual void Next();
       virtual void Prev();
 
       virtual Value GetKey();
+      virtual Value GetPrimaryKey();
       virtual Value GetValue();  
     };
     
@@ -58,7 +60,7 @@ namespace microdb {
 		virtual void RollBackTransaction();
 
         //Query API
-        virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query);
+        virtual Iterator* QueryIndex(const std::string& index, const std::string& query);
         virtual Status AddIndex(const std::string& indexName, const std::string& query);
         virtual Status DeleteIndex(const std::string& indexName);
 

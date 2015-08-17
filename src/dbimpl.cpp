@@ -14,31 +14,43 @@ using namespace std::placeholders;
 
 namespace microdb {
     
-    IteratorImpl::IteratorImpl(Driver::Iterator* it)
-    : mIt(it) {}
+    IteratorImpl::IteratorImpl(Driver::Iterator* it, const std::string& indexName)
+    : mIt(it), mIndexName(indexName) { }
     
     IteratorImpl::~IteratorImpl() {}
     
     bool IteratorImpl::Valid() {
         bool retval = mIt->IsValid();
-        if(retval && !mEnd.IsNull()) {
+        if(retval) {
             MemSlice keySlice;
             mIt->GetKey(keySlice);
             Value indexEntry = MemSliceToValue(keySlice);
-            retval = indexEntry < mEnd;
+            
+            //ensure we are still in our index
+            Value indexName = indexEntry[1];
+            retval = indexName == mIndexName;
         }
         return retval;
     }
     
     void IteratorImpl::SeekToFirst() {
         MemOutputStream out;
-        MemSlice flat = ValueToMemSlice(mStart, out);
+        Value indexEntry;
+        indexEntry.Add('i');
+        indexEntry.Add(mIndexName);
+        
+        MemSlice flat = ValueToMemSlice(indexEntry, out);
         mIt->Seek(flat);
     }
     
-    void IteratorImpl::SeekToLast() {
+    void IteratorImpl::SeekTo(const Value& key) {
         MemOutputStream out;
-        MemSlice flat = ValueToMemSlice(mEnd, out);
+        Value indexEntry;
+        indexEntry.Add('i');
+        indexEntry.Add(mIndexName);
+        indexEntry.Add(key);
+        
+        MemSlice flat = ValueToMemSlice(indexEntry, out);
         mIt->Seek(flat);
     }
     
@@ -54,6 +66,12 @@ namespace microdb {
         mIt->GetKey(mKeySlice);
         Value indexEntry = MemSliceToValue(mKeySlice);
         return indexEntry[2];
+    }
+    
+    Value IteratorImpl::GetPrimaryKey() {
+        mIt->GetKey(mKeySlice);
+        Value indexEntry = MemSliceToValue(mKeySlice);
+        return indexEntry[3];
     }
     
     Value IteratorImpl::GetValue() {
@@ -202,24 +220,10 @@ namespace microdb {
         return ERROR;
     }
     
-    Iterator* DBImpl::QueryIndex(const std::string& index, 
-        const Value& start, const Value& end,
-        const std::string& query) {
+    Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
         
-        IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator() );
+        IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator(), index );
         retval->mQuery.compile(query.c_str());
-        
-        retval->mStart.Add('i');
-		retval->mStart.Add(index);
-        
-        if(!start.IsNull()) {
-            retval->mStart.Add(start);
-            if(!end.IsNull()) {
-                retval->mEnd.Add('i');
-                retval->mEnd.Add(index);
-                retval->mEnd.Add(end);
-            }
-        }
         
         retval->SeekToFirst();
         

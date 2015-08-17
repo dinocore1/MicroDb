@@ -25,6 +25,17 @@ TEST(db, insert) {
 	
 	std::string firstKey;
 	
+	for(int i=0;i<100;i++) {
+		Value v1;
+		
+		std::stringstream buf;
+		buf << "world" << i;
+		v1.Set("hello", buf.str());
+		
+		Value key;
+		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
+	}
+	
 	{
 		Value v1;
 		v1.Set("hello", "world first");
@@ -36,12 +47,20 @@ TEST(db, insert) {
 		firstKey = key.asString();
 	}
 	
-	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary",
-		firstKey, Value(),
-		""
-		));
+	for(int i=0;i<100;i++) {
+		Value v1;
+		
+		std::stringstream buf;
+		buf << "world" << i;
+		v1.Set("hello", buf.str());
+		
+		Value key;
+		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
+	}
 	
-	it->SeekToFirst();
+	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary", ""));
+	
+	it->SeekTo(firstKey);
 	ASSERT_TRUE(it->Valid());
 	Value v2 = it->GetValue();
 	ASSERT_TRUE(v2.IsObject());
@@ -68,10 +87,7 @@ TEST(db, iterate) {
 		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
 	}
 	
-	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary",
-		Value(), Value(),
-		""
-		));
+	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary", ""));
 	
 	int count = 0;
 	while(it->Valid()) {
@@ -103,18 +119,14 @@ TEST(db, range_iterate) {
 		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
 	}
 	
-	unique_ptr<Iterator> it( dbPtr->QueryIndex("cnt_idx",
-		30, 40,
-		""
-		));
+	unique_ptr<Iterator> it( dbPtr->QueryIndex("cnt_idx", ""));
 	
 	int count = 0;
-	while(it->Valid()) {
+	for(it->SeekTo(30); it->Valid() && it->GetKey() < 40; it->Next()) {
 		Value key = it->GetKey();
 		ASSERT_TRUE(key.IsInteger());
 		printf("obj : %s\n", key.asString().c_str());
 		count++;
-		it->Next();
 	}
 	
 	ASSERT_EQ(10, count);

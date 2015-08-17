@@ -16,13 +16,14 @@ namespace microdb {
       virtual ~Iterator() {};
 
       virtual void SeekToFirst() = 0;
-      virtual void SeekToLast() = 0;
-
+      virtual void SeekTo(const Value& key) = 0;
+      
       virtual bool Valid() = 0;
       virtual void Next() = 0;
       virtual void Prev() = 0;
 
       virtual Value GetKey() = 0;
+      virtual Value GetPrimaryKey() = 0;
       virtual Value GetValue() = 0;
     };
 
@@ -41,7 +42,7 @@ namespace microdb {
 		virtual void RollBackTransaction() = 0;
 
         //Query API
-        virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query) = 0;
+        virtual Iterator* QueryIndex(const std::string& index, const std::string& query) = 0;
         virtual Status AddIndex(const std::string& indexName, const std::string& query) = 0;
         virtual Status DeleteIndex(const std::string& indexName) = 0;
 
