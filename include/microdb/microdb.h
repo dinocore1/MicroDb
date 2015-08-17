@@ -42,8 +42,8 @@ namespace microdb {
 
         //Query API
         virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query) = 0;
-        virtual Status AddIndex(const std::string& query) = 0;
-        virtual Status DeleteIndex(const std::string& query) = 0;
+        virtual Status AddIndex(const std::string& indexName, const std::string& query) = 0;
+        virtual Status DeleteIndex(const std::string& indexName) = 0;
 
         //Syncing API        
         //virtual Value GetHead() = 0;

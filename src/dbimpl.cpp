@@ -21,6 +21,12 @@ namespace microdb {
     
     bool IteratorImpl::Valid() {
         bool retval = mIt->IsValid();
+        if(retval && !mEnd.IsNull()) {
+            MemSlice keySlice;
+            mIt->GetKey(keySlice);
+            Value indexEntry = MemSliceToValue(keySlice);
+            retval = indexEntry < mEnd;
+        }
         return retval;
     }
     
@@ -46,7 +52,8 @@ namespace microdb {
     
     Value IteratorImpl::GetKey() {
         mIt->GetKey(mKeySlice);
-        return MemSliceToValue(mKeySlice);
+        Value indexEntry = MemSliceToValue(mKeySlice);
+        return indexEntry[2];
     }
     
     Value IteratorImpl::GetValue() {
@@ -77,11 +84,13 @@ namespace microdb {
         
     }
     
-    void loadDBObj(Driver* driver, const CMem& key, Value& dst) {
-        MemSlice dataSlice;
-        if(driver->Get(key, dataSlice) == OK){
+    void loadDBObj(Driver* driver, const Value& key, Value& dst) {
+        MemSlice keySlice, dataSlice;
+        MemOutputStream keyOut;
+        keySlice = ValueToMemSlice(key, keyOut);
+        if(driver->Get(keySlice, dataSlice) == OK){
             dst = MemSliceToValue(dataSlice);   
-        }   
+        }
     }
     
     void saveDBObj(Driver* driver, const Value& key, const Value& value) {
@@ -123,9 +132,9 @@ namespace microdb {
             const int numIndicies = indicies.Size();
             for(int i=0;i<numIndicies;i++){
                 Value index = indicies[i];
-                Index* idxPtr = new Index();
+                unique_ptr<Index> idxPtr(new Index());
                 idxPtr->fromValue(index);
-                mIndicies[idxPtr->getName()] = idxPtr;
+                mIndicies[idxPtr->getName()] = std::move(idxPtr);
             }
         }
         
@@ -146,7 +155,7 @@ namespace microdb {
         });
         
         auto cb = std::bind(saveDBObj, mDBDriver.get(), _3, _2);
-        for(auto entry : mIndicies) {
+        for(auto& entry : mIndicies) {
             entry.second->index(value, cb);
         }
         
@@ -166,7 +175,7 @@ namespace microdb {
         
         mDBDriver->BeginTransaction();
         
-        for(auto entry : mIndicies) {
+        for(auto& entry : mIndicies) {
             entry.second->index(value, cb);
         }
         
@@ -200,21 +209,14 @@ namespace microdb {
         IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator() );
         retval->mQuery.compile(query.c_str());
         
-        if(index == "primary") {
-            retval->mStart.Add('o');
-            
-            retval->mEnd.Add('o');
-        } else {
-		  retval->mStart.Add('i');
-		  retval->mStart.Add(index);
-          
-          retval->mEnd.Add('i');
-          retval->mEnd.Add(index);
-        }
+        retval->mStart.Add('i');
+		retval->mStart.Add(index);
         
         if(!start.IsNull()) {
             retval->mStart.Add(start);
             if(!end.IsNull()) {
+                retval->mEnd.Add('i');
+                retval->mEnd.Add(index);
                 retval->mEnd.Add(end);
             }
         }
@@ -225,11 +227,19 @@ namespace microdb {
         
     }
     
-    Status DBImpl::AddIndex(const std::string& query) {
+    Status DBImpl::AddIndex(const std::string& indexName, const std::string& querystr) {
         
+        unique_ptr<ViewQuery> query(new ViewQuery());
+        if(!query->compile(querystr.c_str())){
+            return ERROR;
+        }
+        
+        unique_ptr<Index> idx(new Index(indexName));
+        idx->setQuery( std::move(query) );
+        mIndicies[idx->getName()] = std::move(idx);
     }
     
-    Status DBImpl::DeleteIndex(const std::string& query) {
+    Status DBImpl::DeleteIndex(const std::string& indexName) {
         
     }
 

@@ -40,7 +40,7 @@ namespace microdb {
         UUID mInstanceId;
         std::unique_ptr< Driver > mDBDriver;
         Index* mPrimaryIndex;
-        std::map<std::string, Index* > mIndicies;
+        std::map<std::string, std::unique_ptr<Index> > mIndicies;
         
     public:
         
@@ -59,8 +59,8 @@ namespace microdb {
 
         //Query API
         virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query);
-        virtual Status AddIndex(const std::string& query);
-        virtual Status DeleteIndex(const std::string& query);
+        virtual Status AddIndex(const std::string& indexName, const std::string& query);
+        virtual Status DeleteIndex(const std::string& indexName);
 
         //Syncing API        
         //virtual Value GetHead();
