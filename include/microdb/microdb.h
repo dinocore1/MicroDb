@@ -36,9 +36,12 @@ namespace microdb {
         virtual Status Insert(Value& key, Value& value) = 0;
         virtual Status Update(Value& key, Value& value) = 0;
         virtual Status Delete(const Value& key) = 0;
+        virtual void BeginTransaction() = 0;
+		virtual void CommitTransaction() = 0;
+		virtual void RollBackTransaction() = 0;
 
         //Query API
-        virtual Iterator* QueryIndex(const std::string& index, const std::string& query) = 0;
+        virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query) = 0;
         virtual Status AddIndex(const std::string& query) = 0;
         virtual Status DeleteIndex(const std::string& query) = 0;
 

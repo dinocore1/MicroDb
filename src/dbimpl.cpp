@@ -14,21 +14,6 @@ using namespace std::placeholders;
 
 namespace microdb {
     
-    bool startsWith(const MemSlice& value, const MemSlice& prefix) {
-        const size_t size = prefix.size() - 1;
-        if(value.size() < size) {
-            return false;
-        }
-        byte* valuePtr = value.get();
-        byte* prefixPtr = prefix.get();
-        for(size_t i=0;i<size;i++){
-            if(valuePtr[i] != prefixPtr[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
     IteratorImpl::IteratorImpl(Driver::Iterator* it)
     : mIt(it) {}
     
@@ -36,19 +21,19 @@ namespace microdb {
     
     bool IteratorImpl::Valid() {
         bool retval = mIt->IsValid();
-        if(retval) {
-            mIt->GetKey(mKeySlice);
-            retval = startsWith(mKeySlice, mPrefix);
-        }
         return retval;
     }
     
     void IteratorImpl::SeekToFirst() {
-        mIt->Seek(mPrefix);
+        MemOutputStream out;
+        MemSlice flat = ValueToMemSlice(mStart, out);
+        mIt->Seek(flat);
     }
     
     void IteratorImpl::SeekToLast() {
-        
+        MemOutputStream out;
+        MemSlice flat = ValueToMemSlice(mEnd, out);
+        mIt->Seek(flat);
     }
     
     void IteratorImpl::Next() {
@@ -191,31 +176,48 @@ namespace microdb {
         return OK;
     }
     
+    void DBImpl::BeginTransaction(){
+        mDBDriver->BeginTransaction();
+    }
+	
+    void DBImpl::CommitTransaction() {
+        mDBDriver->CommitTransaction();
+    }
+    
+	void DBImpl::RollBackTransaction(){
+        mDBDriver->RollBackTransaction();
+    }
+    
     Status DBImpl::Update(Value& key, Value& value) {
         return ERROR;
     }
     
-    Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
+    Iterator* DBImpl::QueryIndex(const std::string& index, 
+        const Value& start, const Value& end,
+        const std::string& query) {
         
         IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator() );
         retval->mQuery.compile(query.c_str());
         
-        Value prefixValue;
         if(index == "primary") {
-            prefixValue.Add('o');
+            retval->mStart.Add('o');
+            
+            retval->mEnd.Add('o');
         } else {
-		  prefixValue.Add('i');
-		  prefixValue.Add(index);
+		  retval->mStart.Add('i');
+		  retval->mStart.Add(index);
+          
+          retval->mEnd.Add('i');
+          retval->mEnd.Add(index);
         }
         
-        void* ptr;
-        size_t size;
-        MemOutputStream out;
-        UBJSONWriter writer(out);
+        if(!start.IsNull()) {
+            retval->mStart.Add(start);
+            if(!end.IsNull()) {
+                retval->mEnd.Add(end);
+            }
+        }
         
-        writer.write(prefixValue);
-        out.GetData(ptr, size);
-        retval->mPrefix = CMem::copy(ptr, size);
         retval->SeekToFirst();
         
         return retval;

@@ -18,7 +18,7 @@ namespace microdb {
       MemSlice mKeySlice, mValueSlice;
 
       public:
-      MemSlice mPrefix;
+      Value mStart, mEnd;
       ViewQuery mQuery;
       
       IteratorImpl(Driver::Iterator*);
@@ -53,9 +53,12 @@ namespace microdb {
         virtual Status Insert(Value& key, Value& value);
         virtual Status Update(Value& key, Value& value);
         virtual Status Delete(const Value& key);
+        virtual void BeginTransaction();
+		virtual void CommitTransaction();
+		virtual void RollBackTransaction();
 
         //Query API
-        virtual Iterator* QueryIndex(const std::string& index, const std::string& query);
+        virtual Iterator* QueryIndex(const std::string& index, const Value& start, const Value& end, const std::string& query);
         virtual Status AddIndex(const std::string& query);
         virtual Status DeleteIndex(const std::string& query);
 
