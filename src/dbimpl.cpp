@@ -138,7 +138,7 @@ namespace microdb {
             return ERROR;
         }
         
-        mDBDriver->BeginTransaction();
+        Transaction tr(mDBDriver.get());
         
         mPrimaryIndex->index(value, [&](Value key, Value obj, Value indexEntry) {
             returnKey = key;
@@ -149,7 +149,8 @@ namespace microdb {
         for(auto entry : mIndicies) {
             entry.second->index(value, cb);
         }
-        mDBDriver->CommitTransaction();
+        
+        tr.success();
         
         return OK;
     }

@@ -1,6 +1,7 @@
 #ifndef LEVELDBDRIVER_H_
 #define LEVELDBDRIVER_H_
 
+#include <stack>
 #include <memory>
 #include <leveldb/db.h>
 
@@ -32,7 +33,7 @@ namespace microdb {
 		
 		private:
 		leveldb::DB* mDB;
-		std::unique_ptr< leveldb::WriteBatch > mWriteBatch;
+		std::stack< std::unique_ptr<leveldb::WriteBatch> > mTRStack;
 		
 		public:
 		LevelDBDriver();

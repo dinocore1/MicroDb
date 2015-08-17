@@ -12,6 +12,8 @@ TEST(db, insert) {
 	ASSERT_EQ(OK, DB::Open("test.db", &db));
 	unique_ptr<DB> dbPtr(db);
 	
+	dbPtr->BeginTransaction();
+	
 	std::string firstKey;
 	{
 		Value v1;
@@ -24,9 +26,9 @@ TEST(db, insert) {
 		firstKey = key.asString();
 	}
 	
-	dbPtr->BeginTransaction();
 	
-	for(int i=0;i<100000;i++) {
+	
+	for(int i=0;i<10;i++) {
 		Value v1;
 		std::stringstream buf;
 		buf << "world" << i;
@@ -36,7 +38,7 @@ TEST(db, insert) {
 		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
 	}
 	
-	dbPtr->CommitTransaction();
+	dbPtr->RollBackTransaction();
 	
 	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary",
 		firstKey, firstKey,

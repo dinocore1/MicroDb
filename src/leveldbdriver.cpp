@@ -85,10 +85,9 @@ namespace microdb {
 		leveldb::Slice lkey((const char*)key.get(), key.size());
 		leveldb::Slice lvalue((const char*)value.get(), value.size());
 		
-		if(mWriteBatch) {
-			mWriteBatch->Put(lkey, lvalue);
+		if(mTRStack.size() > 0) {
+			mTRStack.top()->Put(lkey, lvalue);
 			return OK;
-			
 		} else {
 			leveldb::Status s = mDB->Put(leveldb::WriteOptions(), lkey, lvalue);
 			return s.ok() ? OK : ERROR;
@@ -112,8 +111,8 @@ namespace microdb {
 	Status LevelDBDriver::Delete(const MemSlice& key) {
 		
 		leveldb::Slice lkey((const char*)key.get(), key.size());
-		if(mWriteBatch) {
-			mWriteBatch->Delete(lkey);
+		if(mTRStack.size() > 0) {
+			mTRStack.top()->Delete(lkey);
 			return OK;
 		} else {
 			leveldb::Status s;
@@ -127,21 +126,22 @@ namespace microdb {
 	}
 	
 	void LevelDBDriver::BeginTransaction() {
-		if(!mWriteBatch) {
-			mWriteBatch = std::unique_ptr< leveldb::WriteBatch > (new leveldb::WriteBatch());
-		}
+		mTRStack.emplace( new leveldb::WriteBatch() );
 	}
 	
 	void LevelDBDriver::CommitTransaction() {
-		if(mWriteBatch) {
-			mDB->Write(leveldb::WriteOptions(), mWriteBatch.get());
-			mWriteBatch.release();
+		if(mTRStack.size() > 0) {
+			auto& ptr = mTRStack.top();
+			mDB->Write(leveldb::WriteOptions(), ptr.get());
+			mTRStack.pop();
 		}
 	}
 	
 	void LevelDBDriver::RollBackTransaction() {
-		if(mWriteBatch) {
-			mWriteBatch.release();
+		if(mTRStack.size() > 0) {
+			auto& ptr = mTRStack.top();
+			ptr->Clear();
+			mTRStack.pop();
 		}
 	}
 	

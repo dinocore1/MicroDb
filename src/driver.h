@@ -40,6 +40,32 @@ namespace microdb {
 		virtual void RollBackTransaction() = 0;
 		
 	};
+	
+	class Transaction {
+		private:
+		Driver* mDriver;
+		bool mSuccess;
+		
+		public:
+		Transaction(Driver* driver)
+		: mDriver(driver), mSuccess(false) {
+			mDriver->BeginTransaction();
+		}
+		
+		~Transaction() {
+			if(mSuccess) {
+				mDriver->CommitTransaction();
+			} else {
+				mDriver->RollBackTransaction();
+			}
+		}
+		
+		void success() {
+			mSuccess = true;
+		}
+		
+	};
+	
 } // namespace microdb
 
 #endif // DRIVER_H_

@@ -92,8 +92,8 @@ namespace microdb {
     return true;
   }
   
-  bool readData(InputStream& in, size_t numBytes, std::unique_ptr<byte>& retval) {
-    std::unique_ptr<byte> buf(new byte[numBytes]);
+  bool readData(InputStream& in, size_t numBytes, std::unique_ptr<byte[]>& retval) {
+    std::unique_ptr<byte[]> buf(new byte[numBytes]);
     CHECK_FAIL(in.ReadFully( buf.get(), numBytes ) != numBytes)
     retval = std::move(buf);
     return true;
@@ -105,7 +105,7 @@ namespace microdb {
     int64_t size;
     CHECK_FAIL(readInt(in, control, size))
     
-    std::unique_ptr<char> buf(new char[size]);
+    std::unique_ptr<char[]> buf(new char[size]);
     CHECK_FAIL(in.ReadFully( (byte*)buf.get(), size) != size)
     retval = std::string( buf.get(), (size_t)size );
     return true;
@@ -197,7 +197,7 @@ namespace microdb {
     } else {
       
       int64_t keySize;
-      std::unique_ptr<byte> strBuf;
+      std::unique_ptr<byte[]> strBuf;
       
       while(control != ubjson::Object_End) {
           
