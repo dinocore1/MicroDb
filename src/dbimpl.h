@@ -14,12 +14,13 @@ namespace microdb {
     
     class IteratorImpl : public Iterator {
       private:
-      
-        
+      std::unique_ptr<Driver::Iterator> mIt;
+
       public:
+      MemSlice mPrefix;
       ViewQuery mQuery;
       
-      IteratorImpl();
+      IteratorImpl(Driver::Iterator*);
       virtual ~IteratorImpl();
 
       virtual void SeekToFirst();
@@ -53,7 +54,7 @@ namespace microdb {
         virtual Status Delete(const Value& key);
 
         //Query API
-        virtual Iterator* Query(const std::string& query);
+        virtual Iterator* QueryIndex(const std::string& index, const std::string& query);
         virtual Status AddIndex(const std::string& query);
         virtual Status DeleteIndex(const std::string& query);
 

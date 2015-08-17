@@ -15,7 +15,15 @@ using namespace std::placeholders;
 namespace microdb {
     
     
-    Iterator::Iterator() {}
+    IteratorImpl::IteratorImpl(Driver::Iterator* it)
+    : mIt(it) {}
+    
+    IteratorImpl::~IteratorImpl() {}
+    
+    void IteratorImpl::SeekToFirst() {
+        mIt->Seek(mPrefix);
+    }
+    
     
     Status DB::Open(const std::string& dburl, DB** dbptr) {
          
@@ -142,7 +150,26 @@ namespace microdb {
         return ERROR;
     }
     
-    Iterator* DBImpl::Query(const std::string& query) {
+    Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
+        IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator() );
+        retval->mQuery.compile(query.c_str());
+        
+        {
+        Value prefixValue;
+		prefixValue.Add('i');
+		prefixValue.Add(index);
+        MemOutputStream out;
+        void* ptr;
+        size_t size;
+        
+        UBJSONWriter writer(out);
+		writer.write(prefixValue);
+		out.GetData(ptr, size);
+        
+        retval->mPrefix = CMem::copy(ptr, size);
+        }
+        
+        return retval;
         
     }
     

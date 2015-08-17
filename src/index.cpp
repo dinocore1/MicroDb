@@ -10,7 +10,7 @@ namespace microdb {
 	Value Index::createPrimaryIndexEntry(const Value& primaryKey) {
 		Value retval;
 		
-		retval.Add("o");
+		retval.Add('o');
 		retval.Add(primaryKey);
 		
 		return retval;
@@ -67,7 +67,7 @@ namespace microdb {
 				}
 				
 				Value indexEntry;
-				indexEntry.Add("i");
+				indexEntry.Add('i');
 				indexEntry.Add(mName);
 				indexEntry.Add(key);
 				

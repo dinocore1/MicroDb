@@ -21,4 +21,10 @@ TEST(db, insert) {
 	ASSERT_TRUE(!key.IsNull());
 	ASSERT_TRUE(key.IsString());
 	
+	std::stringbuf queryStr;
+	queryStr << "if(obj.id==\"" << key.asString() << "\")emit(obj)";
+	Iterator it;
+	
+	ASSERT_TRUE(OK, dbPtr->Query(queryStr.str(), it);
+	
 }
