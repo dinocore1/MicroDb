@@ -1,13 +1,16 @@
 package com.devsmart.microdb.ubjson;
 
 
+import java.nio.charset.Charset;
+
 public class UBString extends UBValue {
 
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-    private String mString;
+    private byte[] mData;
 
-    UBString(String string) {
-        mString = string;
+    UBString(byte[] string) {
+        mData = string;
     }
 
     @Override
@@ -16,6 +19,6 @@ public class UBString extends UBValue {
     }
 
     public String getString() {
-        return mString;
+        return new String(mData, UTF_8);
     }
 }
