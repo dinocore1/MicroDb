@@ -1,6 +1,8 @@
 package com.devsmart.microdb.ubjson;
 
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 
 public class UBString extends UBValue {
@@ -16,6 +18,14 @@ public class UBString extends UBValue {
     @Override
     public Type getType() {
         return Type.String;
+    }
+
+    @Override
+    public void write(OutputStream out) throws IOException {
+        out.write(MARKER_STRING);
+        UBValue intValue = UBValueFactory.createInt(mData.length);
+        intValue.write(out);
+        out.write(mData);
     }
 
     public String getString() {

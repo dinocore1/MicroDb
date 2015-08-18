@@ -1,7 +1,12 @@
 package com.devsmart.microdb.ubjson;
 
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 public abstract class UBValue {
+
+    public static final char MARKER_STRING = 'S';
 
     public enum Type {
         Null,
@@ -20,6 +25,7 @@ public abstract class UBValue {
     }
 
     public abstract Type getType();
+    public abstract void write(OutputStream out) throws IOException;
 
     public boolean isNumber() {
         switch (getType()){
