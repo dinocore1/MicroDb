@@ -137,6 +137,9 @@ public abstract class UBValue {
                 retval = (float)((UBFloat64)this).getDouble();
                 break;
 
+            case String:
+                retval = Float.parseFloat(asString());
+
             default:
                 throw new RuntimeException("not a float type");
         }
@@ -153,6 +156,9 @@ public abstract class UBValue {
             case Float64:
                 retval = ((UBFloat64)this).getDouble();
                 break;
+
+            case String:
+                retval = Double.parseDouble(asString());
 
             default:
                 throw new RuntimeException("not a float type");
