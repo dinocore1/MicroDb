@@ -18,6 +18,12 @@ public abstract class UBValue {
     public static final byte MARKER_FLOAT32 = 'd';
     public static final byte MARKER_FLOAT64 = 'D';
     public static final byte MARKER_STRING = 'S';
+    public static final byte MARKER_ARRAY_START = '[';
+    public static final byte MARKER_ARRAY_END = ']';
+    public static final byte MARKER_OBJ_START = '{';
+    public static final byte MARKER_OBJ_END = '}';
+    public static final byte MARKER_OPTIMIZED_TYPE = '$';
+    public static final byte MARKER_OPTIMIZED_SIZE = '#';
 
     public enum Type {
         Null,
@@ -93,6 +99,10 @@ public abstract class UBValue {
         return thiz.getString();
     }
 
+    public byte[] asByteArray() {
+        return ((UBString)this).asByteArray();
+    }
+
     public long asInt() {
         switch (getType()){
             case Int8:
@@ -147,6 +157,32 @@ public abstract class UBValue {
             default:
                 throw new RuntimeException("not a float type");
         }
+        return retval;
+    }
+
+    public boolean isArray() {
+        return getType() == Type.Array;
+    }
+
+    public UBArray asArray() {
+        return ((UBArray)this);
+    }
+
+    public int size() {
+        int retval;
+        switch (getType()) {
+            case Array:
+                retval = asArray().size();
+                break;
+
+            case String:
+                retval = ((UBString)this).length();
+                break;
+
+            default:
+                retval = -1;
+        }
+
         return retval;
     }
 }

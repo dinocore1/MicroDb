@@ -1,6 +1,7 @@
 package com.devsmart.microdb.ubjson;
 
 import java.io.*;
+import java.util.ArrayList;
 
 
 public class UBReader implements Closeable {
@@ -96,6 +97,53 @@ public class UBReader implements Closeable {
         return value;
     }
 
+    private void readOptimizedArray(int size, byte type) {
+        switch(type) {
+            case UBValue.MARKER_FLOAT32:
+                break;
+
+            default:
+                ArrayList<UBValue> mValue = new ArrayList<UBValue>();
+
+                break;
+
+        }
+
+        for(int i=0;i<size;i++) {
+
+        }
+    }
+
+    private UBArray readArray() throws IOException {
+        byte control, type;
+        int size;
+
+        control = readControl();
+        if(control == UBValue.MARKER_OPTIMIZED_TYPE) {
+            type = readControl();
+
+            if(readControl() != UBValue.MARKER_OPTIMIZED_SIZE) {
+                throw new IOException("optimized size missing");
+            }
+            size = (int)readInt(readControl());
+
+            switch (type) {
+                case UBValue.MARKER_FLOAT32:
+
+                default:
+
+            }
+
+
+        } else if(control == UBValue.MARKER_OPTIMIZED_SIZE) {
+            size = (int)readInt(readControl());
+            for(int i=0;i<size;i++){
+
+            }
+        }
+
+    }
+
     private UBValue readValue(byte control) throws IOException {
         UBValue retval = null;
         switch(control) {
@@ -134,6 +182,9 @@ public class UBReader implements Closeable {
             case UBValue.MARKER_STRING:
                 retval = UBValueFactory.createString(readString());
                 break;
+
+            case UBValue.MARKER_ARRAY_START:
+                retval = readArray();
         }
 
         return retval;

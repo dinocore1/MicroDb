@@ -15,4 +15,12 @@ public class UBArray extends UBValue {
     public void add(UBValue value) {
         mValue.add(value);
     }
+
+    public int size() {
+        return mValue.size();
+    }
+
+    public UBValue get(int index) {
+        return mValue.get(index);
+    }
 }

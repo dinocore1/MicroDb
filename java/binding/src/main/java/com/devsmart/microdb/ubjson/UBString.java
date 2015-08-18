@@ -33,4 +33,8 @@ public class UBString extends UBValue {
     public String getString() {
         return new String(mData, UTF_8);
     }
+
+    public int length() {
+        return mData.length;
+    }
 }

@@ -107,4 +107,23 @@ public class UBReaderTest {
         assertTrue(value.isNumber());
         assertEquals(3.14f, value.asFloat32(), 0.000001);
     }
+
+    @Test
+    public void readArray() throws Exception {
+        byte[] data;
+        UBReader reader;
+        UBValue value;
+
+        data = new byte[] {'[', 'i', (byte)0xff, 'U', (byte)0xff, ']' };
+        reader = new UBReader(new ByteArrayInputStream(data));
+        value = reader.read();
+        assertTrue(value.isArray());
+        UBArray array = value.asArray();
+        assertEquals(2, array.size());
+        assertTrue(array.get(0).isNumber());
+        assertEquals(-1, array.get(0).asInt());
+        assertTrue(array.get(1).isNumber());
+        assertEquals(255, array.get(1).asInt());
+
+    }
 }
