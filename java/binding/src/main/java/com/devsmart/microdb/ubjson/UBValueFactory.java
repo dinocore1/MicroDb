@@ -25,7 +25,7 @@ public class UBValueFactory {
         }
     }
 
-    private static boolean inRange(long value, long min, long max) {
+    static boolean inRange(long value, long min, long max) {
         return value >= min && value <= max;
     }
 

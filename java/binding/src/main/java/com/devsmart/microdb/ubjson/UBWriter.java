@@ -71,6 +71,20 @@ public class UBWriter implements Closeable {
         mOutputStream.write((int) (value));
     }
 
+    public void writeInt(long value) throws IOException {
+        if(UBValueFactory.inRange(value, 0, 255)) {
+            writeUInt8((byte)value);
+        } else if(UBValueFactory.inRange(value, -128, 127)) {
+            writeInt8((byte)value);
+        } else if(UBValueFactory.inRange(value, -32768, 32767)) {
+            writeInt16((short)value);
+        } else if(UBValueFactory.inRange(value, -2147483648, 2147483647)) {
+            writeInt32((int)value);
+        } else {
+            writeInt64(value);
+        }
+    }
+
     public void writeFloat32(float value) throws IOException {
         mOutputStream.write(UBValue.MARKER_FLOAT32);
 
@@ -93,6 +107,76 @@ public class UBWriter implements Closeable {
         mOutputStream.write((int) ((intValue >> 16)));
         mOutputStream.write((int) ((intValue >> 8)));
         mOutputStream.write((int) (intValue));
+    }
+
+    public void writeInt8Array(byte[] value) throws IOException {
+        mOutputStream.write(UBValue.MARKER_ARRAY_START);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_TYPE);
+        mOutputStream.write(UBValue.MARKER_INT8);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_SIZE);
+        writeInt(value.length);
+
+        for(int i=0;i<value.length;i++){
+            writeInt8(value[i]);
+        }
+    }
+
+    public void writeFloat32Array(float[] value) throws IOException {
+        mOutputStream.write(UBValue.MARKER_ARRAY_START);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_TYPE);
+        mOutputStream.write(UBValue.MARKER_FLOAT32);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_SIZE);
+        writeInt(value.length);
+
+        for(int i=0;i<value.length;i++){
+            writeFloat32(value[i]);
+        }
+    }
+
+    public void writeFloat64Array(double[] value) throws IOException {
+        mOutputStream.write(UBValue.MARKER_ARRAY_START);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_TYPE);
+        mOutputStream.write(UBValue.MARKER_FLOAT64);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_SIZE);
+        writeInt(value.length);
+
+        for(int i=0;i<value.length;i++){
+            writeFloat64(value[i]);
+        }
+    }
+
+    public void writeGenericeArray(UBArray value) throws IOException {
+        mOutputStream.write(UBValue.MARKER_ARRAY_START);
+        mOutputStream.write(UBValue.MARKER_OPTIMIZED_SIZE);
+
+        final int size = value.size();
+        writeInt(size);
+
+        for(int i=0;i<size;i++){
+            write(value.get(i));
+        }
+    }
+
+    public void writeArray(UBArray value) throws IOException {
+        switch(value.getStrongType()) {
+
+            case Int8:
+                writeInt8Array( ((UBInt8Array)value).getValues() );
+                break;
+
+            case Float32:
+                writeFloat32Array(((UBFloat32Array)value).getValues());
+                break;
+
+            case Float64:
+                writeFloat64Array(((UBFloat64Array)value).getValues());
+                break;
+
+            default:
+                writeGenericeArray( value );
+                break;
+
+        }
     }
 
     public void write(UBValue value) throws IOException {
@@ -135,6 +219,10 @@ public class UBWriter implements Closeable {
 
             case Float64:
                 writeFloat64(value.asFloat64());
+                break;
+
+            case Array:
+                writeArray(value.asArray());
                 break;
 
         }
