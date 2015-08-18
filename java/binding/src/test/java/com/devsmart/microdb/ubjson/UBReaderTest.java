@@ -133,6 +133,25 @@ public class UBReaderTest {
         UBReader reader;
         UBValue value;
 
+        data = new byte[] {'[', '#', 'U', (byte)2, 'i', (byte)0xff, 'U', (byte)0xff };
+        reader = new UBReader(new ByteArrayInputStream(data));
+        value = reader.read();
+        assertTrue(value.isArray());
+        UBArray array = value.asArray();
+        assertEquals(2, array.size());
+        assertTrue(array.get(0).isNumber());
+        assertEquals(-1, array.get(0).asInt());
+        assertTrue(array.get(1).isNumber());
+        assertEquals(255, array.get(1).asInt());
+
+    }
+
+    @Test
+    public void readOptimizedArray2() throws Exception {
+        byte[] data;
+        UBReader reader;
+        UBValue value;
+
         data = new byte[] {'[', '$', 'i', '#', 'U', (byte)2, (byte)0xff, (byte)0x01 };
         reader = new UBReader(new ByteArrayInputStream(data));
         value = reader.read();
@@ -144,5 +163,21 @@ public class UBReaderTest {
         assertTrue(array.get(1).isNumber());
         assertEquals(1, array.get(1).asInt());
 
+    }
+
+    @Test
+    public void readObject() throws Exception {
+        byte[] data;
+        UBReader reader;
+        UBValue value;
+
+        data = new byte[] { '{', 'i', 3, 'l', 'a', 't', 'i', 5, 'i', 3, 'l', 'n', 'g', 'U', (byte)0xff, '}'};
+        reader = new UBReader(new ByteArrayInputStream(data));
+        value = reader.read();
+        assertTrue(value.isObject());
+        UBObject obj = value.asObject();
+        assertTrue(obj.has("lat"));
+        assertEquals(5, obj.get("lat").asInt());
+        assertEquals(255, obj.get("lng").asInt());
     }
 }

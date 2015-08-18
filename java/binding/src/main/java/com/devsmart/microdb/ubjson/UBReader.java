@@ -2,6 +2,7 @@ package com.devsmart.microdb.ubjson;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 
 public class UBReader implements Closeable {
@@ -93,8 +94,8 @@ public class UBReader implements Closeable {
         return value;
     }
 
-    private byte[] readString() throws IOException {
-        int size = (int) readInt(readControl());
+    private byte[] readString(byte control) throws IOException {
+        int size = (int) readInt(control);
         byte[] value = new byte[size];
 
         int bytesRead = mInputStream.read(value, 0, size);
@@ -192,6 +193,53 @@ public class UBReader implements Closeable {
 
     }
 
+    private UBValue readObj() throws IOException {
+        byte control, type;
+        int size;
+        TreeMap<String, UBValue> obj = new TreeMap<String, UBValue>();
+
+        control = readControl();
+        if(control == UBValue.MARKER_OPTIMIZED_TYPE) {
+            type = readControl();
+
+            if(readControl() != UBValue.MARKER_OPTIMIZED_SIZE) {
+                throw new IOException("optimized size missing");
+            }
+            size = (int)readInt(readControl());
+
+            for(int i=0;i<size;i++) {
+                String key = new String(readString(readControl()), UBString.UTF_8);
+                UBValue value = readValue(type);
+
+                obj.put(key, value);
+            }
+
+        } else if(control == UBValue.MARKER_OPTIMIZED_SIZE) {
+            size = (int)readInt(readControl());
+
+            for(int i=0;i<size;i++) {
+                String key = new String(readString(readControl()), UBString.UTF_8);
+                UBValue value = readValue(readControl());
+
+                obj.put(key, value);
+            }
+
+        } else {
+
+            while(control != UBValue.MARKER_OBJ_END) {
+                String key = new String(readString(control), UBString.UTF_8);
+                control = readControl();
+                UBValue value = readValue(control);
+
+                obj.put(key, value);
+
+                control = readControl();
+            }
+        }
+
+        return UBValueFactory.createObject(obj);
+    }
+
     private UBValue readValue(byte control) throws IOException {
         UBValue retval = null;
         switch(control) {
@@ -228,11 +276,16 @@ public class UBReader implements Closeable {
                 break;
 
             case UBValue.MARKER_STRING:
-                retval = UBValueFactory.createString(readString());
+                retval = UBValueFactory.createString(readString(readControl()));
                 break;
 
             case UBValue.MARKER_ARRAY_START:
                 retval = readArray();
+                break;
+
+            case UBValue.MARKER_OBJ_START:
+                retval = readObj();
+                break;
         }
 
         return retval;

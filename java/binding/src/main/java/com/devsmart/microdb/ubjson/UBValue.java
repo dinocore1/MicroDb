@@ -185,4 +185,12 @@ public abstract class UBValue {
 
         return retval;
     }
+
+    public boolean isObject() {
+        return getType() == Type.Object;
+    }
+
+    public UBObject asObject() {
+        return ((UBObject)this);
+    }
 }

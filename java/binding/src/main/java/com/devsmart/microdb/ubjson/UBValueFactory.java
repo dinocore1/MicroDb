@@ -1,6 +1,8 @@
 package com.devsmart.microdb.ubjson;
 
 
+import java.util.TreeMap;
+
 public class UBValueFactory {
 
     private static final UBNull VALUE_NULL = new UBNull();
@@ -71,5 +73,9 @@ public class UBValueFactory {
 
     public static UBArray createArray(UBValue[] value) {
         return new UBArray(value);
+    }
+
+    public static UBObject createObject(TreeMap<String, UBValue> value) {
+        return new UBObject(value);
     }
 }

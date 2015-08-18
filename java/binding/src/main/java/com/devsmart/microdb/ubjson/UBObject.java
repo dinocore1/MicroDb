@@ -5,15 +5,19 @@ import java.util.TreeMap;
 
 public final class UBObject extends UBValue {
 
-    private TreeMap<String, UBValue> mValue = new TreeMap<String, UBValue>();
+    private TreeMap<String, UBValue> mValue;
 
-    public UBObject() {
-
+    UBObject(TreeMap<String, UBValue> value) {
+        mValue = value;
     }
 
     @Override
     public Type getType() {
         return Type.Object;
+    }
+
+    public boolean has(String key) {
+        return mValue.containsKey(key);
     }
 
     public UBValue get(String key) {
