@@ -42,8 +42,6 @@ public class UBFactory {
         assertEquals(UBValue.Type.Int64, value.getType());
         assertEquals(Long.parseLong("9223372036854775807"), value.asInt());
 
-
-
     }
 
 }

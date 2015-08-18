@@ -6,7 +6,18 @@ import java.io.OutputStream;
 
 public abstract class UBValue {
 
-    public static final char MARKER_STRING = 'S';
+    public static final byte MARKER_NULL = 'Z';
+    public static final byte MARKER_TRUE = 'T';
+    public static final byte MARKER_FALSE = 'F';
+    public static final byte MARKER_CHAR = 'C';
+    public static final byte MARKER_INT8 = 'i';
+    public static final byte MARKER_UINT8 = 'U';
+    public static final byte MARKER_INT16 = 'I';
+    public static final byte MARKER_INT32 = 'l';
+    public static final byte MARKER_INT64 = 'L';
+    public static final byte MARKER_FLOAT32 = 'd';
+    public static final byte MARKER_FLOAT64 = 'D';
+    public static final byte MARKER_STRING = 'S';
 
     public enum Type {
         Null,
@@ -25,7 +36,27 @@ public abstract class UBValue {
     }
 
     public abstract Type getType();
-    public abstract void write(OutputStream out) throws IOException;
+    //public abstract void write(OutputStream out) throws IOException;
+
+    public boolean isNull() {
+        return getType() == Type.Null;
+    }
+
+    public boolean isBool() {
+        return getType() == Type.Bool;
+    }
+
+    public boolean asBool() {
+        return ((UBBool)this).getBool();
+    }
+
+    public boolean isChar() {
+        return getType() == Type.Char;
+    }
+
+    public char asChar() {
+        return ((UBChar)this).getChar();
+    }
 
     public boolean isNumber() {
         switch (getType()){
@@ -83,5 +114,39 @@ public abstract class UBValue {
                 throw new RuntimeException("not a number type");
 
         }
+    }
+
+    public float asFloat32() {
+        float retval;
+        switch (getType()) {
+            case Float32:
+                retval = ((UBFloat32)this).getFloat();
+                break;
+
+            case Float64:
+                retval = (float)((UBFloat64)this).getDouble();
+                break;
+
+            default:
+                throw new RuntimeException("not a float type");
+        }
+        return retval;
+    }
+
+    public double asFloat64() {
+        double retval;
+        switch (getType()) {
+            case Float32:
+                retval = ((UBFloat32)this).getFloat();
+                break;
+
+            case Float64:
+                retval = ((UBFloat64)this).getDouble();
+                break;
+
+            default:
+                throw new RuntimeException("not a float type");
+        }
+        return retval;
     }
 }

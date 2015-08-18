@@ -20,6 +20,7 @@ public class UBString extends UBValue {
         return Type.String;
     }
 
+    /*
     @Override
     public void write(OutputStream out) throws IOException {
         out.write(MARKER_STRING);
@@ -27,6 +28,7 @@ public class UBString extends UBValue {
         intValue.write(out);
         out.write(mData);
     }
+    */
 
     public String getString() {
         return new String(mData, UTF_8);
