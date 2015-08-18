@@ -1,11 +1,10 @@
 package com.devsmart.microdb.ubjson;
 
 
-public final class UBFloat32Array extends UBArray {
+public final class UBInt8Array extends UBArray {
+    private final byte[] mArray;
 
-    private final float[] mArray;
-
-    UBFloat32Array(float[] values) {
+    UBInt8Array(byte[] values) {
         mArray = values;
     }
 
@@ -20,7 +19,7 @@ public final class UBFloat32Array extends UBArray {
     }
 
     public ArrayType getStrongType() {
-        return ArrayType.Float32;
+        return ArrayType.Int8;
     }
 
     @Override
@@ -30,10 +29,10 @@ public final class UBFloat32Array extends UBArray {
 
     @Override
     public UBValue get(int index) {
-        return UBValueFactory.createFloat32(mArray[index]);
+        return UBValueFactory.createInt(mArray[index]);
     }
 
-    public float[] getValues() {
+    public byte[] getValues() {
         return mArray;
     }
 }

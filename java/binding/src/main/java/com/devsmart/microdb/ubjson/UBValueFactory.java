@@ -57,8 +57,19 @@ public class UBValueFactory {
         return createString(string.getBytes(UBString.UTF_8));
     }
 
+    public static UBInt8Array createArray(byte[] value) {
+        return new UBInt8Array(value);
+    }
+
     public static UBFloat32Array createArray(float[] value) {
         return new UBFloat32Array(value);
+    }
 
+    public static UBFloat64Array createArray(double[] value) {
+        return new UBFloat64Array(value);
+    }
+
+    public static UBArray createArray(UBValue[] value) {
+        return new UBArray(value);
     }
 }

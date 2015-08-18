@@ -26,16 +26,23 @@ public class UBReader implements Closeable {
         }
     }
 
+    private byte readInt8() throws IOException {
+        return readControl();
+    }
+
+    private short readUInt8() throws IOException {
+        return (short)(0xFF & readControl());
+    }
 
     private long readInt(byte control) throws IOException {
         long value;
         switch (control) {
             case UBValue.MARKER_INT8:
-                value = readControl();
+                value = readInt8();
                 break;
 
             case UBValue.MARKER_UINT8:
-                value = (0xFF & readControl());
+                value = readUInt8();
                 break;
 
             case UBValue.MARKER_INT16:
@@ -97,21 +104,46 @@ public class UBReader implements Closeable {
         return value;
     }
 
-    private void readOptimizedArray(int size, byte type) {
-        switch(type) {
-            case UBValue.MARKER_FLOAT32:
-                break;
-
-            default:
-                ArrayList<UBValue> mValue = new ArrayList<UBValue>();
-
-                break;
-
+    private byte[] readOptimizedArrayInt8(int size) throws IOException {
+        byte[] data = new byte[size];
+        for(int i=0;i<size;i++){
+            data[i] = readInt8();
         }
+        return data;
+    }
 
+    private float[] readOptimizedArrayFloat32(int size) throws IOException {
+        float[] data = new float[size];
+        for(int i=0;i<size;i++){
+            data[i] = readFloat32();
+        }
+        return data;
+    }
+
+    private double[] readOptimizedArrayFloat64(int size) throws IOException {
+        double[] data = new double[size];
+        for(int i=0;i<size;i++){
+            data[i] = readFloat64();
+        }
+        return data;
+    }
+
+    private UBValue[] readOptimizedArray(int size, byte type) throws IOException {
+        UBValue[] retval = new UBValue[size];
         for(int i=0;i<size;i++) {
-
+            retval[i] = readValue(type);
         }
+        return retval;
+
+    }
+
+    private UBValue[] readOptimizedArray(int size) throws IOException {
+        UBValue[] retval = new UBValue[size];
+        for(int i=0;i<size;i++) {
+            byte type = readControl();
+            retval[i] = readValue(type);
+        }
+        return retval;
     }
 
     private UBArray readArray() throws IOException {
@@ -128,18 +160,34 @@ public class UBReader implements Closeable {
             size = (int)readInt(readControl());
 
             switch (type) {
+
+                case UBValue.MARKER_INT8:
+                    return UBValueFactory.createArray(readOptimizedArrayInt8(size));
+
                 case UBValue.MARKER_FLOAT32:
+                    return UBValueFactory.createArray(readOptimizedArrayFloat32(size));
+
+                case UBValue.MARKER_FLOAT64:
+                    return UBValueFactory.createArray(readOptimizedArrayFloat64(size));
 
                 default:
+                    return UBValueFactory.createArray(readOptimizedArray(size, type));
 
             }
 
 
         } else if(control == UBValue.MARKER_OPTIMIZED_SIZE) {
             size = (int)readInt(readControl());
-            for(int i=0;i<size;i++){
+            return UBValueFactory.createArray(readOptimizedArray(size));
+        } else {
+            ArrayList<UBValue> data = new ArrayList<UBValue>();
 
+            while(control != UBValue.MARKER_ARRAY_END) {
+                data.add(readValue(control));
+                control = readControl();
             }
+
+            return UBValueFactory.createArray(data.toArray(new UBValue[data.size()]));
         }
 
     }
