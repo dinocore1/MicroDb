@@ -26,8 +26,7 @@ public class UBReader implements Closeable {
     }
 
 
-
-    private UBValue readInt(byte control) throws IOException {
+    private long readInt(byte control) throws IOException {
         long value;
         switch (control) {
             case UBValue.MARKER_INT8:
@@ -59,20 +58,42 @@ public class UBReader implements Closeable {
 
         }
 
-        return UBValueFactory.createInt(value);
+        return value;
     }
 
-    private UBValue readChar() throws IOException {
+    private char readChar() throws IOException {
         char value = (char) readControl();
-        return UBValueFactory.createChar(value);
+        return value;
     }
 
-    private UBValue readFloat32() throws IOException {
+    private float readFloat32() throws IOException {
         int intvalue = (readControl() & 0xFF) << 24 | (readControl() & 0xFF) << 16
                 | (readControl() & 0xFF) << 8 | (readControl() & 0xFF);
 
         float value = Float.intBitsToFloat(intvalue);
-        return UBValueFactory.createFloat32(value);
+        return value;
+    }
+
+    private double readFloat64() throws IOException {
+        long intvalue = (readControl() & 0xFF) << 56 | (readControl() & 0xFF) << 48
+                | (readControl() & 0xFF) << 40 | (readControl() & 0xFF) << 32
+                | (readControl() & 0xFF) << 24 | (readControl() & 0xFF) << 16
+                | (readControl() & 0xFF) << 8 | (readControl() & 0xFF);
+
+
+        double value = Double.longBitsToDouble(intvalue);
+        return value;
+    }
+
+    private byte[] readString() throws IOException {
+        int size = (int) readInt(readControl());
+        byte[] value = new byte[size];
+
+        int bytesRead = mInputStream.read(value, 0, size);
+        if(bytesRead != size) {
+            throw new IOException("eof reached");
+        }
+        return value;
     }
 
     private UBValue readValue(byte control) throws IOException {
@@ -91,7 +112,7 @@ public class UBReader implements Closeable {
                 break;
 
             case UBValue.MARKER_CHAR:
-                retval = readChar();
+                retval = UBValueFactory.createChar(readChar());
                 break;
 
             case UBValue.MARKER_INT8:
@@ -99,14 +120,19 @@ public class UBReader implements Closeable {
             case UBValue.MARKER_INT16:
             case UBValue.MARKER_INT32:
             case UBValue.MARKER_INT64:
-                retval = readInt(control);
+                retval = UBValueFactory.createInt(readInt(control));
                 break;
 
             case UBValue.MARKER_FLOAT32:
-                retval = readFloat32();
+                retval = UBValueFactory.createFloat32(readFloat32());
+                break;
+
+            case UBValue.MARKER_FLOAT64:
+                retval = UBValueFactory.createFloat64(readFloat64());
                 break;
 
             case UBValue.MARKER_STRING:
+                retval = UBValueFactory.createString(readString());
                 break;
         }
 
