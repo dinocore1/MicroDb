@@ -52,4 +52,9 @@ public class UBValueFactory {
     public static UBString createString(String string) {
         return new UBString(string);
     }
+
+    public static UBFloat32Array createArray(float[] value) {
+        return new UBFloat32Array(value);
+
+    }
 }
