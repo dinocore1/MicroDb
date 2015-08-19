@@ -1,11 +1,10 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.microdb.ubjson.UBObject;
+import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBValueFactory;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -15,6 +14,8 @@ import javax.tools.JavaFileObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
+import java.util.TreeMap;
 
 public class ProxyFileGenerator {
 
@@ -71,7 +72,7 @@ public class ProxyFileGenerator {
 
         if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))){
             return true;
-        } else if(mEnv.getTypeUtils().isSubtype(fieldType, toTypeMirror(DBObject.class))) {
+        } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(Link.class))) {
             return true;
         } else if("int".equals(fqClassName)
                 || "long".equals(fqClassName)
@@ -96,7 +97,6 @@ public class ProxyFileGenerator {
             for(Element member : mClassElement.getEnclosedElements()){
 
                 if(member.getKind() == ElementKind.FIELD
-                        && member.getModifiers().contains(Modifier.PRIVATE)
                         && !member.getModifiers().contains(Modifier.TRANSIENT)) {
 
                     VariableElement field = (VariableElement)member;
@@ -107,8 +107,11 @@ public class ProxyFileGenerator {
                     } else {
 
                         if(!isAcceptableType(field)) {
-                            error(String.format("'%s' is not an acceptable type", field.toString()));
+                            error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field.toString()));
                         } else {
+
+                            MethodSpec toUBObject = generateToUBObjectMethod(fieldName, field);
+                            classBuilder.addMethod(toUBObject);
 
                             MethodSpec getMethod = generateGetMethod(fieldName, field);
                             classBuilder.addMethod(getMethod);
@@ -134,6 +137,29 @@ public class ProxyFileGenerator {
         } catch (IOException e) {
             error("error generating proxy class: " + e.getMessage());
         }
+    }
+
+    private MethodSpec generateToUBObjectMethod(final List<VariableElement> fields) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("to")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(TypeName.get(mClassElement.asType()), "value")
+                .returns(TypeName.get(UBObject.class));
+
+        TypeName ubvaluefactory = ClassName.get(UBValueFactory.class);
+        TypeName treeMap = ParameterizedTypeName.get(ClassName.get(TreeMap.class), ClassName.get(String.class), ClassName.get(UBValue.class));
+        builder.addStatement("$T retval = new $T<>()", treeMap);
+
+        for(VariableElement field : fields) {
+
+            builder.addStatement("retval.put($S, $T.createString(value.$N)",
+                    field.getSimpleName(), UBValueFactory.class, field.getSimpleName());
+
+        }
+
+
+        builder.addStatement("return $T.createObject(retval)", ubvaluefactory);
+
+        return builder.build();
     }
 
     private MethodSpec generateGetMethod(final String fieldName, final VariableElement field) {
