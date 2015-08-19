@@ -1,8 +1,14 @@
 package com.devsmart.microdb;
 
+import com.devsmart.microdb.ubjson.UBObject;
+import pkg.project.SimpleDBModel;
 import com.devsmart.microdb.ubjson.UBValueFactory;
 
-public final class SimpleDBModel_pxy extends DBObject {
+public final class SimpleDBModel_pxy extends SimpleDBModel {
+
+    void init(UBObject data, MicroDB db) {
+        super.init(data, db);
+    }
 
     public String getMyString() {
         return mData.get("myString").asString();

@@ -60,32 +60,62 @@ public class ProxyFileGenerator {
         return true;
     }
 
+    private TypeMirror toTypeMirror(Class<?> type) {
+        TypeElement element = mEnv.getElementUtils().getTypeElement(type.getCanonicalName());
+        return element.asType();
+    }
+
+    private boolean isAcceptableType(VariableElement field) {
+        TypeMirror fieldType = field.asType();
+        final String fqClassName = fieldType.toString();
+
+        if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))){
+            return true;
+        } else if(mEnv.getTypeUtils().isSubtype(fieldType, toTypeMirror(DBObject.class))) {
+            return true;
+        } else if("int".equals(fqClassName)
+                || "long".equals(fqClassName)
+                || "float".equals(fqClassName)
+                || "double".equals(fqClassName)) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
     public void generate() {
         final String proxyClassName = String.format("%s_pxy", mSimpleProxyClassName);
         final String fqClassName = String.format("%s.%s", MICRODB_PACKAGE, proxyClassName);
         try {
 
             TypeSpec.Builder classBuilder = TypeSpec.classBuilder(proxyClassName)
-                    .superclass(DBObject.class)
+                    .superclass(TypeName.get(mClassElement.asType()))
                     .addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
             for(Element member : mClassElement.getEnclosedElements()){
 
                 if(member.getKind() == ElementKind.FIELD
+                        && member.getModifiers().contains(Modifier.PRIVATE)
                         && !member.getModifiers().contains(Modifier.TRANSIENT)) {
 
                     VariableElement field = (VariableElement)member;
-                    TypeMirror fieldType = field.asType();
 
                     final String fieldName = field.getSimpleName().toString();
                     if("id".equals(fieldName)) {
                         error("field with name 'id' is reserved");
                     } else {
-                        MethodSpec getMethod = generateGetMethod(fieldName, fieldType);
-                        classBuilder.addMethod(getMethod);
 
-                        MethodSpec setMethod = generateSetMethod(fieldName, fieldType);
-                        classBuilder.addMethod(setMethod);
+                        if(!isAcceptableType(field)) {
+                            error(String.format("'%s' is not an acceptable type", field.toString()));
+                        } else {
+
+                            MethodSpec getMethod = generateGetMethod(fieldName, field);
+                            classBuilder.addMethod(getMethod);
+
+                            MethodSpec setMethod = generateSetMethod(fieldName, field);
+                            classBuilder.addMethod(setMethod);
+                        }
                     }
                 }
 
@@ -106,10 +136,11 @@ public class ProxyFileGenerator {
         }
     }
 
-    private MethodSpec generateGetMethod(final String fieldName, final TypeMirror fieldType) {
+    private MethodSpec generateGetMethod(final String fieldName, final VariableElement field) {
         final String methodName = String.format("get%s%s", fieldName.substring(0, 1).toUpperCase(),
                 fieldName.substring(1));
 
+        final TypeMirror fieldType = field.asType();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
@@ -124,10 +155,11 @@ public class ProxyFileGenerator {
         return builder.build();
     }
 
-    private MethodSpec generateSetMethod(final String fieldName, final TypeMirror fieldType) {
+    private MethodSpec generateSetMethod(final String fieldName, final VariableElement field) {
         final String methodName = String.format("set%s%s", fieldName.substring(0, 1).toUpperCase(),
                 fieldName.substring(1));
 
+        final TypeMirror fieldType = field.asType();
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)

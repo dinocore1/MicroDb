@@ -5,11 +5,19 @@ import com.devsmart.microdb.ubjson.UBObject;
 public class DBObject {
 
     private MicroDB mDB;
-    private String mKey;
     protected UBObject mData;
 
-    public String getKey() {
-        return mKey;
+    private String id;
+
+    void init(UBObject data, MicroDB db) {
+        mData = data;
+        mDB = db;
+
+        id = mData.get("id").asString();
+    }
+
+    public String getId() {
+        return id;
     }
 
     public void save() {
