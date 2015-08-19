@@ -8,5 +8,9 @@ import com.devsmart.microdb.annotations.DBObj;
 public class SimpleDBModel extends DBObject {
 
 
+    String myString;
+    transient String notSaved;
+    int myInt;
+    long myLong;
 
 }

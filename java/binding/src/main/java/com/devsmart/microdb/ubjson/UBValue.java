@@ -103,7 +103,7 @@ public abstract class UBValue {
         return ((UBString)this).asByteArray();
     }
 
-    public long asInt() {
+    public int asInt() {
         switch (getType()){
             case Int8:
                 return ((UBInt8)this).getInt();
@@ -114,7 +114,30 @@ public abstract class UBValue {
             case Int32:
                 return ((UBInt32)this).getInt();
             case Int64:
-                return ((UBInt64)this).getInt();
+                return (int)((UBInt64)this).getInt();
+            case Float32:
+                return (int)((UBFloat32)this).getFloat();
+            case Float64:
+                return (int)((UBFloat64)this).getDouble();
+
+            default:
+                throw new RuntimeException("not a number type");
+
+        }
+    }
+
+    public long asLong() {
+        switch (getType()){
+            case Int8:
+                return ((UBInt8)this).getInt();
+            case Uint8:
+                return ((UBUInt8)this).getInt();
+            case Int16:
+                return ((UBInt16)this).getInt();
+            case Int32:
+                return ((UBInt32)this).getInt();
+            case Int64:
+                return (long)((UBInt64)this).getInt();
             case Float32:
                 return (long)((UBFloat32)this).getFloat();
             case Float64:
