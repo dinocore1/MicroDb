@@ -2,7 +2,6 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.microdb.annotations.DBObj;
-import com.devsmart.microdb.annotations.Link;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;

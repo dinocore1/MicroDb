@@ -2,25 +2,31 @@
 package pkg.project;
 
 import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
-import com.devsmart.microdb.annotations.Link;
 
 @DBObj
 public class SimpleDBModel extends DBObject {
 
-    private String myString;
+    public String myString;
 
     //transient fields are ignored
-    private transient String notSaved;
+    transient String notSaved;
 
-    //only private fields are persisted, public fields are ignored
-    public String pubString;
-
+    //if instance value is private, you must provide getters and setters
     private int myInt;
 
-    private SimpleDBModel internal;
+    public int getMyInt() {
+        return myInt;
+    }
 
-    @Link
-    private SimpleDBModel link;
+    public void setMyInt(int value) {
+        myInt = value;
+    }
+
+    public SimpleDBModel internal;
+
+    //Links must be public
+    public Link<SimpleDBModel> link;
 
 }

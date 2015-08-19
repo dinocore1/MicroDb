@@ -1,13 +1,20 @@
 package com.devsmart.microdb;
 
 import com.devsmart.microdb.ubjson.UBObject;
+import com.devsmart.microdb.ubjson.UBValue;
 
 public class DBObject {
 
-    protected UBObject mData;
+    private UBValue mId;
+    private MicroDB mDB;
 
-    protected void init(UBObject data) {
-        mData = data;
+    protected void init(UBObject data, MicroDB db) {
+        mId = data.get("id");
+        mDB = db;
+    }
+
+    public UBValue getId() {
+        return mId;
     }
 	
 }

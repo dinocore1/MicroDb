@@ -1,9 +1,14 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.microdb.ubjson.UBValue;
+
 public class MicroDB {
 
 
+    public <T extends DBObject> T get(UBValue id, Class<T> classType) {
+        return null;
+    }
 
     public String insert(DBObject obj) {
         //TODO:
