@@ -9,6 +9,7 @@ apply plugin: 'java'
 dependencies {
   compile 'org.slf4j:slf4j-api:1.7.7'
   compile 'org.slf4j:slf4j-simple:1.7.7'
+  compile 'com.squareup:javapoet:1.2.0'
   testCompile 'junit:junit:4.11'
   testCompile 'com.google.testing.compile:compile-testing:0.6'
 
