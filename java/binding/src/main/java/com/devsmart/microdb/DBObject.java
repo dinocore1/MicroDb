@@ -1,6 +1,6 @@
 package com.devsmart.microdb;
 
-public class MicroDBObject {
+public class DBObject {
 
     private MicroDB mDB;
     private String mKey;

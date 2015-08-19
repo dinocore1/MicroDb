@@ -5,13 +5,13 @@ public class MicroDB {
 
 
 
-    public String insert(MicroDBObject obj) {
+    public String insert(DBObject obj) {
         //TODO:
         return null;
 
     }
 
-    public void update(MicroDBObject obj) {
+    public void update(DBObject obj) {
 
     }
 
@@ -19,7 +19,7 @@ public class MicroDB {
 
     }
 
-    public void delete(MicroDBObject obj) {
+    public void delete(DBObject obj) {
         delete(obj.getKey());
     }
 
