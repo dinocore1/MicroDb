@@ -20,7 +20,7 @@ public class MicroDB {
     }
 
     public void delete(DBObject obj) {
-        delete(obj.getKey());
+
     }
 
     public Transaction beginTransaction() {

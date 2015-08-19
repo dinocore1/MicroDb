@@ -6,10 +6,6 @@ import com.devsmart.microdb.ubjson.UBValueFactory;
 
 public final class SimpleDBModel_pxy extends SimpleDBModel {
 
-    void init(UBObject data, MicroDB db) {
-        super.init(data, db);
-    }
-
     public String getMyString() {
         return mData.get("myString").asString();
     }
@@ -24,5 +20,20 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
 
     public void setMyInt(int value) {
         mData.set("myInt", UBValueFactory.createInt(value));
+    }
+
+    private SimpleDBModel_pxy mCache_internal;
+    public SimpleDBModel getInternal() {
+        if(mCache_internal == null) {
+            UBObject data = mData.get("internal").asObject();
+            mCache_internal = new SimpleDBModel_pxy();
+            mCache_internal.init(data);
+        }
+        return mCache_internal;
+    }
+
+    public void setInternal(SimpleDBModel_pxy value) {
+        mData.set("internal", value.mData);
+        mCache_internal = value;
     }
 }
