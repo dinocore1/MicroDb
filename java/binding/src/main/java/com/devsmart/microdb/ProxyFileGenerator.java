@@ -8,12 +8,14 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -24,6 +26,7 @@ public class ProxyFileGenerator {
     private final ProcessingEnvironment mEnv;
     private final TypeElement mClassElement;
     private String mSimpleProxyClassName;
+    private ArrayList<VariableElement> mPersistFields = new ArrayList<VariableElement>();
 
     public ProxyFileGenerator(ProcessingEnvironment env, TypeElement classElement) {
         mEnv = env;
@@ -62,13 +65,31 @@ public class ProxyFileGenerator {
     }
 
     private TypeMirror toTypeMirror(Class<?> type) {
-        TypeElement element = mEnv.getElementUtils().getTypeElement(type.getCanonicalName());
+        TypeElement element = toTypeElement(type);
         return element.asType();
+    }
+
+    private TypeElement toTypeElement(Class<?> type) {
+        TypeElement element = mEnv.getElementUtils().getTypeElement(type.getCanonicalName());
+        return element;
     }
 
     private boolean isAcceptableType(VariableElement field) {
         TypeMirror fieldType = field.asType();
         final String fqClassName = fieldType.toString();
+
+        DeclaredType linkType = mEnv.getTypeUtils().getDeclaredType(toTypeElement(Link.class), mEnv.getTypeUtils().getWildcardType(toTypeMirror(DBObject.class), null));
+
+        if(fieldType instanceof DeclaredType) {
+            if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class)) ||
+                    mEnv.getTypeUtils().isSubtype(fieldType, toTypeMirror(DBObject.class)) ||
+                    mEnv.getTypeUtils().isAssignable(fieldType, linkType)){
+                return true;
+            } else {
+                return false;
+
+            }
+        }
 
         if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))){
             return true;
@@ -110,11 +131,10 @@ public class ProxyFileGenerator {
                             error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field.toString()));
                         } else {
 
-                            MethodSpec toUBObject = generateToUBObjectMethod(fieldName, field);
-                            classBuilder.addMethod(toUBObject);
 
-                            MethodSpec getMethod = generateGetMethod(fieldName, field);
-                            classBuilder.addMethod(getMethod);
+                            mPersistFields.add(field);
+                            //MethodSpec getMethod = generateGetMethod(fieldName, field);
+                            //classBuilder.addMethod(getMethod);
 
                             MethodSpec setMethod = generateSetMethod(fieldName, field);
                             classBuilder.addMethod(setMethod);
@@ -123,6 +143,10 @@ public class ProxyFileGenerator {
                 }
 
             }
+
+            MethodSpec toUBObject = generateToUBObjectMethod(mPersistFields);
+            classBuilder.addMethod(toUBObject);
+
 
             JavaFile proxySourceFile = JavaFile.builder(MICRODB_PACKAGE, classBuilder.build())
                     .skipJavaLangImports(true)
@@ -147,12 +171,20 @@ public class ProxyFileGenerator {
 
         TypeName ubvaluefactory = ClassName.get(UBValueFactory.class);
         TypeName treeMap = ParameterizedTypeName.get(ClassName.get(TreeMap.class), ClassName.get(String.class), ClassName.get(UBValue.class));
-        builder.addStatement("$T retval = new $T<>()", treeMap);
+        builder.addStatement("$T retval = new $T()", treeMap, treeMap);
 
         for(VariableElement field : fields) {
 
-            builder.addStatement("retval.put($S, $T.createString(value.$N)",
-                    field.getSimpleName(), UBValueFactory.class, field.getSimpleName());
+            if(mEnv.getTypeUtils().isSubtype(field.asType(), toTypeMirror(DBObject.class))) {
+                builder.addStatement("retval.put($S, value.$N() == null ? $T.createNull() : $T.to(value.$L()))",
+                        field.getSimpleName().toString(), createGetterName(field), UBValueFactory.class,
+                        createDBObjName(field), createGetterName(field)
+                        );
+            } else {
+                builder.addStatement("retval.put($S, $T.$L(value.$N())",
+                        field.getSimpleName(), UBValueFactory.class, createUBFactoryFunctionNameForType(field),
+                        createGetterName(field));
+            }
 
         }
 
@@ -162,9 +194,37 @@ public class ProxyFileGenerator {
         return builder.build();
     }
 
-    private MethodSpec generateGetMethod(final String fieldName, final VariableElement field) {
+    private String createUBFactoryFunctionNameForType(VariableElement field) {
+        TypeMirror fieldType = field.asType();
+        final String fqClassName = fieldType.toString();
+        if("int".equals(fqClassName)) {
+            return "createInt";
+        } else if("long".equals(fqClassName)) {
+            return "createLong";
+        } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
+            return "createString";
+        } else {
+            error("wtf");
+            throw new RuntimeException("");
+        }
+    }
+
+    private String createGetterName(VariableElement field) {
+        final String fieldName = field.getSimpleName().toString();
         final String methodName = String.format("get%s%s", fieldName.substring(0, 1).toUpperCase(),
                 fieldName.substring(1));
+        return methodName;
+
+    }
+
+    private ClassName createDBObjName(VariableElement field) {
+        TypeMirror fieldType = field.asType();
+        return ClassName.get(MICRODB_PACKAGE, ClassName.bestGuess(fieldType.toString()).simpleName()+"_pxy");
+    }
+
+    /*
+    private MethodSpec generateGetMethod(final VariableElement field) {
+        final String methodName = createGetterName(field);
 
         final TypeMirror fieldType = field.asType();
 
@@ -180,6 +240,7 @@ public class ProxyFileGenerator {
 
         return builder.build();
     }
+    */
 
     private MethodSpec generateSetMethod(final String fieldName, final VariableElement field) {
         final String methodName = String.format("set%s%s", fieldName.substring(0, 1).toUpperCase(),
@@ -189,16 +250,13 @@ public class ProxyFileGenerator {
 
         MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
                 .addParameter(TypeName.get(fieldType), "value")
                 .returns(TypeName.VOID);
 
 
-
-        if(String.class.getCanonicalName().equals(fieldType.toString())) {
-            builder.addStatement("mData.set($S, $T.createString($L))", fieldName, UBValueFactory.class, "value");
-        } else if("int".equals(fieldType.toString())) {
-            builder.addStatement("mData.set($S, $T.createInt($L))", fieldName, UBValueFactory.class, "value");
-        }
+        builder.addStatement("super.$N($N)", methodName, "value");
+        builder.addStatement("mDirty = true");
 
         return builder.build();
     }

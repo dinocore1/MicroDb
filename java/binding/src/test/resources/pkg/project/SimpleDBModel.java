@@ -8,25 +8,44 @@ import com.devsmart.microdb.annotations.DBObj;
 @DBObj
 public class SimpleDBModel extends DBObject {
 
-    public String myString;
+
+
+    //only private fields will be persisted. You must create
+    //getters and setters for every field
+    private String myString;
+
+    public String getMyString() {
+        return myString;
+    }
+
+    public void setMyString(String myString) {
+        this.myString = myString;
+    }
+
 
     //transient fields are ignored
-    transient String notSaved;
+    private transient String notSaved;
 
-    //if instance value is private, you must provide getters and setters
     private int myInt;
 
     public int getMyInt() {
         return myInt;
     }
-
     public void setMyInt(int value) {
         myInt = value;
     }
 
-    public SimpleDBModel internal;
 
-    //Links must be public
+    private SimpleDBModel internal;
+    public SimpleDBModel getInternal() {
+        return internal;
+    }
+
+    public void setInternal(SimpleDBModel value) {
+        internal = value;
+    }
+
+    //Links must be public and must not have getter and setter
     public Link<SimpleDBModel> link;
 
 }
