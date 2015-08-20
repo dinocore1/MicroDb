@@ -35,18 +35,62 @@ public class ProxyFileGenerator {
 
     private class PrimitiveDBOBjectField implements FieldMethodCodeGen {
 
+        private String createUBFactoryCreateFunction(VariableElement field) {
+            TypeMirror fieldType = field.asType();
+            final String fqClassName = fieldType.toString();
+            if("int".equals(fqClassName)) {
+                return "createInt";
+            } else if("long".equals(fqClassName)) {
+                return "createLong";
+            } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
+                return "createString";
+            } else {
+                error("wtf");
+                throw new RuntimeException("");
+            }
+        }
+
+        private String createUBAsFunctionName(VariableElement field) {
+            TypeMirror fieldType = field.asType();
+            final String fqClassName = fieldType.toString();
+            if("int".equals(fqClassName)) {
+                return "asInt";
+            } else if("long".equals(fqClassName)) {
+                return "asLong";
+            } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
+                return "asString";
+            } else {
+                error("wtf");
+                throw new RuntimeException("");
+            }
+
+        }
+
         @Override
         public void serializeCode(VariableElement field, MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.$L(value.$L())",
+                    field.getSimpleName(), UBValueFactory.class, createUBFactoryCreateFunction(field), createGetterName(field));
 
         }
 
         @Override
         public void deserializeCode(VariableElement field, MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).$L())",
+                    createSetterName(field), field.getSimpleName(), createUBAsFunctionName(field));
 
         }
 
         @Override
         public void specializedMethods(VariableElement field, TypeSpec.Builder builder) {
+            final String setterName = createSetterName(field);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(field.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
 
         }
     }
@@ -93,8 +137,8 @@ public class ProxyFileGenerator {
                             .addAnnotation(Override.class)
                             .addModifiers(Modifier.PUBLIC)
                             .addParameter(TypeName.get(field.asType()), "value")
-                            .addStatement("supert.$L(value)", setterName)
-                            .addStatement("mdirty = true")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
                             .build()
             );
 
@@ -275,20 +319,7 @@ public class ProxyFileGenerator {
         return builder.build();
     }
 
-    private String createUBFactoryFunctionNameForType(VariableElement field) {
-        TypeMirror fieldType = field.asType();
-        final String fqClassName = fieldType.toString();
-        if("int".equals(fqClassName)) {
-            return "createInt";
-        } else if("long".equals(fqClassName)) {
-            return "createLong";
-        } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
-            return "createString";
-        } else {
-            error("wtf");
-            throw new RuntimeException("");
-        }
-    }
+
 
     private String createGetterName(VariableElement field) {
         final String fieldName = field.getSimpleName().toString();
