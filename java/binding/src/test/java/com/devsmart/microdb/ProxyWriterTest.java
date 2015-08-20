@@ -1,6 +1,7 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.microdb.generator.DBAnnotationProcessor;
 import com.google.testing.compile.JavaFileObjects;
 import org.junit.Test;
 

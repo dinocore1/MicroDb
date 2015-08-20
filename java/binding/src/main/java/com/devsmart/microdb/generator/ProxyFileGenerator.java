@@ -1,6 +1,8 @@
-package com.devsmart.microdb;
+package com.devsmart.microdb.generator;
 
 
+import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.Link;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBValueFactory;
@@ -22,6 +24,83 @@ import java.util.TreeMap;
 public class ProxyFileGenerator {
 
     public static final String MICRODB_PACKAGE = "com.devsmart.microdb";
+
+    private interface FieldMethodCodeGen {
+
+        void serializeCode(VariableElement field, MethodSpec.Builder builder);
+        void deserializeCode(VariableElement field, MethodSpec.Builder builder);
+        void specializedMethods(VariableElement field, TypeSpec.Builder builder);
+
+    }
+
+    private class PrimitiveDBOBjectField implements FieldMethodCodeGen {
+
+        @Override
+        public void serializeCode(VariableElement field, MethodSpec.Builder builder) {
+
+        }
+
+        @Override
+        public void deserializeCode(VariableElement field, MethodSpec.Builder builder) {
+
+        }
+
+        @Override
+        public void specializedMethods(VariableElement field, TypeSpec.Builder builder) {
+
+        }
+    }
+
+    private class EmbeddedDBObjectField implements FieldMethodCodeGen {
+
+        private ClassName createDBObjName(VariableElement field) {
+            TypeMirror fieldType = field.asType();
+            String simpleName = mEnv.getElementUtils().getTypeElement(fieldType.toString()).getSimpleName().toString();
+            return ClassName.get(MICRODB_PACKAGE, simpleName+"_pxy");
+        }
+
+        @Override
+        public void serializeCode(VariableElement field, MethodSpec.Builder builder) {
+
+            TypeName embeddedName = TypeName.get(field.asType());
+
+            builder.addCode(CodeBlock.builder()
+                    .addStatement("$T obj = value.$N", embeddedName, createGetterName(field))
+                    .addStatement("retval.put($S, obj == null ? $T.createNull() : $T.to(obj))",
+                            field.getSimpleName(), UBValueFactory.class, createDBObjName(field))
+                    .build()
+            );
+
+        }
+
+        @Override
+        public void deserializeCode(VariableElement field, MethodSpec.Builder builder) {
+
+            ClassName proxyClassName = createDBObjName(field);
+            builder.addCode(CodeBlock.builder()
+                            .addStatement("$T tmp = new $T", proxyClassName)
+                            .addStatement("tmp.init(obj.get($S).asObject(), db)", field.getSimpleName())
+                            .addStatement("$L(tmp)", createSetterName(field))
+                            .build()
+            );
+
+        }
+
+        @Override
+        public void specializedMethods(VariableElement field, TypeSpec.Builder builder) {
+            final String setterName = createSetterName(field);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(field.asType()), "value")
+                            .addStatement("supert.$L(value)", setterName)
+                            .addStatement("mdirty = true")
+                            .build()
+            );
+
+        }
+    }
+
 
     private final ProcessingEnvironment mEnv;
     private final TypeElement mClassElement;
@@ -73,6 +152,8 @@ public class ProxyFileGenerator {
         TypeElement element = mEnv.getElementUtils().getTypeElement(type.getCanonicalName());
         return element;
     }
+
+
 
     private boolean isAcceptableType(VariableElement field) {
         TypeMirror fieldType = field.asType();
@@ -217,10 +298,14 @@ public class ProxyFileGenerator {
 
     }
 
-    private ClassName createDBObjName(VariableElement field) {
-        TypeMirror fieldType = field.asType();
-        return ClassName.get(MICRODB_PACKAGE, ClassName.bestGuess(fieldType.toString()).simpleName()+"_pxy");
+    public String createSetterName(VariableElement field) {
+        final String fieldName = field.getSimpleName().toString();
+        final String methodName = String.format("set%s%s", fieldName.substring(0, 1).toUpperCase(),
+                fieldName.substring(1));
+        return methodName;
     }
+
+
 
     /*
     private MethodSpec generateGetMethod(final VariableElement field) {

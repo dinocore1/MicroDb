@@ -1,6 +1,7 @@
-package com.devsmart.microdb;
+package com.devsmart.microdb.generator;
 
 
+import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
 
 import javax.annotation.processing.AbstractProcessor;
