@@ -8,8 +8,6 @@ import com.devsmart.microdb.annotations.DBObj;
 @DBObj
 public class SimpleDBModel extends DBObject {
 
-
-
     //only private fields will be persisted. You must create
     //getters and setters for every field
     private String myString;

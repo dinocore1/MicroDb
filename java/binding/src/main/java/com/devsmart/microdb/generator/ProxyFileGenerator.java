@@ -395,7 +395,9 @@ public class ProxyFileGenerator {
             for(Element member : mClassElement.getEnclosedElements()){
 
                 if(member.getKind() == ElementKind.FIELD
+                        && !member.getModifiers().contains(Modifier.STATIC)
                         && !member.getModifiers().contains(Modifier.TRANSIENT)) {
+
 
                     VariableElement field = (VariableElement)member;
 
@@ -404,23 +406,35 @@ public class ProxyFileGenerator {
                         error("field with name 'id' is reserved");
                     } else {
 
-                        if(isEmbeddedType(field)) {
-                            fields.add(new EmbeddedDBObjectField(field));
-                        } else if(isLinkType(field)){
-                            fields.add(new LinkFieldGen(field));
-                        } else if(isStringType(field)) {
-                            fields.add(new StringDBOBjectField(field));
-                        } else if(isIntType(field)){
-                            fields.add(new IntDBOBjectField(field));
-                        } else if(isLongType(field)){
-                            fields.add(new LongDBOBjectField(field));
-                        } else if(isFloatType(field)){
-                            fields.add(new FloatDBOBjectField(field));
-                        }else if(isDoubleType(field)){
-                            fields.add(new DoubleDBOBjectField(field));
+
+                        if(isLinkType(field)){
+                            if(!field.getModifiers().contains(Modifier.PUBLIC)) {
+                                error("Link fields must be public");
+                            } else {
+                                fields.add(new LinkFieldGen(field));
+                            }
                         } else {
-                            error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field.toString()));
+                            if(!field.getModifiers().contains(Modifier.PRIVATE)) {
+                                error(String.format("'%s' field must be private", field));
+                            } else {
+                                if(isEmbeddedType(field)) {
+                                    fields.add(new EmbeddedDBObjectField(field));
+                                } else if(isStringType(field)) {
+                                    fields.add(new StringDBOBjectField(field));
+                                } else if(isIntType(field)){
+                                    fields.add(new IntDBOBjectField(field));
+                                } else if(isLongType(field)){
+                                    fields.add(new LongDBOBjectField(field));
+                                } else if(isFloatType(field)){
+                                    fields.add(new FloatDBOBjectField(field));
+                                }else if(isDoubleType(field)){
+                                    fields.add(new DoubleDBOBjectField(field));
+                                } else {
+                                    error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field));
+                                }
+                            }
                         }
+
 
                     }
                 }
