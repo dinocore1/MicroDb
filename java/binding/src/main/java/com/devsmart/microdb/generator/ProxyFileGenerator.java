@@ -3,6 +3,7 @@ package com.devsmart.microdb.generator;
 
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
+import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBValueFactory;
@@ -11,10 +12,10 @@ import com.squareup.javapoet.*;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -27,66 +28,41 @@ public class ProxyFileGenerator {
 
     private interface FieldMethodCodeGen {
 
-        void serializeCode(VariableElement field, MethodSpec.Builder builder);
-        void deserializeCode(VariableElement field, MethodSpec.Builder builder);
-        void specializedMethods(VariableElement field, TypeSpec.Builder builder);
+        void serializeCode(MethodSpec.Builder builder);
+        void deserializeCode(MethodSpec.Builder builder);
+        void specializedMethods(TypeSpec.Builder builder);
 
     }
 
-    private class PrimitiveDBOBjectField implements FieldMethodCodeGen {
+    private class StringDBOBjectField implements FieldMethodCodeGen {
 
-        private String createUBFactoryCreateFunction(VariableElement field) {
-            TypeMirror fieldType = field.asType();
-            final String fqClassName = fieldType.toString();
-            if("int".equals(fqClassName)) {
-                return "createInt";
-            } else if("long".equals(fqClassName)) {
-                return "createLong";
-            } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
-                return "createString";
-            } else {
-                error("wtf");
-                throw new RuntimeException("");
-            }
+        private final VariableElement mField;
+
+        public StringDBOBjectField(VariableElement field) {
+            mField = field;
         }
 
-        private String createUBAsFunctionName(VariableElement field) {
-            TypeMirror fieldType = field.asType();
-            final String fqClassName = fieldType.toString();
-            if("int".equals(fqClassName)) {
-                return "asInt";
-            } else if("long".equals(fqClassName)) {
-                return "asLong";
-            } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))) {
-                return "asString";
-            } else {
-                error("wtf");
-                throw new RuntimeException("");
-            }
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createString(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
-        public void serializeCode(VariableElement field, MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.$L(value.$L())",
-                    field.getSimpleName(), UBValueFactory.class, createUBFactoryCreateFunction(field), createGetterName(field));
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asString())",
+                    createSetterName(mField), mField.getSimpleName());
 
         }
 
         @Override
-        public void deserializeCode(VariableElement field, MethodSpec.Builder builder) {
-            builder.addStatement("$L(obj.get($S).$L())",
-                    createSetterName(field), field.getSimpleName(), createUBAsFunctionName(field));
-
-        }
-
-        @Override
-        public void specializedMethods(VariableElement field, TypeSpec.Builder builder) {
-            final String setterName = createSetterName(field);
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
             builder.addMethod(MethodSpec.methodBuilder(setterName)
                             .addAnnotation(Override.class)
                             .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(field.asType()), "value")
+                            .addParameter(TypeName.get(mField.asType()), "value")
                             .addStatement("super.$L(value)", setterName)
                             .addStatement("mDirty = true")
                             .build()
@@ -95,48 +71,227 @@ public class ProxyFileGenerator {
         }
     }
 
-    private class EmbeddedDBObjectField implements FieldMethodCodeGen {
+    private class IntDBOBjectField implements FieldMethodCodeGen {
 
-        private ClassName createDBObjName(VariableElement field) {
-            TypeMirror fieldType = field.asType();
-            String simpleName = mEnv.getElementUtils().getTypeElement(fieldType.toString()).getSimpleName().toString();
-            return ClassName.get(MICRODB_PACKAGE, simpleName+"_pxy");
+        private final VariableElement mField;
+
+        public IntDBOBjectField(VariableElement field) {
+            mField = field;
         }
 
         @Override
-        public void serializeCode(VariableElement field, MethodSpec.Builder builder) {
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
-            TypeName embeddedName = TypeName.get(field.asType());
+        }
 
-            builder.addCode(CodeBlock.builder()
-                    .addStatement("$T obj = value.$N", embeddedName, createGetterName(field))
-                    .addStatement("retval.put($S, obj == null ? $T.createNull() : $T.to(obj))",
-                            field.getSimpleName(), UBValueFactory.class, createDBObjName(field))
-                    .build()
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asInt())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class LongDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public LongDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asLong())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class FloatDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public FloatDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createFloat32(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asFloat32())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class DoubleDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public DoubleDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createFloat64(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asFloat64())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class LinkFieldGen implements FieldMethodCodeGen {
+        private final VariableElement mField;
+
+        public LinkFieldGen(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, value.$L.getId())", mField, mField);
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
+            builder.addStatement("$L = new $T(obj.get($S), db, $T.class)", mField, mField.asType(), mField, createDBObjName( mEnv.getTypeUtils().asElement(genericType) ));
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+
+        }
+    }
+
+    private ClassName createDBObjName(Element field) {
+        TypeMirror fieldType = field.asType();
+        Element typeElement = mEnv.getTypeUtils().asElement(fieldType);
+        String simpleName = typeElement.getSimpleName().toString();
+        return ClassName.get(MICRODB_PACKAGE, simpleName+"_pxy");
+    }
+
+    private class EmbeddedDBObjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public EmbeddedDBObjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+
+            builder.addStatement("retval.put($S, $T.to(value.$N()))",
+                    mField.getSimpleName(), createDBObjName(mField), createGetterName(mField)
             );
 
         }
 
         @Override
-        public void deserializeCode(VariableElement field, MethodSpec.Builder builder) {
+        public void deserializeCode(MethodSpec.Builder builder) {
 
-            ClassName proxyClassName = createDBObjName(field);
+            ClassName proxyClassName = createDBObjName(mField);
             builder.addCode(CodeBlock.builder()
-                            .addStatement("$T tmp = new $T", proxyClassName)
-                            .addStatement("tmp.init(obj.get($S).asObject(), db)", field.getSimpleName())
-                            .addStatement("$L(tmp)", createSetterName(field))
+                            .add("{\n")
+                            .indent()
+                            .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
+                            .addStatement("tmp.init(obj.get($S).asObject(), db)", mField)
+                            .addStatement("$L(tmp)", createSetterName(mField))
+                            .unindent()
+                            .add("}\n")
                             .build()
             );
 
         }
 
         @Override
-        public void specializedMethods(VariableElement field, TypeSpec.Builder builder) {
-            final String setterName = createSetterName(field);
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
             builder.addMethod(MethodSpec.methodBuilder(setterName)
                             .addAnnotation(Override.class)
                             .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(field.asType()), "value")
+                            .addParameter(TypeName.get(mField.asType()), "value")
                             .addStatement("super.$L(value)", setterName)
                             .addStatement("mDirty = true")
                             .build()
@@ -149,7 +304,6 @@ public class ProxyFileGenerator {
     private final ProcessingEnvironment mEnv;
     private final TypeElement mClassElement;
     private String mSimpleProxyClassName;
-    private ArrayList<VariableElement> mPersistFields = new ArrayList<VariableElement>();
 
     public ProxyFileGenerator(ProcessingEnvironment env, TypeElement classElement) {
         mEnv = env;
@@ -198,43 +352,41 @@ public class ProxyFileGenerator {
     }
 
 
-
-    private boolean isAcceptableType(VariableElement field) {
-        TypeMirror fieldType = field.asType();
-        final String fqClassName = fieldType.toString();
-
+    private boolean isLinkType(VariableElement field) {
         DeclaredType linkType = mEnv.getTypeUtils().getDeclaredType(toTypeElement(Link.class), mEnv.getTypeUtils().getWildcardType(toTypeMirror(DBObject.class), null));
+        return mEnv.getTypeUtils().isAssignable(field.asType(), linkType);
+    }
 
-        if(fieldType instanceof DeclaredType) {
-            if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class)) ||
-                    mEnv.getTypeUtils().isSubtype(fieldType, toTypeMirror(DBObject.class)) ||
-                    mEnv.getTypeUtils().isAssignable(fieldType, linkType)){
-                return true;
-            } else {
-                return false;
+    private boolean isEmbeddedType(VariableElement field) {
+        return mEnv.getTypeUtils().isSubtype(field.asType(), toTypeMirror(DBObject.class));
+    }
 
-            }
-        }
+    private boolean isStringType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), toTypeMirror(String.class));
+    }
 
-        if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(String.class))){
-            return true;
-        } else if(mEnv.getTypeUtils().isSameType(fieldType, toTypeMirror(Link.class))) {
-            return true;
-        } else if("int".equals(fqClassName)
-                || "long".equals(fqClassName)
-                || "float".equals(fqClassName)
-                || "double".equals(fqClassName)) {
-            return true;
-        } else {
-            return false;
-        }
+    private boolean isIntType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.INT));
+    }
 
+    private boolean isLongType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.LONG));
+    }
+
+    private boolean isFloatType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.FLOAT));
+    }
+
+    private boolean isDoubleType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.DOUBLE));
     }
 
     public void generate() {
         final String proxyClassName = String.format("%s_pxy", mSimpleProxyClassName);
         final String fqClassName = String.format("%s.%s", MICRODB_PACKAGE, proxyClassName);
         try {
+
+            ArrayList<FieldMethodCodeGen> fields = new ArrayList<FieldMethodCodeGen>();
 
             TypeSpec.Builder classBuilder = TypeSpec.classBuilder(proxyClassName)
                     .superclass(TypeName.get(mClassElement.asType()))
@@ -252,25 +404,35 @@ public class ProxyFileGenerator {
                         error("field with name 'id' is reserved");
                     } else {
 
-                        if(!isAcceptableType(field)) {
-                            error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field.toString()));
+                        if(isEmbeddedType(field)) {
+                            fields.add(new EmbeddedDBObjectField(field));
+                        } else if(isLinkType(field)){
+                            fields.add(new LinkFieldGen(field));
+                        } else if(isStringType(field)) {
+                            fields.add(new StringDBOBjectField(field));
+                        } else if(isIntType(field)){
+                            fields.add(new IntDBOBjectField(field));
+                        } else if(isLongType(field)){
+                            fields.add(new LongDBOBjectField(field));
+                        } else if(isFloatType(field)){
+                            fields.add(new FloatDBOBjectField(field));
+                        }else if(isDoubleType(field)){
+                            fields.add(new DoubleDBOBjectField(field));
                         } else {
-
-
-                            mPersistFields.add(field);
-                            //MethodSpec getMethod = generateGetMethod(fieldName, field);
-                            //classBuilder.addMethod(getMethod);
-
-                            MethodSpec setMethod = generateSetMethod(fieldName, field);
-                            classBuilder.addMethod(setMethod);
+                            error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field.toString()));
                         }
+
                     }
                 }
-
             }
 
-            MethodSpec toUBObject = generateToUBObjectMethod(mPersistFields);
-            classBuilder.addMethod(toUBObject);
+            classBuilder.addMethod(generateToUBValueMethod(fields));
+
+            classBuilder.addMethod(generateInitMethod(fields));
+
+            for(FieldMethodCodeGen fieldGen : fields) {
+                fieldGen.specializedMethods(classBuilder);
+            }
 
 
             JavaFile proxySourceFile = JavaFile.builder(MICRODB_PACKAGE, classBuilder.build())
@@ -288,33 +450,43 @@ public class ProxyFileGenerator {
         }
     }
 
-    private MethodSpec generateToUBObjectMethod(final List<VariableElement> fields) {
+    private MethodSpec generateToUBValueMethod(final List<FieldMethodCodeGen> fieldGens) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("to")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(TypeName.get(mClassElement.asType()), "value")
-                .returns(TypeName.get(UBObject.class));
+                .returns(TypeName.get(UBValue.class));
+
+        builder.beginControlFlow("if (value == null)");
+        builder.addStatement("return $T.createNull()", UBValueFactory.class);
+        builder.endControlFlow();
+
 
         TypeName ubvaluefactory = ClassName.get(UBValueFactory.class);
         TypeName treeMap = ParameterizedTypeName.get(ClassName.get(TreeMap.class), ClassName.get(String.class), ClassName.get(UBValue.class));
         builder.addStatement("$T retval = new $T()", treeMap, treeMap);
 
-        for(VariableElement field : fields) {
-
-            if(mEnv.getTypeUtils().isSubtype(field.asType(), toTypeMirror(DBObject.class))) {
-                builder.addStatement("retval.put($S, value.$N() == null ? $T.createNull() : $T.to(value.$L()))",
-                        field.getSimpleName().toString(), createGetterName(field), UBValueFactory.class,
-                        createDBObjName(field), createGetterName(field)
-                        );
-            } else {
-                builder.addStatement("retval.put($S, $T.$L(value.$N())",
-                        field.getSimpleName(), UBValueFactory.class, createUBFactoryFunctionNameForType(field),
-                        createGetterName(field));
-            }
-
+        for(FieldMethodCodeGen field : fieldGens) {
+            field.serializeCode(builder);
         }
 
-
         builder.addStatement("return $T.createObject(retval)", ubvaluefactory);
+
+        return builder.build();
+    }
+
+    private MethodSpec generateInitMethod(final List<FieldMethodCodeGen> fieldGens) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("init")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(UBObject.class, "obj")
+                .addParameter(MicroDB.class, "db")
+                .returns(TypeName.VOID);
+
+        builder.addStatement("super.init(obj, db)");
+
+        for(FieldMethodCodeGen fieldGen : fieldGens) {
+            fieldGen.deserializeCode(builder);
+        }
 
         return builder.build();
     }
@@ -336,44 +508,4 @@ public class ProxyFileGenerator {
         return methodName;
     }
 
-
-
-    /*
-    private MethodSpec generateGetMethod(final VariableElement field) {
-        final String methodName = createGetterName(field);
-
-        final TypeMirror fieldType = field.asType();
-
-        MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PUBLIC)
-                .returns(TypeName.get(fieldType));
-
-        if(String.class.getCanonicalName().equals(fieldType.toString())) {
-            builder.addStatement("return mData.get($S).asString()", fieldName);
-        } else if("int".equals(fieldType.toString())) {
-            builder.addStatement("return mData.get($S).asInt()", fieldName);
-        }
-
-        return builder.build();
-    }
-    */
-
-    private MethodSpec generateSetMethod(final String fieldName, final VariableElement field) {
-        final String methodName = String.format("set%s%s", fieldName.substring(0, 1).toUpperCase(),
-                fieldName.substring(1));
-
-        final TypeMirror fieldType = field.asType();
-
-        MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(Modifier.PUBLIC)
-                .addAnnotation(Override.class)
-                .addParameter(TypeName.get(fieldType), "value")
-                .returns(TypeName.VOID);
-
-
-        builder.addStatement("super.$N($N)", methodName, "value");
-        builder.addStatement("mDirty = true");
-
-        return builder.build();
-    }
 }

@@ -2,22 +2,27 @@ package com.devsmart.microdb;
 
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
-import pkg.project.SimpleDBModel;
 import com.devsmart.microdb.ubjson.UBValueFactory;
-
 import java.util.TreeMap;
+import pkg.project.SimpleDBModel;
+
+
 
 public final class SimpleDBModel_pxy extends SimpleDBModel {
 
-    public static UBObject to(SimpleDBModel value) {
+    public static UBValue to(SimpleDBModel value) {
+        if(value == null) {
+            return UBValueFactory.createNull();
+        }
         TreeMap<String, UBValue> retval = new TreeMap<String, UBValue>();
         retval.put("myString", UBValueFactory.createString(value.getMyString()));
         retval.put("myInt", UBValueFactory.createInt(value.getMyInt()));
-        retval.put("internal", value.getInternal() == null ? UBValueFactory.createNull() : SimpleDBModel_pxy.to(value.getInternal()));
+        retval.put("internal", SimpleDBModel_pxy.to(value.getInternal()));
         retval.put("link", value.link.getId());
         return UBValueFactory.createObject(retval);
     }
 
+    @Override
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
         setMyString(obj.get("myString").asString());
@@ -32,8 +37,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
 
 
     @Override
-    public void setMyString(String myString) {
-        super.setMyString(myString);
+    public void setMyString(String value) {
+        super.setMyString(value);
         mDirty = true;
     }
 
@@ -47,13 +52,5 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     public void setInternal(SimpleDBModel value) {
         super.setInternal(value);
         mDirty = true;
-    }
-
-    public SimpleDBModel getLink() {
-        return link.get();
-    }
-
-    public void setLink(SimpleDBModel value) {
-        link.set(value);
     }
 }
