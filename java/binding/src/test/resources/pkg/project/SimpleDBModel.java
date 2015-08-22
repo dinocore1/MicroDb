@@ -82,4 +82,22 @@ public class SimpleDBModel extends DBObject {
     //Links must be public and must not have getter and setter
     public Link<SimpleDBModel> link;
 
+    private float[] myFloatArray;
+    public float[] getMyFloatArray() {
+        return myFloatArray;
+    }
+    public void setMyFloatArray(float[] value) {
+        myFloatArray = value;
+    }
+
+    private double[] myDoubleArray;
+    public double[] getMyDoubleArray() {
+        return myDoubleArray;
+    }
+
+    public void setMyDoubleArray(double[] myDoubleArray) {
+        this.myDoubleArray = myDoubleArray;
+    }
+
+
 }

@@ -223,6 +223,75 @@ public abstract class UBValue {
         return retval;
     }
 
+    public float[] asFloat32Array() {
+        float[] retval;
+        UBArray array = asArray();
+        switch(array.getStrongType()){
+            case Int8: {
+                byte[] data = ((UBInt8Array) array).getValues();
+                retval = new float[data.length];
+                for (int i = 0; i < data.length; i++) {
+                    retval[i] = data[i];
+                }
+                break;
+            }
+
+            case Float32:
+                retval = ((UBFloat32Array)array).getValues();
+                break;
+
+            case Float64: {
+                double[] data = ((UBFloat64Array) array).getValues();
+                retval = new float[data.length];
+                for (int i = 0; i < data.length; i++) {
+                    retval[i] = (float) data[i];
+                }
+                break;
+            }
+
+
+            default:
+                throw new RuntimeException("not an float32[] type");
+        }
+
+        return retval;
+    }
+
+    public double[] asFloat64Array() {
+        double[] retval;
+        UBArray array = asArray();
+        switch(array.getStrongType()){
+            case Int8: {
+                byte[] data = ((UBInt8Array) array).getValues();
+                retval = new double[data.length];
+                for (int i = 0; i < data.length; i++) {
+                    retval[i] = data[i];
+                }
+                break;
+            }
+
+            case Float32: {
+                float[] data = ((UBFloat32Array) array).getValues();
+                retval = new double[data.length];
+                for (int i = 0; i < data.length; i++) {
+                    retval[i] = data[i];
+                }
+                break;
+            }
+
+
+            case Float64: {
+                retval = ((UBFloat64Array)array).getValues();
+                break;
+            }
+
+            default:
+                throw new RuntimeException("not an float32[] type");
+        }
+
+        return retval;
+    }
+
     public boolean isObject() {
         return getType() == Type.Object;
     }

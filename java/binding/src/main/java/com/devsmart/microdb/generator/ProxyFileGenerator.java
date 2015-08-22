@@ -11,6 +11,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -290,6 +291,43 @@ public class ProxyFileGenerator {
         }
     }
 
+    private class FloatArrayDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public FloatArrayDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createArray(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asFloat32Array())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
     private class DoubleDBOBjectField implements FieldMethodCodeGen {
 
         private final VariableElement mField;
@@ -308,6 +346,43 @@ public class ProxyFileGenerator {
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
             builder.addStatement("$L(obj.get($S).asFloat64())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class DoubleArrayDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public DoubleArrayDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createArray(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asFloat64Array())",
                     createSetterName(mField), mField.getSimpleName());
 
         }
@@ -497,8 +572,18 @@ public class ProxyFileGenerator {
         return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.FLOAT));
     }
 
+    private boolean isFloatArrayType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(),
+                mEnv.getTypeUtils().getArrayType(mEnv.getTypeUtils().getPrimitiveType(TypeKind.FLOAT)));
+    }
+
     private boolean isDoubleType(VariableElement field) {
         return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.DOUBLE));
+    }
+
+    private boolean isDoubleArrayType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(),
+                mEnv.getTypeUtils().getArrayType(mEnv.getTypeUtils().getPrimitiveType(TypeKind.DOUBLE)));
     }
 
     public void generate() {
@@ -555,6 +640,10 @@ public class ProxyFileGenerator {
                                     fields.add(new FloatDBOBjectField(field));
                                 } else if (isDoubleType(field)) {
                                     fields.add(new DoubleDBOBjectField(field));
+                                } else if(isFloatArrayType(field)){
+                                    fields.add(new FloatArrayDBOBjectField(field));
+                                } else if(isDoubleArrayType(field)){
+                                    fields.add(new DoubleArrayDBOBjectField(field));
                                 } else {
                                     error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field));
                                 }

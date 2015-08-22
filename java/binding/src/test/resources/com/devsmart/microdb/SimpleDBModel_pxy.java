@@ -23,6 +23,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         retval.put("myLong", UBValueFactory.createInt(value.getMyLong()));
         retval.put("internal", SimpleDBModel_pxy.to(value.getInternal()));
         retval.put("link", value.link.getId());
+        retval.put("myFloatArray", UBValueFactory.createArray(value.getMyFloatArray()));
+        retval.put("myDoubleArray", UBValueFactory.createArray(value.getMyDoubleArray()));
         return UBValueFactory.createObject(retval);
     }
 
@@ -41,6 +43,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             setInternal(tmp);
         }
         link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
+        setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
+        setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
     }
 
 
@@ -83,6 +87,18 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void setInternal(SimpleDBModel value) {
         super.setInternal(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyFloatArray(float[] value) {
+        super.setMyFloatArray(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyDoubleArray(double[] value) {
+        super.setMyDoubleArray(value);
         mDirty = true;
     }
 }
