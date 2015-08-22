@@ -71,6 +71,114 @@ public class ProxyFileGenerator {
         }
     }
 
+    private class BoolDBObjectField implements FieldMethodCodeGen {
+        private final VariableElement mField;
+
+        public BoolDBObjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createBool(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asBool())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class ByteDBObjectField implements FieldMethodCodeGen {
+        private final VariableElement mField;
+
+        public ByteDBObjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asByte())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
+    private class ShortDBObjectField implements FieldMethodCodeGen {
+        private final VariableElement mField;
+
+        public ShortDBObjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("$L(obj.get($S).asShort())",
+                    createSetterName(mField), mField.getSimpleName());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
     private class IntDBOBjectField implements FieldMethodCodeGen {
 
         private final VariableElement mField;
@@ -365,6 +473,18 @@ public class ProxyFileGenerator {
         return mEnv.getTypeUtils().isSameType(field.asType(), toTypeMirror(String.class));
     }
 
+    private boolean isBoolType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.BOOLEAN));
+    }
+
+    private boolean isByteType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.BYTE));
+    }
+
+    private boolean isShortType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.SHORT));
+    }
+
     private boolean isIntType(VariableElement field) {
         return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.INT));
     }
@@ -421,13 +541,19 @@ public class ProxyFileGenerator {
                                     fields.add(new EmbeddedDBObjectField(field));
                                 } else if(isStringType(field)) {
                                     fields.add(new StringDBOBjectField(field));
-                                } else if(isIntType(field)){
+                                } else if(isBoolType(field)){
+                                    fields.add(new BoolDBObjectField(field));
+                                } else if(isByteType(field)){
+                                    fields.add(new ByteDBObjectField(field));
+                                } else if (isShortType(field)) {
+                                    fields.add(new ShortDBObjectField(field));
+                                } else if (isIntType(field)) {
                                     fields.add(new IntDBOBjectField(field));
-                                } else if(isLongType(field)){
+                                } else if (isLongType(field)) {
                                     fields.add(new LongDBOBjectField(field));
-                                } else if(isFloatType(field)){
+                                } else if (isFloatType(field)) {
                                     fields.add(new FloatDBOBjectField(field));
-                                }else if(isDoubleType(field)){
+                                } else if (isDoubleType(field)) {
                                     fields.add(new DoubleDBOBjectField(field));
                                 } else {
                                     error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field));

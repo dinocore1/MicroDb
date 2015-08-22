@@ -24,14 +24,50 @@ public class SimpleDBModel extends DBObject {
     //transient fields are ignored
     private transient String notSaved;
 
-    private int myInt;
+    private boolean myBool;
+    public boolean getMyBool() {
+        return myBool;
+    }
 
+    public void setMyBool(boolean myBool) {
+        this.myBool = myBool;
+    }
+
+    private byte myByte;
+    public byte getMyByte() {
+        return myByte;
+    }
+
+    public void setMyByte(byte myByte) {
+        this.myByte = myByte;
+    }
+
+    private short myShort;
+    public short getMyShort() {
+        return myShort;
+    }
+
+    public void setMyShort(short myShort) {
+        this.myShort = myShort;
+    }
+
+    private int myInt;
     public int getMyInt() {
         return myInt;
     }
     public void setMyInt(int value) {
         myInt = value;
     }
+
+    private long myLong;
+    public long getMyLong() {
+        return myLong;
+    }
+
+    public void setMyLong(long myLong) {
+        this.myLong = myLong;
+    }
+
 
 
     private SimpleDBModel internal;

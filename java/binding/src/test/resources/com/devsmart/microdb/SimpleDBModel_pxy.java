@@ -16,7 +16,11 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         TreeMap<String, UBValue> retval = new TreeMap<String, UBValue>();
         retval.put("myString", UBValueFactory.createString(value.getMyString()));
+        retval.put("myBool", UBValueFactory.createBool(value.getMyBool()));
+        retval.put("myByte", UBValueFactory.createInt(value.getMyByte()));
+        retval.put("myShort", UBValueFactory.createInt(value.getMyShort()));
         retval.put("myInt", UBValueFactory.createInt(value.getMyInt()));
+        retval.put("myLong", UBValueFactory.createInt(value.getMyLong()));
         retval.put("internal", SimpleDBModel_pxy.to(value.getInternal()));
         retval.put("link", value.link.getId());
         return UBValueFactory.createObject(retval);
@@ -26,7 +30,11 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
         setMyString(obj.get("myString").asString());
+        setMyBool(obj.get("myBool").asBool());
+        setMyByte(obj.get("myByte").asByte());
+        setMyShort(obj.get("myShort").asShort());
         setMyInt(obj.get("myInt").asInt());
+        setMyLong(obj.get("myLong").asLong());
         {
             SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
             tmp.init(obj.get("internal").asObject(), db);
@@ -43,8 +51,32 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     }
 
     @Override
+    public void setMyBool(boolean value) {
+        super.setMyBool(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyByte(byte value) {
+        super.setMyByte(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyShort(short value) {
+        super.setMyShort(value);
+        mDirty = true;
+    }
+
+    @Override
     public void setMyInt(int value) {
         super.setMyInt(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyLong(long value) {
+        super.setMyLong(value);
         mDirty = true;
     }
 

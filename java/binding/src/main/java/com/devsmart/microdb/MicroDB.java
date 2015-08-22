@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 public class MicroDB {
 
-    private HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<>()
+    //private HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<>()
 
 
     public <T extends DBObject> T create(Class<T> classType) {

@@ -103,6 +103,14 @@ public abstract class UBValue {
         return ((UBString)this).asByteArray();
     }
 
+    public byte asByte() {
+        return (byte)asInt();
+    }
+
+    public short asShort() {
+        return (short)asInt();
+    }
+
     public int asInt() {
         switch (getType()){
             case Int8:
