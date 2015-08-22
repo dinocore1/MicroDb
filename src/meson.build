@@ -20,11 +20,14 @@ bisongen.process('viewquery.y')
 ]
 
 dep = []
-cpp_args = []
+cpp_args = [ ]
 	
 if meson.is_cross_build()
   if host.name() == 'mingw'
-    cpp_args = [ '-D_WIN32_WINNT=0x0600' ]
+    cpp_args = [ cpp_args, '-D_WIN32_WINNT=0x0600' ]
+	sources = [port_src, 'uuid_generic.cpp']
+  elif host.name() == 'android'
+    cpp_args = [ cpp_args, '-DOS_ANDROID' ]
 	sources = [port_src, 'uuid_generic.cpp']
   endif
 else
@@ -37,6 +40,7 @@ else
 endif
 
 microdb_lib = build_target('microdb', sources,
+	cpp_args : cpp_args,
 	include_directories : incdir,
 	dependencies : [dep, leveldb_dep],
 	target_type : libtype

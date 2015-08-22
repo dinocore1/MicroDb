@@ -7,13 +7,22 @@
 #ifndef PORTABLE_ENDIAN_H__
 #define PORTABLE_ENDIAN_H__
 
-#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
-#	define __WINDOWS__
 
-#endif
+#if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__) || defined(OS_ANDROID)
 
-#if defined(__linux__) || defined(__CYGWIN__)
+#	include <sys/endian.h>
+
+#	define be16toh(x) betoh16(x)
+#	define le16toh(x) letoh16(x)
+
+#	define be32toh(x) betoh32(x)
+#	define le32toh(x) letoh32(x)
+
+#	define be64toh(x) betoh64(x)
+#	define le64toh(x) letoh64(x)
+
+#elif defined(__linux__) || defined(__CYGWIN__)
 
 #	include <endian.h>
 
@@ -45,20 +54,8 @@
 
 #	include <sys/endian.h>
 
-#elif defined(__NetBSD__) || defined(__FreeBSD__) || defined(__DragonFly__)
 
-#	include <sys/endian.h>
-
-#	define be16toh(x) betoh16(x)
-#	define le16toh(x) letoh16(x)
-
-#	define be32toh(x) betoh32(x)
-#	define le32toh(x) letoh32(x)
-
-#	define be64toh(x) betoh64(x)
-#	define le64toh(x) letoh64(x)
-
-#elif defined(__WINDOWS__)
+#elif defined(_WIN16) || defined(_WIN32) || defined(_WIN64)
 
 #	include <winsock2.h>
 #	include <sys/param.h>
@@ -104,15 +101,10 @@
 
 #	endif
 
-#	define __BYTE_ORDER    BYTE_ORDER
-#	define __BIG_ENDIAN    BIG_ENDIAN
-#	define __LITTLE_ENDIAN LITTLE_ENDIAN
-#	define __PDP_ENDIAN    PDP_ENDIAN
-
 #else
 
 #	error platform not supported
 
 #endif
 
-#endif
+#endif //PORTABLE_ENDIAN_H__

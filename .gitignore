@@ -5,3 +5,6 @@ subprojects/packagecache
 subprojects/leveldb*
 subprojects/gtest*
 build/
+
+android-arm_cross.txt
+android-x86_cross.txt
