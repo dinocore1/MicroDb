@@ -4,9 +4,6 @@ package com.devsmart.microdb;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 
-import java.lang.ref.SoftReference;
-import java.util.HashMap;
-
 public class MicroDB {
 
     //private HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<>()

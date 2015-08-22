@@ -40,4 +40,12 @@ public class UBArray extends UBValue {
     public UBValue get(int index) {
         return mValue[index];
     }
+
+    @Override
+    public int compareTo(UBValue o) {
+        //TODO: implement
+        int retval = 0;
+        return retval;
+
+    }
 }

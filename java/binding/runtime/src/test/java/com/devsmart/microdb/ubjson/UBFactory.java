@@ -3,8 +3,6 @@ package com.devsmart.microdb.ubjson;
 
 import org.junit.Test;
 
-import java.math.BigInteger;
-
 import static org.junit.Assert.*;
 
 public class UBFactory {
@@ -40,7 +38,7 @@ public class UBFactory {
 
         value = UBValueFactory.createInt(Long.parseLong("9223372036854775807"));
         assertEquals(UBValue.Type.Int64, value.getType());
-        assertEquals(Long.parseLong("9223372036854775807"), value.asInt());
+        assertEquals(Long.parseLong("9223372036854775807"), value.asLong());
 
     }
 

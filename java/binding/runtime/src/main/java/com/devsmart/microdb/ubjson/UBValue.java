@@ -1,10 +1,9 @@
 package com.devsmart.microdb.ubjson;
 
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.util.Comparator;
 
-public abstract class UBValue {
+public abstract class UBValue implements Comparable<UBValue> {
 
     public static final byte MARKER_NULL = 'Z';
     public static final byte MARKER_TRUE = 'T';
@@ -136,6 +135,10 @@ public abstract class UBValue {
 
     public long asLong() {
         switch (getType()){
+            case Bool:
+                return asBool() ? 1 : 0;
+            case Char:
+                return asChar();
             case Int8:
                 return ((UBInt8)this).getInt();
             case Uint8:
@@ -299,4 +302,143 @@ public abstract class UBValue {
     public UBObject asObject() {
         return ((UBObject)this);
     }
+
+    @Override
+    public int hashCode() {
+        int retval = 0;
+        switch (getType()) {
+            case Null:
+                retval = 0;
+                break;
+            case Bool:
+                retval = asBool() ? 1 : 0;
+                break;
+            case Char:
+                retval = asChar();
+                break;
+            case Int8:
+            case Uint8:
+            case Int16:
+            case Int32:
+                retval = asInt();
+                break;
+            case Int64: {
+                long value = asLong();
+                retval = (int) (value ^ (value >>> 32));
+                break;
+            }
+
+            case Float32:
+                retval = Float.floatToIntBits(asFloat32());
+                break;
+
+            case Float64: {
+                long value = Double.doubleToLongBits(asFloat64());
+                retval = (int) (value ^ (value >>> 32));
+                break;
+            }
+
+            case String:
+                retval = asString().hashCode();
+                break;
+
+            case Array:
+                retval = asArray().hashCode();
+                break;
+
+            case Object:
+                retval = asObject().hashCode();
+                break;
+        }
+        return retval;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj == null) {
+            return false;
+        }
+        if(!(obj instanceof UBValue)) {
+            return false;
+        }
+        return COMPARATOR.compare(this, (UBValue)obj) == 0;
+    }
+
+    @Override
+    public int compareTo(UBValue value) {
+        return COMPARATOR.compare(this, value);
+    }
+
+    private static int getCompareType(UBValue value) {
+        int retval = 0;
+        switch(value.getType()) {
+            case Null:
+                retval = 0;
+                break;
+
+            case Char:
+            case Bool:
+            case Int8:
+            case Uint8:
+            case Int16:
+            case Int32:
+            case Int64:
+                retval = 1;
+                break;
+            case Float32:
+            case Float64:
+                retval = 2;
+                break;
+            case String:
+                retval = 3;
+                break;
+            case Array:
+                retval = 4;
+                break;
+            case Object:
+                retval = 5;
+                break;
+        }
+
+        return retval;
+    }
+
+    private static int compareLong(long a, long b) {
+        return (a < b) ? -1 : ((a > b) ? 1 : 0);
+    }
+
+    public static final Comparator<UBValue> COMPARATOR = new Comparator<UBValue>() {
+
+
+
+        @Override
+        public int compare(UBValue a, UBValue b) {
+            int retval = getCompareType(a) - getCompareType(b);
+            if(retval == 0) {
+                switch (getCompareType(a)) {
+                    case 1:
+                        retval = compareLong(a.asLong(), b.asLong());
+                        break;
+
+                    case 2:
+                        retval = Double.compare(a.asFloat64(), b.asFloat64());
+                        break;
+
+                    case 3:
+                        retval = a.asString().compareTo(b.asString());
+                        break;
+
+                    case 4:
+                        retval = a.asArray().compareTo(b.asArray());
+                        break;
+
+                    case 5:
+                        retval = a.asObject().compareTo(b.asObject());
+                        break;
+                }
+            }
+
+            return retval;
+        }
+    };
 }
