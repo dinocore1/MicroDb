@@ -72,6 +72,15 @@ public class UBValueTest {
         assertTrue(UBValue.COMPARATOR.compare(v1, v2) == 0);
 
 
+        v1 = UBValueFactory.createArray(new float[] {0, 1});
+        v2 = UBValueFactory.createArray(new float[] {0, 1});
+        assertTrue(UBValue.COMPARATOR.compare(v1, v2) == 0);
+
+        v1 = UBValueFactory.createArray(new float[] {0, 1});
+        v2 = UBValueFactory.createArray(new float[] {0, 1, 0});
+        assertTrue(UBValue.COMPARATOR.compare(v1, v2) < 0);
+
+
     }
 
     @Test
