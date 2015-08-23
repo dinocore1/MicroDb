@@ -376,31 +376,43 @@ public abstract class UBValue implements Comparable<UBValue> {
                 retval = 0;
                 break;
 
-            case Char:
             case Bool:
+                retval = 1;
+                break;
+            case Char:
+                retval = 2;
+                break;
             case Int8:
             case Uint8:
             case Int16:
             case Int32:
             case Int64:
-                retval = 1;
+                retval = 3;
                 break;
             case Float32:
             case Float64:
-                retval = 2;
-                break;
-            case String:
-                retval = 3;
-                break;
-            case Array:
                 retval = 4;
                 break;
-            case Object:
+            case String:
                 retval = 5;
+                break;
+            case Array:
+                retval = 6;
+                break;
+            case Object:
+                retval = 7;
                 break;
         }
 
         return retval;
+    }
+
+    private static int compareBool(boolean a, boolean b){
+        return (a == b) ? 0 : (a ? 1 : -1);
+    }
+
+    private static int compareChar(char a, char b) {
+        return (a == b) ? 0 : (a < b ? -1 : 1);
     }
 
     private static int compareLong(long a, long b) {
@@ -417,22 +429,30 @@ public abstract class UBValue implements Comparable<UBValue> {
             if(retval == 0) {
                 switch (getCompareType(a)) {
                     case 1:
-                        retval = compareLong(a.asLong(), b.asLong());
+                        retval = compareBool(a.asBool(), b.asBool());
                         break;
 
                     case 2:
-                        retval = Double.compare(a.asFloat64(), b.asFloat64());
+                        retval = compareChar(a.asChar(), b.asChar());
                         break;
 
                     case 3:
-                        retval = a.asString().compareTo(b.asString());
+                        retval = compareLong(a.asLong(), b.asLong());
                         break;
 
                     case 4:
-                        retval = a.asArray().compareTo(b.asArray());
+                        retval = Double.compare(a.asFloat64(), b.asFloat64());
                         break;
 
                     case 5:
+                        retval = a.asString().compareTo(b.asString());
+                        break;
+
+                    case 6:
+                        retval = a.asArray().compareTo(b.asArray());
+                        break;
+
+                    case 7:
                         retval = a.asObject().compareTo(b.asObject());
                         break;
                 }

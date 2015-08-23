@@ -71,8 +71,8 @@ public class UBValueFactory {
         return new UBFloat64Array(value);
     }
 
-    public static UBArray createArray(UBValue[] value) {
-        return new UBArray(value);
+    public static UBArray createArray(UBValue... args) {
+        return new UBArray(args);
     }
 
     public static UBObject createObject(TreeMap<String, UBValue> value) {
