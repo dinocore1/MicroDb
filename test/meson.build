@@ -5,6 +5,14 @@ gtestmain = gtest_sp.get_variable('mainsources')
 
 gtest_lib = static_library('gtest', gtestlibsrc, include_directories : gtestinc)
 
+if meson.is_cross_build()
+  if host.name() == 'mingw'
+    cpp_args = [ '-D_WIN32_WINNT=0x0600' ]
+  elif host.name() == 'android'
+    cpp_args = [ '-DOS_ANDROID' ]
+  endif
+endif
+
 main_incdir = [ include_directories('../src'), incdir, gtestinc, leveldb_inc]
 
 test('uuid_test', executable('uuid_test', ['uuid_test.cpp', gtestmain],
