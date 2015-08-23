@@ -3,12 +3,34 @@ package com.devsmart.microdb;
 
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class MicroDB {
+
+    private static final Logger logger = LoggerFactory.getLogger(MicroDB.class);
 
     //private HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<>()
 
     private Driver mDriver;
+    private boolean mAutoSave = true;
+
+    /**
+     * called when a dbobject is being finalized by the GC
+     * @param obj
+     */
+    protected void finalizing(DBObject obj) {
+        if(mAutoSave && obj.mDirty) {
+            try {
+                save(obj);
+            } catch (IOException e) {
+                logger.error(String.format("error saving object %s", obj), e);
+            }
+        }
+
+    }
 
     public <T extends DBObject> T create(Class<T> classType) {
         try {
@@ -38,6 +60,13 @@ public class MicroDB {
         } catch (Exception e){
             throw new RuntimeException("", e);
         }
+    }
+
+    public void save(DBObject obj) throws IOException {
+        UBObject data = new UBObject();
+        obj.writeUBObject(data);
+        mDriver.save(data);
+        obj.mDirty = false;
     }
 
 

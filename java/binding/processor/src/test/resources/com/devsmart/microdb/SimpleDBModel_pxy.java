@@ -10,22 +10,29 @@ import pkg.project.SimpleDBModel;
 
 public final class SimpleDBModel_pxy extends SimpleDBModel {
 
-    public static UBValue to(SimpleDBModel value) {
-        if(value == null) {
-            return UBValueFactory.createNull();
+    @Override
+    public void writeUBObject(UBObject data) {
+        super.writeUBObject(data);
+        data.set("myString", UBValueFactory.createString(getMyString()));
+        data.set("myBool", UBValueFactory.createBool(getMyBool()));
+        data.set("myByte", UBValueFactory.createInt(getMyByte()));
+        data.set("myShort", UBValueFactory.createInt(getMyShort()));
+        data.set("myInt", UBValueFactory.createInt(getMyInt()));
+        data.set("myLong", UBValueFactory.createInt(getMyLong()));
+
+        {
+            SimpleDBModel inst = getInternal();
+            if(inst == null) {
+                data.set("internal", UBValueFactory.createNull());
+            } else {
+                UBObject obj = new UBObject();
+                inst.writeUBObject(obj);
+                data.set("internal", obj);
+            }
         }
-        TreeMap<String, UBValue> retval = new TreeMap<String, UBValue>();
-        retval.put("myString", UBValueFactory.createString(value.getMyString()));
-        retval.put("myBool", UBValueFactory.createBool(value.getMyBool()));
-        retval.put("myByte", UBValueFactory.createInt(value.getMyByte()));
-        retval.put("myShort", UBValueFactory.createInt(value.getMyShort()));
-        retval.put("myInt", UBValueFactory.createInt(value.getMyInt()));
-        retval.put("myLong", UBValueFactory.createInt(value.getMyLong()));
-        retval.put("internal", SimpleDBModel_pxy.to(value.getInternal()));
-        retval.put("link", value.link.getId());
-        retval.put("myFloatArray", UBValueFactory.createArray(value.getMyFloatArray()));
-        retval.put("myDoubleArray", UBValueFactory.createArray(value.getMyDoubleArray()));
-        return UBValueFactory.createObject(retval);
+        data.set("link", link.getId());
+        data.set("myFloatArray", UBValueFactory.createArray(getMyFloatArray()));
+        data.set("myDoubleArray", UBValueFactory.createArray(getMyDoubleArray()));
     }
 
     @Override

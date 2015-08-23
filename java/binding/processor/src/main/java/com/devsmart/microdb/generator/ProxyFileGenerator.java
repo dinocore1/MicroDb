@@ -44,7 +44,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createString(value.$L()))",
+            builder.addStatement("data.set($S, $T.createString($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -80,7 +80,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createBool(value.$L()))",
+            builder.addStatement("data.put($S, $T.createBool($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -116,7 +116,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+            builder.addStatement("data.put($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -152,7 +152,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+            builder.addStatement("data.put($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -189,7 +189,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+            builder.addStatement("data.put($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -226,7 +226,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createInt(value.$L()))",
+            builder.addStatement("data.put($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -263,7 +263,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createFloat32(value.$L()))",
+            builder.addStatement("data.put($S, $T.createFloat32($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -300,7 +300,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createArray(value.$L()))",
+            builder.addStatement("data.put($S, $T.createArray($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -337,7 +337,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createFloat64(value.$L()))",
+            builder.addStatement("data.put($S, $T.createFloat64($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -374,7 +374,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, $T.createArray(value.$L()))",
+            builder.addStatement("data.put($S, $T.createArray($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -410,7 +410,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("retval.put($S, value.$L.getId())", mField, mField);
+            builder.addStatement("data.put($S, $L.getId())", mField, mField);
 
         }
 
@@ -444,9 +444,21 @@ public class ProxyFileGenerator {
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
 
-            builder.addStatement("retval.put($S, $T.to(value.$N()))",
-                    mField.getSimpleName(), createDBObjName(mField), createGetterName(mField)
-            );
+            builder.addCode(CodeBlock.builder()
+                    .add("{\n")
+                    .indent()
+
+                    .addStatement("$T inst = $N()", TypeName.get(mField.asType()), createGetterName(mField))
+                    .beginControlFlow("if(inst == null)")
+                    .addStatement("data.set($S, $T.createNull())", mField, UBValueFactory.class)
+                    .nextControlFlow("else")
+                    .addStatement("$T obj = new $T()", UBObject.class, UBObject.class)
+                    .addStatement("inst.writeUBObject(obj)")
+                    .addStatement("data.set($S, obj)", mField)
+                    .endControlFlow()
+                    .unindent()
+                    .add("}\n")
+                    .build());
 
         }
 

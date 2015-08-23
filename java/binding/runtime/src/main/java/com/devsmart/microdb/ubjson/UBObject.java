@@ -7,7 +7,11 @@ public final class UBObject extends UBValue {
 
     private TreeMap<String, UBValue> mValue;
 
-    UBObject(TreeMap<String, UBValue> value) {
+    public UBObject() {
+        mValue = new TreeMap<String, UBValue>();
+    }
+
+    public UBObject(TreeMap<String, UBValue> value) {
         mValue = value;
     }
 
