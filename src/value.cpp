@@ -3,6 +3,21 @@
 
 #include <cmath>
 #include <limits>
+#include <sstream>
+
+template <typename T>
+std::string to_string(T value) {
+    std::ostringstream os ;
+    os << value ;
+    return os.str() ;
+}
+
+template <typename T>
+T to_number(const std::string& str) {
+  T i;
+  std::istringstream(str) >> i;
+  return i;
+}
 
 template<typename T, typename ...Args>
 std::unique_ptr<T> make_unique( Args&& ...args )
@@ -321,10 +336,7 @@ namespace microdb {
     if(IsBool())
         return mValue.Bool ? 1 : 0;
     if(IsString()) {
-        try { return std::stoll(mValue.String); }
-        catch (std::invalid_argument&) {}
-        catch (std::out_of_range&) {}
-        return 0;
+        return to_number<int64_t>(mValue.String);
     }
     return Size();
   }
@@ -342,12 +354,9 @@ namespace microdb {
         return static_cast<uint64_t>(mValue.Char);
     if(IsBool())
         return mValue.Bool ? 1 : 0;
-    if(IsString())
-    {
-        try { return std::stoull(mValue.String); }
-        catch (std::invalid_argument&) {}
-        catch (std::out_of_range&) {}
-        return 0;
+    if(IsString()) {
+        return to_number<uint64_t>(mValue.String);
+       
     }
 
     return Size();
@@ -357,10 +366,7 @@ namespace microdb {
     if(IsFloat()) {
       return mValue.Float;
     } else if(IsString()){
-      try { return std::stod(mValue.String); }
-      catch (std::invalid_argument&) {}
-      catch (std::out_of_range&) {}
-      return 0;
+      return to_number<double>(mValue.String);
     } else {
       double k1 = asUint64();
       double k2 = asInt64();
@@ -400,11 +406,11 @@ namespace microdb {
     if(IsChar())
         return {mValue.Char};
     if(IsSignedInteger())
-        return std::to_string(mValue.SignedInt);
+        return to_string(mValue.SignedInt);
     if(IsUnsignedInteger())
-        return std::to_string(mValue.UnsignedInt);
+        return to_string(mValue.UnsignedInt);
     if(IsFloat())
-        return std::to_string(mValue.Float);
+        return to_string(mValue.Float);
     return "";
   }
 
