@@ -1,3 +1,4 @@
 include ':runtime'
 include ':processor'
 include ':android'
+include ':android-testapp'

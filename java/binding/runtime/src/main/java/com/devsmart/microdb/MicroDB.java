@@ -8,6 +8,7 @@ public class MicroDB {
 
     //private HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<>()
 
+    private Driver mDriver;
 
     public <T extends DBObject> T create(Class<T> classType) {
         try {

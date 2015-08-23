@@ -33,6 +33,7 @@ android {
     }
   }
 
+  /*
   sourceSets {
     main {
       java {
@@ -40,4 +41,9 @@ android {
       }
     }
   }
+  */
+}
+
+dependencies {
+  compile project(':runtime')
 }
