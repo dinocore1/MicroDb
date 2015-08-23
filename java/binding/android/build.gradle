@@ -19,14 +19,6 @@ android {
     targetSdkVersion 19
     versionCode 1
     versionName "1.0"
-    
-    ndk {
-        moduleName "microdb-jni"
-        cFlags "-std=c++11 -I${project.rootDir.absolutePath}/../../include"
-
-      ldLibs "log"
-      stl "gnustl_shared"
-    }
   }
 
   buildTypes {

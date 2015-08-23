@@ -12,17 +12,16 @@ import java.io.IOException;
 public class NativeDriver implements Driver {
 
     static {
-        System.loadLibrary("gnustl_shared");
-        System.loadLibrary("microdb");
         System.loadLibrary("microdb-jni");
     }
 
 
     private long mNativePtr;
     private native static boolean open(String dbpath, NativeDriver driver);
+    public native void close();
 
-    private native byte[] get(byte[] key);
-    private native void set(byte[] key, byte[] data);
+    private native byte[] load(byte[] key);
+    private native byte[] save(byte[] data);
 
     private NativeDriver() {}
 
@@ -49,9 +48,13 @@ public class NativeDriver implements Driver {
     }
 
 
+
+
     @Override
     public UBValue load(UBValue key) throws IOException {
-        return null;
+        byte[] keyData = toByteArray(key);
+        byte[] valueData = load(keyData);
+        return fromByteArray(valueData);
     }
 
     @Override

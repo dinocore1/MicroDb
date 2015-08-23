@@ -40,11 +40,11 @@ if [ -d "build-android-arm" ]; then
   rm -rf "build-android-arm"
 fi
 mkdir "build-android-arm"
-meson build-android-arm --cross-file android-arm_cross.txt -Dshared_lib=true
+meson build-android-arm --cross-file android-arm_cross.txt -Dbuild_jni=true
 
 pushd build-android-arm
 ninja
-cp src/libmicrodb.so ../java/binding/android/src/main/jniLibs/armeabi/
+cp java/jni/libmicrodb-jni.so ../java/binding/android/src/main/jniLibs/armeabi/
 popd
 
 ####### x86 #######
@@ -70,9 +70,9 @@ if [ -d "build-android-x86" ]; then
   rm -rf "build-android-x86"
 fi
 mkdir "build-android-x86"
-meson build-android-x86 --cross-file android-x86_cross.txt -Dshared_lib=true
+meson build-android-x86 --cross-file android-x86_cross.txt -Dbuild_jni=true
 
 pushd build-android-x86
 ninja
-cp src/libmicrodb.so ../java/binding/android/src/main/jniLibs/x86/
+cp java/jni/libmicrodb-jni.so ../java/binding/android/src/main/jniLibs/x86/
 popd

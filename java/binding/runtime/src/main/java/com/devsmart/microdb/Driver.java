@@ -7,6 +7,8 @@ import java.io.IOException;
 
 public interface Driver {
 
+    void close();
+
     /**
      * loads and returns the object data.
      * @param key the object primary key
