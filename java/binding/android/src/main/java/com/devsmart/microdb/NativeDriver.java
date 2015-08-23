@@ -27,7 +27,7 @@ public class NativeDriver implements Driver {
 
     public static NativeDriver open(String dbpath) throws IOException {
         NativeDriver driver = new NativeDriver();
-        if(open(dbpath, driver)){
+        if(!open(dbpath, driver)){
             throw new IOException("could not open db with path: " + dbpath);
         }
         return driver;
