@@ -22,7 +22,8 @@ android {
     
     ndk {
       moduleName "microdb-jni"
-      stl "gnustl_shared"
+      ldLibs "log"
+      //stl "gnustl_shared"
     }
   }
 

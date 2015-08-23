@@ -1,12 +1,20 @@
 package com.devsmart.examples.intro;
 
 
-import android.app.Application;
+import android.app.Activity;
+import android.os.Bundle;
 
-public class IntroActivity extends Application {
+import com.devsmart.microdb.NativeDriver;
+
+public class IntroActivity extends Activity {
+
+    private NativeDriver mDriver;
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mDriver = new NativeDriver();
+
     }
 }
