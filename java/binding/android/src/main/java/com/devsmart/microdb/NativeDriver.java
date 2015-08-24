@@ -1,6 +1,7 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBReader;
 import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBWriter;
@@ -22,6 +23,7 @@ public class NativeDriver implements Driver {
 
     private native byte[] load(byte[] key);
     private native byte[] save(byte[] data);
+    private native void delete(byte[] key);
 
     private NativeDriver() {}
 
@@ -47,23 +49,22 @@ public class NativeDriver implements Driver {
         return reader.read();
     }
 
-
-
-
     @Override
-    public UBValue load(UBValue key) throws IOException {
+    public UBObject load(UBValue key) throws IOException {
         byte[] keyData = toByteArray(key);
         byte[] valueData = load(keyData);
-        return fromByteArray(valueData);
+        return (UBObject)fromByteArray(valueData);
     }
 
     @Override
     public UBValue save(UBValue data) throws IOException {
-        return null;
+        byte[] key = save(toByteArray(data));
+        return fromByteArray(key);
     }
 
     @Override
     public void delete(UBValue key) throws IOException {
+        delete(toByteArray(key));
 
     }
 

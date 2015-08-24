@@ -1,6 +1,7 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public interface Driver {
      * @return
      * @throws IOException
      */
-    UBValue load(UBValue key) throws IOException;
+    UBObject load(UBValue key) throws IOException;
 
 
     /**

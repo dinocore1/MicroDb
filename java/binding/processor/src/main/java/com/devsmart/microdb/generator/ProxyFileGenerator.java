@@ -80,7 +80,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createBool($L()))",
+            builder.addStatement("data.set($S, $T.createBool($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -116,7 +116,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createInt($L()))",
+            builder.addStatement("data.set($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -152,7 +152,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createInt($L()))",
+            builder.addStatement("data.set($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -189,7 +189,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createInt($L()))",
+            builder.addStatement("data.set($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -226,7 +226,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createInt($L()))",
+            builder.addStatement("data.set($S, $T.createInt($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -263,7 +263,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createFloat32($L()))",
+            builder.addStatement("data.set($S, $T.createFloat32($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -300,7 +300,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createArray($L()))",
+            builder.addStatement("data.set($S, $T.createArray($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -337,7 +337,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createFloat64($L()))",
+            builder.addStatement("data.set($S, $T.createFloat64($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -374,7 +374,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createArray($L()))",
+            builder.addStatement("data.set($S, $T.createArray($L()))",
                     mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
 
         }
@@ -410,7 +410,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $L.getId())", mField, mField);
+            builder.addStatement("data.set($S, $L.getId())", mField, mField);
 
         }
 
@@ -691,25 +691,16 @@ public class ProxyFileGenerator {
     }
 
     private MethodSpec generateToUBValueMethod(final List<FieldMethodCodeGen> fieldGens) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("to")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(TypeName.get(mClassElement.asType()), "value")
-                .returns(TypeName.get(UBValue.class));
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("writeUBObject")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .addParameter(UBObject.class, "data")
+                .returns(TypeName.VOID);
 
-        builder.beginControlFlow("if (value == null)");
-        builder.addStatement("return $T.createNull()", UBValueFactory.class);
-        builder.endControlFlow();
-
-
-        TypeName ubvaluefactory = ClassName.get(UBValueFactory.class);
-        TypeName treeMap = ParameterizedTypeName.get(ClassName.get(TreeMap.class), ClassName.get(String.class), ClassName.get(UBValue.class));
-        builder.addStatement("$T retval = new $T()", treeMap, treeMap);
-
+        builder.addStatement("super.writeUBObject(data)");
         for(FieldMethodCodeGen field : fieldGens) {
             field.serializeCode(builder);
         }
-
-        builder.addStatement("return $T.createObject(retval)", ubvaluefactory);
 
         return builder.build();
     }
