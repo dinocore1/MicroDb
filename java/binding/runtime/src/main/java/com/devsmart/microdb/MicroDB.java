@@ -42,12 +42,13 @@ public class MicroDB {
         if(metaObj == null) {
             metaObj = new UBObject();
             metaObj.set("id", key);
+            mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.save(metaObj);
         } else {
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if(currentVersion < mSchemaVersion) {
-                mCallback.onUpgrade(currentVersion, mSchemaVersion);
+                mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
                 mDriver.save(metaObj);
             }
