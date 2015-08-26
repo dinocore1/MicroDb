@@ -12,6 +12,9 @@ import java.lang.ref.SoftReference;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Queue;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MicroDB {
 
@@ -21,7 +24,17 @@ public class MicroDB {
     private int mSchemaVersion;
     private DBCallback mCallback;
     private final HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<UBValue, SoftReference<DBObject>>();
+    private final Queue<UBObject> mSaveQueue = new ConcurrentLinkedQueue<UBObject>();
     private boolean mAutoSave = true;
+
+
+    private class WriteCommand {
+        private static final int TYPE_SAVE = 0;
+        private static final int TYPE_DELETE = 1;
+
+        int mType;
+        UBValue mData;
+    }
 
     MicroDB(Driver driver, int schemaVersion, DBCallback cb) throws IOException {
         mDriver = driver;
@@ -69,12 +82,10 @@ public class MicroDB {
      * @param obj
      */
     protected synchronized void finalizing(DBObject obj) {
-        if(mAutoSave && obj.mDirty) {
-            try {
-                save(obj);
-            } catch (IOException e) {
-                logger.error(String.format("error saving object %s", obj), e);
-            }
+        if(mAutoSave && obj.mDirty){
+            UBObject data = new UBObject();
+            obj.writeUBObject(data);
+            mSaveQueue.add(data);
         }
         mLiveObjects.remove(obj.getId());
 
@@ -109,7 +120,8 @@ public class MicroDB {
             T retval = classType.newInstance();
 
             UBObject data = new UBObject();
-            UBValue key = mDriver.insert(data);
+            //UBValue key = mDriver.insert(data);
+            UBValue key = UBValueFactory.createString(UUID.randomUUID().toString());
             data.put("id", key);
             retval.init(data, this);
 
