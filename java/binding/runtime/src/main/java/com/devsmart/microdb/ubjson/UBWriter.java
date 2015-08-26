@@ -158,14 +158,15 @@ public class UBWriter implements Closeable {
         }
     }
 
-    public void writeString(byte[] data) throws IOException {
+    public void writeString(UBString string) throws IOException {
         mOutputStream.write(UBValue.MARKER_STRING);
-        writeInt(data.length);
-        mOutputStream.write(data);
+        byte[] data = string.getData();
+        writeDataArray(data);
     }
 
-    public void writeString(String string) throws IOException {
-        writeString(string.getBytes(UBString.UTF_8));
+    public void writeDataArray(byte[] data) throws IOException {
+        writeInt(data.length);
+        mOutputStream.write(data);
     }
 
     public void writeArray(UBArray value) throws IOException {
@@ -193,7 +194,7 @@ public class UBWriter implements Closeable {
     public void writeObject(UBObject object) throws IOException {
         mOutputStream.write(UBValue.MARKER_OBJ_START);
         for(Map.Entry<String, UBValue> entry : object.asMap().entrySet()) {
-            writeString(entry.getKey());
+            writeDataArray(entry.getKey().getBytes(UBString.UTF_8));
             write(entry.getValue());
         }
         mOutputStream.write(UBValue.MARKER_OBJ_END);
@@ -242,7 +243,7 @@ public class UBWriter implements Closeable {
                 break;
 
             case String:
-                writeString(((UBString)value).getData());
+                writeString((UBString)value);
                 break;
 
             case Array:
