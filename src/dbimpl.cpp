@@ -164,7 +164,9 @@ namespace microdb {
         MemSlice valueSlice;
         MemSlice keySlice = ValueToMemSlice(Index::createPrimaryIndexEntry(key), out);
         Status retval = mDBDriver->Get(keySlice, valueSlice);
-        value = MemSliceToValue(valueSlice);
+        if(retval == OK) {
+            value = MemSliceToValue(valueSlice);
+        }
         
         return retval;
     }
@@ -196,18 +198,19 @@ namespace microdb {
         MemOutputStream out;
         MemSlice valueSlice;
         MemSlice keySlice = ValueToMemSlice(Index::createPrimaryIndexEntry(key), out);
-        mDBDriver->Get(keySlice, valueSlice);
-        Value value = MemSliceToValue(valueSlice);
-        
-        auto cb = std::bind(deleteDBObj, mDBDriver.get(), _3);
-        
-        Transaction tr(mDBDriver.get());
-        
-        for(auto& entry : mIndicies) {
-            entry.second->index(value, cb);
+        if(mDBDriver->Get(keySlice, valueSlice) == OK) {
+            Value value = MemSliceToValue(valueSlice);
+            
+            auto cb = std::bind(deleteDBObj, mDBDriver.get(), _3);
+            
+            Transaction tr(mDBDriver.get());
+            
+            for(auto& entry : mIndicies) {
+                entry.second->index(value, cb);
+            }
+            
+            mPrimaryIndex->index(value, cb);
         }
-        
-        mPrimaryIndex->index(value, cb);
         
         return OK;
     }
@@ -245,10 +248,13 @@ namespace microdb {
         unique_ptr<Index> idx(new Index(indexName));
         idx->setQuery( std::move(query) );
         mIndicies[idx->getName()] = std::move(idx);
+        
+        return OK;
     }
     
     Status DBImpl::DeleteIndex(const std::string& indexName) {
-        
+        //TODO: implement
+        return ERROR;
     }
 
 }

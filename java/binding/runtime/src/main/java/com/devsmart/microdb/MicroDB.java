@@ -38,22 +38,30 @@ public class MicroDB {
 
         UBValue key = UBValueFactory.createString(METAKEY);
 
-        UBObject metaObj = mDriver.load(key);
-        if(metaObj == null) {
-            metaObj = new UBObject();
+        UBValue storedValue = mDriver.get(key);
+        if(storedValue == null) {
+            UBObject metaObj = new UBObject();
             metaObj.set("id", key);
             mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-            mDriver.save(metaObj);
+            save(metaObj);
         } else {
+            UBObject metaObj = storedValue.asObject();
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if(currentVersion < mSchemaVersion) {
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-                mDriver.save(metaObj);
+                save(metaObj);
             }
         }
 
+    }
+
+    private void save(UBObject obj) throws IOException {
+        if(obj.has("id")) {
+            mDriver.delete(obj.get("id"));
+        }
+        mDriver.insert(obj);
     }
 
     /**
@@ -101,7 +109,7 @@ public class MicroDB {
             T retval = classType.newInstance();
 
             UBObject data = new UBObject();
-            UBValue key = mDriver.save(data);
+            UBValue key = mDriver.insert(data);
             data.set("id", key);
             retval.init(data, this);
 
@@ -124,7 +132,7 @@ public class MicroDB {
             if(ref != null && (cached = ref.get()) != null){
                 retval = (T)cached;
             } else {
-                UBObject data = mDriver.load(id);
+                UBObject data = mDriver.get(id).asObject();
                 T newObj = classType.newInstance();
                 newObj.init(data, this);
                 retval = newObj;
@@ -141,7 +149,7 @@ public class MicroDB {
     public synchronized void save(DBObject obj) throws IOException {
         UBObject data = new UBObject();
         obj.writeUBObject(data);
-        mDriver.save(data);
+        save(data);
         obj.mDirty = false;
     }
 

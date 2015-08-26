@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 
+import com.devsmart.examples.intro.model.Person;
 import com.devsmart.microdb.DBBuilder;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.NativeDriver;
@@ -25,6 +26,12 @@ public class IntroActivity extends Activity {
 
         try {
             mDatabase = DBBuilder.builder(new File(Environment.getExternalStorageDirectory(), "mydb.db")).build();
+            Person newPersion = mDatabase.create(Person.class);
+
+            newPersion.setFirstName("Santa");
+            newPersion.setLastName("Clause");
+            newPersion.save();
+
         } catch (IOException e) {
             Log.e("", "", e);
         }

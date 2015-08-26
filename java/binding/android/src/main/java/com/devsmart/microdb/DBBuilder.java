@@ -6,8 +6,16 @@ import java.io.IOException;
 
 public class DBBuilder {
 
+    private static class NullCallback implements DBCallback {
+
+        @Override
+        public void onUpgrade(MicroDB db, int oldVersion, int newVersion) throws IOException {
+
+        }
+    }
+
     private final File mDBPath;
-    private DBCallback mCallback;
+    private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion = 0;
 
     public static DBBuilder builder(File dbpath) {

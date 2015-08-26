@@ -35,4 +35,8 @@ public class UBString extends UBValue {
     public int length() {
         return mData.length;
     }
+
+    public byte[] getData() {
+        return mData;
+    }
 }

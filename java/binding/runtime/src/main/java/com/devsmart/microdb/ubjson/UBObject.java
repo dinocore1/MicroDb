@@ -1,6 +1,7 @@
 package com.devsmart.microdb.ubjson;
 
 
+import java.util.Map;
 import java.util.TreeMap;
 
 public final class UBObject extends UBValue {
@@ -30,5 +31,9 @@ public final class UBObject extends UBValue {
 
     public void set(String key, UBValue value) {
         mValue.put(key, value);
+    }
+
+    public Map<String, UBValue> asMap() {
+        return mValue;
     }
 }

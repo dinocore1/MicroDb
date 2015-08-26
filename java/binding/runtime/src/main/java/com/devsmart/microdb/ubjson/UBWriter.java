@@ -4,6 +4,7 @@ package com.devsmart.microdb.ubjson;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 public class UBWriter implements Closeable {
 
@@ -157,6 +158,16 @@ public class UBWriter implements Closeable {
         }
     }
 
+    public void writeString(byte[] data) throws IOException {
+        mOutputStream.write(UBValue.MARKER_STRING);
+        writeInt(data.length);
+        mOutputStream.write(data);
+    }
+
+    public void writeString(String string) throws IOException {
+        writeString(string.getBytes(UBString.UTF_8));
+    }
+
     public void writeArray(UBArray value) throws IOException {
         switch(value.getStrongType()) {
 
@@ -177,6 +188,15 @@ public class UBWriter implements Closeable {
                 break;
 
         }
+    }
+
+    public void writeObject(UBObject object) throws IOException {
+        mOutputStream.write(UBValue.MARKER_OBJ_START);
+        for(Map.Entry<String, UBValue> entry : object.asMap().entrySet()) {
+            writeString(entry.getKey());
+            write(entry.getValue());
+        }
+        mOutputStream.write(UBValue.MARKER_OBJ_END);
     }
 
     public void write(UBValue value) throws IOException {
@@ -221,8 +241,16 @@ public class UBWriter implements Closeable {
                 writeFloat64(value.asFloat64());
                 break;
 
+            case String:
+                writeString(((UBString)value).getData());
+                break;
+
             case Array:
                 writeArray(value.asArray());
+                break;
+
+            case Object:
+                writeObject(value.asObject());
                 break;
 
         }

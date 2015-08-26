@@ -1,6 +1,6 @@
+#include "common.h"
 
 #include "log.h"
-#include <jni.h>
 
 #ifndef NELEM
 # define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
@@ -99,8 +99,22 @@ static jbyteArray insert(JNIEnv* env, jobject thiz, jbyteArray data) {
     return retval;
 }
 
-static jobject queryIndex(JNIEnv* env, jobject thiz, jstring indexName) {
+static void deleteobj(JNIEnv* env, jobject thiz, jbyteArray key) {
+    DB* database = (DB*)env->GetLongField(thiz, gNativeDriverClass.mNativePtr);
+    Value keyValue = byteArrayToValue(env, key);
+    database->Delete(keyValue);
+}
+
+static void queryIndex(JNIEnv* env, jobject thiz, jstring indexName, jobject it) {
+    DB* database = (DB*)env->GetLongField(thiz, gNativeDriverClass.mNativePtr);
     
+    const char* indexNameStr = env->GetStringUTFChars(indexName, NULL);
+    std::string query;
+    
+    Iterator* retit = database->QueryIndex(indexNameStr, query);
+    env->SetLongField(it, gNativeIteratorClass.mNativePtr, (jlong)retit);
+    
+    env->ReleaseStringUTFChars(indexName, indexNameStr);
 }
 
 static void addIndex(JNIEnv* env, jobject thiz, jstring indexName, jstring indexQuery) {
@@ -117,12 +131,13 @@ JNIEXPORT JNINativeMethod gDriverMethods[] = {
     { "close", "()V", (void*)close_db },
     { "get", "([B)[B", (void*)get },
     { "insert", "([B)[B", (void*)insert },
-    { "queryIndex", "(Ljava/lang/String;)Lcom/devsmart/microdb/NativeIterator;", (void*)queryIndex },
+    { "delete", "([B)V", (void*)deleteobj },
+    { "queryIndex", "(Ljava/lang/String;Lcom/devsmart/microdb/NativeIterator;)V", (void*)queryIndex },
     { "addIndex", "(Ljava/lang/String;Ljava/lang/String;)V", (void*)addIndex },
     { "deleteIndex", "(Ljava/lang/String;)V", (void*)deleteIndex }
 };
 
-static jint driver_OnLoad(JNIEnv* env) {
+jint driver_OnLoad(JNIEnv* env) {
     const char* className = "com/devsmart/microdb/NativeDriver";
     jclass clazz = env->FindClass(className);
     if(clazz == NULL) {

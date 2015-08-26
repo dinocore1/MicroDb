@@ -1,3 +1,5 @@
+#include "common.h"
+
 #include "log.h"
 #include <jni.h>
 
@@ -12,10 +14,7 @@
 
 using namespace microdb;
 
-static struct {
-    jclass clazz;
-    jfieldID mNativePtr;
-} gNativeIteratorClass;
+nativeIteratorClass_t gNativeIteratorClass;
 
 static jbyteArray getKey(JNIEnv* env, jobject thiz) {
     jbyteArray retval = env->NewByteArray(0);    
@@ -27,7 +26,7 @@ JNIEXPORT JNINativeMethod gIteratorMethods[] = {
     { "key", "()[B", (void*)getKey }
 };
 
-static jint iterator_OnLoad(JNIEnv* env) {
+jint iterator_OnLoad(JNIEnv* env) {
     const char* className = "com/devsmart/microdb/NativeIterator";
     jclass clazz = env->FindClass(className);
     if(clazz == NULL) {
