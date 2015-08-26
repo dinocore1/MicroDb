@@ -138,6 +138,19 @@ TEST(ubjsonserialize, read_array_optimize2) {
   ASSERT_EQ(1, v1[0].asInt());
 }
 
+TEST(ubjsonserialize, read_emptyobject) {
+  SSInputStream in;
+  in.mStream << "{}";
+  in.mStream.seekg(0);
+  
+  UBJSONReader reader(in);
+  
+  Value v1;
+  ASSERT_TRUE(reader.read(v1));
+  ASSERT_TRUE(v1.IsObject());
+  ASSERT_EQ(0, v1.Size());
+}
+
 TEST(ubjsonserialize, read_object) {
   SSInputStream in;
   in.mStream << "{i\x3lati\x1i\x3lngi\x2}";

@@ -144,6 +144,7 @@ public:
 
 
   //Object Operations
+  void SetObject();
   KeysType GetKeys() const;
   bool HasKey(const std::string& key);
   Value const& Get(const std::string&) const;

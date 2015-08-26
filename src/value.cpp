@@ -470,6 +470,14 @@ namespace microdb {
   }
 
   //Object Operations
+  
+  void Value::SetObject() {
+    if(!IsObject()) {
+      destruct();
+      construct_fromObject( ObjectType() );
+      mType = Type::Object;
+    }
+  }
 
   bool Value::HasKey(const std::string& key) {
     switch(mType) {

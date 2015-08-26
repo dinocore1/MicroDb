@@ -198,6 +198,7 @@ namespace microdb {
       
       int64_t keySize;
       std::unique_ptr<byte[]> strBuf;
+      retval.SetObject();
       
       while(control != ubjson::Object_End) {
           
