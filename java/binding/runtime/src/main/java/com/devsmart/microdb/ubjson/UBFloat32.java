@@ -21,4 +21,9 @@ public final class UBFloat32 extends UBValue {
     public double getDouble() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return Float.toString(getFloat());
+    }
 }

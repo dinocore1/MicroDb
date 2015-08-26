@@ -21,4 +21,9 @@ public final class UBFloat64 extends UBValue {
     public double getDouble() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return Double.toString(getDouble());
+    }
 }

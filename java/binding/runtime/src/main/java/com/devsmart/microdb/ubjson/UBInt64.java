@@ -17,4 +17,9 @@ public final class UBInt64 extends UBValue {
     public long getInt() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return Long.toString(getInt());
+    }
 }

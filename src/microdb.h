@@ -12,6 +12,7 @@
 #include <microdb/status.h>
 #include <microdb/microdb.h>
 
+#include "log.h"
 #include "utils.h"
 #include "sha256.h"
 #include "uuid.h"

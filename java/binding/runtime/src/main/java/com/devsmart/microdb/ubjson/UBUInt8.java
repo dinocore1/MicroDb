@@ -17,4 +17,9 @@ public final class UBUInt8 extends UBValue {
     int getInt() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return Integer.toString(getInt());
+    }
 }

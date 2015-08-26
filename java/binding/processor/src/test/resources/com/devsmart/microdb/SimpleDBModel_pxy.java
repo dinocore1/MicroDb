@@ -10,45 +10,61 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void writeUBObject(UBObject data) {
         super.writeUBObject(data);
-        data.set("myString", UBValueFactory.createString(getMyString()));
-        data.set("myBool", UBValueFactory.createBool(getMyBool()));
-        data.set("myByte", UBValueFactory.createInt(getMyByte()));
-        data.set("myShort", UBValueFactory.createInt(getMyShort()));
-        data.set("myInt", UBValueFactory.createInt(getMyInt()));
-        data.set("myLong", UBValueFactory.createInt(getMyLong()));
+        data.put("myString", UBValueFactory.createString(getMyString()));
+        data.put("myBool", UBValueFactory.createBool(getMyBool()));
+        data.put("myByte", UBValueFactory.createInt(getMyByte()));
+        data.put("myShort", UBValueFactory.createInt(getMyShort()));
+        data.put("myInt", UBValueFactory.createInt(getMyInt()));
+        data.put("myLong", UBValueFactory.createInt(getMyLong()));
 
         {
             SimpleDBModel inst = getInternal();
             if(inst == null) {
-                data.set("internal", UBValueFactory.createNull());
+                data.put("internal", UBValueFactory.createNull());
             } else {
                 UBObject obj = new UBObject();
                 inst.writeUBObject(obj);
-                data.set("internal", obj);
+                data.put("internal", obj);
             }
         }
-        data.set("link", link.getId());
-        data.set("myFloatArray", UBValueFactory.createArray(getMyFloatArray()));
-        data.set("myDoubleArray", UBValueFactory.createArray(getMyDoubleArray()));
+        data.put("link", link.getId());
+        data.put("myFloatArray", UBValueFactory.createArray(getMyFloatArray()));
+        data.put("myDoubleArray", UBValueFactory.createArray(getMyDoubleArray()));
     }
 
     @Override
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
-        setMyString(obj.get("myString").asString());
-        setMyBool(obj.get("myBool").asBool());
-        setMyByte(obj.get("myByte").asByte());
-        setMyShort(obj.get("myShort").asShort());
-        setMyInt(obj.get("myInt").asInt());
-        setMyLong(obj.get("myLong").asLong());
-        {
+        if(obj.containsKey("myString")) {
+            setMyString(obj.get("myString").asString());
+        }
+        if(obj.containsKey("myBool")) {
+            setMyBool(obj.get("myBool").asBool());
+        }
+        if(obj.containsKey("myByte")) {
+            setMyByte(obj.get("myByte").asByte());
+        }
+        if(obj.containsKey("myShort")) {
+            setMyShort(obj.get("myShort").asShort());
+        }
+        if(obj.containsKey("myInt")) {
+            setMyInt(obj.get("myInt").asInt());
+        }
+        if(obj.containsKey("myLong")) {
+            setMyLong(obj.get("myLong").asLong());
+        }
+        if(obj.containsKey("internal")) {
             SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
             tmp.init(obj.get("internal").asObject(), db);
             setInternal(tmp);
         }
         link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
-        setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
-        setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
+        if(obj.containsKey("myFloatArray")) {
+            setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
+        }
+        if(obj.containsKey("myDoubleArray")) {
+            setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
+        }
     }
 
 

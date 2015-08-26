@@ -41,16 +41,16 @@ public class MicroDB {
         UBValue storedValue = mDriver.get(key);
         if(storedValue == null) {
             UBObject metaObj = new UBObject();
-            metaObj.set("id", key);
+            metaObj.put("id", key);
             mCallback.onUpgrade(this, -1, mSchemaVersion);
-            metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
+            metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             save(metaObj);
         } else {
             UBObject metaObj = storedValue.asObject();
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if(currentVersion < mSchemaVersion) {
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
-                metaObj.set(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
+                metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
                 save(metaObj);
             }
         }
@@ -58,7 +58,7 @@ public class MicroDB {
     }
 
     private void save(UBObject obj) throws IOException {
-        if(obj.has("id")) {
+        if(obj.containsKey("id")) {
             mDriver.delete(obj.get("id"));
         }
         mDriver.insert(obj);
@@ -110,7 +110,7 @@ public class MicroDB {
 
             UBObject data = new UBObject();
             UBValue key = mDriver.insert(data);
-            data.set("id", key);
+            data.put("id", key);
             retval.init(data, this);
 
             mLiveObjects.put(key, new SoftReference<DBObject>(retval));

@@ -17,4 +17,9 @@ public final class UBInt32 extends UBValue {
     public int getInt() {
         return mValue;
     }
+
+    @Override
+    public String toString() {
+        return Integer.toString(getInt());
+    }
 }

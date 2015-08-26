@@ -78,7 +78,7 @@ static jbyteArray get(JNIEnv* env, jobject thiz, jbyteArray key) {
     jbyteArray retval = NULL;
     Value keyValue = byteArrayToValue(env, key);
     Value valueValue;
-    if(database->Get(key, valueValue) == OK) {
+    if(database->Get(keyValue, valueValue) == OK) {
         retval = valueToByteArray(env, valueValue);
     }
 

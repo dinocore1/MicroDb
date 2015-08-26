@@ -44,15 +44,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createString($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createString($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asString())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -80,15 +82,16 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createBool($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
-
+            builder.addStatement("data.put($S, $T.createBool($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asBool())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -116,15 +119,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createInt($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createInt($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asByte())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -152,15 +157,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createInt($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createInt($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asShort())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -189,15 +196,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createInt($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createInt($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asInt())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -226,15 +235,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createInt($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createInt($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asLong())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -263,15 +274,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createFloat32($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createFloat32($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asFloat32())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -300,15 +313,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createArray($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createArray($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asFloat32Array())",
-                    createSetterName(mField), mField.getSimpleName());
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
 
         }
 
@@ -337,16 +352,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createFloat64($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createFloat64($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asFloat64())",
                     createSetterName(mField), mField.getSimpleName());
-
+            builder.endControlFlow();
         }
 
         @Override
@@ -374,15 +390,17 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $T.createArray($L()))",
-                    mField.getSimpleName(), UBValueFactory.class, createGetterName(mField));
+            builder.addStatement("data.put($S, $T.createArray($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
 
         }
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
             builder.addStatement("$L(obj.get($S).asFloat64Array())",
                     createSetterName(mField), mField.getSimpleName());
+            builder.endControlFlow();
 
         }
 
@@ -410,7 +428,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.set($S, $L.getId())", mField, mField);
+            builder.addStatement("data.put($S, $L.getId())", mField, mField);
 
         }
 
@@ -450,11 +468,11 @@ public class ProxyFileGenerator {
 
                     .addStatement("$T inst = $N()", TypeName.get(mField.asType()), createGetterName(mField))
                     .beginControlFlow("if(inst == null)")
-                    .addStatement("data.set($S, $T.createNull())", mField, UBValueFactory.class)
+                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
                     .nextControlFlow("else")
                     .addStatement("$T obj = new $T()", UBObject.class, UBObject.class)
                     .addStatement("inst.writeUBObject(obj)")
-                    .addStatement("data.set($S, obj)", mField)
+                    .addStatement("data.put($S, obj)", mField)
                     .endControlFlow()
                     .unindent()
                     .add("}\n")
@@ -467,13 +485,11 @@ public class ProxyFileGenerator {
 
             ClassName proxyClassName = createDBObjName(mField);
             builder.addCode(CodeBlock.builder()
-                            .add("{\n")
-                            .indent()
+                            .beginControlFlow("if(obj.containsKey($S))", mField)
                             .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
                             .addStatement("tmp.init(obj.get($S).asObject(), db)", mField)
                             .addStatement("$L(tmp)", createSetterName(mField))
-                            .unindent()
-                            .add("}\n")
+                            .endControlFlow()
                             .build()
             );
 

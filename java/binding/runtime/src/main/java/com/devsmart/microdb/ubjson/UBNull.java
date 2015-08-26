@@ -7,4 +7,9 @@ public final class UBNull extends UBValue {
     public Type getType() {
         return Type.Null;
     }
+
+    @Override
+    public String toString() {
+        return "null";
+    }
 }

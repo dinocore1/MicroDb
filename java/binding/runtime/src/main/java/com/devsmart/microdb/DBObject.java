@@ -31,7 +31,7 @@ public class DBObject {
 
     public void writeUBObject(UBObject data) {
         if(mId != null) {
-            data.set("id", mId);
+            data.put("id", mId);
         }
     }
 

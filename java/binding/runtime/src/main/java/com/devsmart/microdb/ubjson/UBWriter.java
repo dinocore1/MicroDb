@@ -193,7 +193,7 @@ public class UBWriter implements Closeable {
 
     public void writeObject(UBObject object) throws IOException {
         mOutputStream.write(UBValue.MARKER_OBJ_START);
-        for(Map.Entry<String, UBValue> entry : object.asMap().entrySet()) {
+        for(Map.Entry<String, UBValue> entry : object.entrySet()) {
             writeDataArray(entry.getKey().getBytes(UBString.UTF_8));
             write(entry.getValue());
         }

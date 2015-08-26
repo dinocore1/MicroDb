@@ -39,4 +39,9 @@ public class UBString extends UBValue {
     public byte[] getData() {
         return mData;
     }
+
+    @Override
+    public String toString() {
+        return getString();
+    }
 }

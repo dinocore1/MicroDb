@@ -176,7 +176,7 @@ public class UBReaderTest {
         value = reader.read();
         assertTrue(value.isObject());
         UBObject obj = value.asObject();
-        assertTrue(obj.has("lat"));
+        assertTrue(obj.containsKey("lat"));
         assertEquals(5, obj.get("lat").asInt());
         assertEquals(255, obj.get("lng").asInt());
     }
