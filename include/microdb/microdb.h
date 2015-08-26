@@ -34,8 +34,8 @@ namespace microdb {
         virtual ~DB();
         
         //CRUD API
+        virtual Status Get(const Value& key, Value& value) = 0;
         virtual Status Insert(Value& key, Value& value) = 0;
-        virtual Status Update(Value& key, Value& value) = 0;
         virtual Status Delete(const Value& key) = 0;
         virtual void BeginTransaction() = 0;
 		virtual void CommitTransaction() = 0;

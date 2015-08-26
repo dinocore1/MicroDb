@@ -11,25 +11,28 @@ public interface Driver {
     void close();
 
     /**
-     * loads and returns the object data.
-     * @param key the object primary key
-     * @return
+     * loads the database value with {@code key}
+     * @param key
+     * @return the value stored in the database or null if it does not exist
      * @throws IOException
      */
-    UBObject load(UBValue key) throws IOException;
-
+    UBValue get(UBValue key) throws IOException;
 
     /**
-     * Save the data to database. This method will update the
-     * object data if it already exists in the database, or will
-     * create a new entry and assign a primary key to the object.
-     * @param data object data to be saved or updated
-     * @return the primary key of the object
+     * inserts a new value into the the database. If the value is an object and contains
+     * a string value for "id" that value will be used as the primary key, else a new
+     * unique key will be automatically generated and returned.
+     * @param value
+     * @return the unique key for {@code value}
      * @throws IOException
      */
-    UBValue save(UBValue data) throws IOException;
+    UBValue insert(UBValue value) throws IOException;
 
-
+    /**
+     * delete the database object with key {@code key}
+     * @param key
+     * @throws IOException
+     */
     void delete(UBValue key) throws IOException;
 
     DBIterator queryIndex(String indexName) throws IOException;

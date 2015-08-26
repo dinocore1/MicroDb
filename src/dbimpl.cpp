@@ -102,7 +102,7 @@ namespace microdb {
         
     }
     
-    void loadDBObj(Driver* driver, const Value& key, Value& dst) {
+    static void loadDBObj(Driver* driver, const Value& key, Value& dst) {
         MemSlice keySlice, dataSlice;
         MemOutputStream keyOut;
         keySlice = ValueToMemSlice(key, keyOut);
@@ -111,7 +111,7 @@ namespace microdb {
         }
     }
     
-    void saveDBObj(Driver* driver, const Value& key, const Value& value) {
+    static void saveDBObj(Driver* driver, const Value& key, const Value& value) {
         
         MemSlice keySlice, valueSlice;
         MemOutputStream keyOut, valueOut;
@@ -121,7 +121,7 @@ namespace microdb {
         driver->Insert(keySlice, valueSlice);
     }
     
-    void deleteDBObj(Driver* driver, const Value& key) {
+    static void deleteDBObj(Driver* driver, const Value& key) {
         MemSlice keySlice;
         MemOutputStream keyOut;
         keySlice = ValueToMemSlice(key, keyOut);
@@ -159,6 +159,16 @@ namespace microdb {
         return OK;
     }
     
+    Status DBImpl::Get(const Value& key, Value& value) {
+        MemOutputStream out;
+        MemSlice valueSlice;
+        MemSlice keySlice = ValueToMemSlice(Index::createPrimaryIndexEntry(key), out);
+        Status retval = mDBDriver->Get(keySlice, valueSlice);
+        value = MemSliceToValue(valueSlice);
+        
+        return retval;
+    }
+    
     Status DBImpl::Insert(Value& returnKey, Value& value) {
         
         if(!value.IsObject()) {
@@ -191,15 +201,13 @@ namespace microdb {
         
         auto cb = std::bind(deleteDBObj, mDBDriver.get(), _3);
         
-        mDBDriver->BeginTransaction();
+        Transaction tr(mDBDriver.get());
         
         for(auto& entry : mIndicies) {
             entry.second->index(value, cb);
         }
         
         mPrimaryIndex->index(value, cb);
-        
-        mDBDriver->CommitTransaction();
         
         return OK;
     }
@@ -214,10 +222,6 @@ namespace microdb {
     
 	void DBImpl::RollBackTransaction(){
         mDBDriver->RollBackTransaction();
-    }
-    
-    Status DBImpl::Update(Value& key, Value& value) {
-        return ERROR;
     }
     
     Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {

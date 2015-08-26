@@ -52,8 +52,8 @@ namespace microdb {
         Status init();
         
         //CRUD API
+        virtual Status Get(const Value& key, Value& value);
         virtual Status Insert(Value& key, Value& value);
-        virtual Status Update(Value& key, Value& value);
         virtual Status Delete(const Value& key);
         virtual void BeginTransaction();
 		virtual void CommitTransaction();

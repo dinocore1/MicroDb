@@ -21,8 +21,8 @@ public class NativeDriver implements Driver {
     private native static boolean open(String dbpath, NativeDriver driver);
     public native void close();
 
-    private native byte[] load(byte[] key);
-    private native byte[] save(byte[] data);
+    private native byte[] get(byte[] key);
+    private native byte[] insert(byte[] data);
     private native void delete(byte[] key);
 
     private NativeDriver() {}
@@ -35,7 +35,7 @@ public class NativeDriver implements Driver {
         return driver;
     }
 
-    private static byte[] toByteArray(UBValue value) throws IOException {
+    static byte[] toByteArray(UBValue value) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         UBWriter writer = new UBWriter(out);
         writer.write(value);
@@ -43,23 +43,26 @@ public class NativeDriver implements Driver {
         return out.toByteArray();
     }
 
-    private static UBValue fromByteArray(byte[] data) throws IOException {
+    static UBValue fromByteArray(byte[] data) throws IOException {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         UBReader reader = new UBReader(in);
         return reader.read();
     }
 
     @Override
-    public UBObject load(UBValue key) throws IOException {
-        byte[] keyData = toByteArray(key);
-        byte[] valueData = load(keyData);
-        return (UBObject)fromByteArray(valueData);
+    public UBValue get(UBValue key) throws IOException {
+        byte[] data = get(toByteArray(key));
+        UBValue retval = null;
+        if(data != null) {
+            retval = fromByteArray(data);
+        }
+        return retval;
     }
 
     @Override
-    public UBValue save(UBValue data) throws IOException {
-        byte[] key = save(toByteArray(data));
-        return fromByteArray(key);
+    public UBValue insert(UBValue value) throws IOException {
+        byte[] keydata = insert(toByteArray(value));
+        return fromByteArray(keydata);
     }
 
     @Override
@@ -69,17 +72,11 @@ public class NativeDriver implements Driver {
     }
 
     @Override
-    public DBIterator queryIndex(String indexName) throws IOException {
-        return null;
-    }
+    public native DBIterator queryIndex(String indexName);
 
     @Override
-    public void addIndex(String indexName, String indexQuery) throws IOException {
-
-    }
+    public native void addIndex(String indexName, String indexQuery) throws IOException;
 
     @Override
-    public void deleteIndex(String indexName) {
-
-    }
+    public native void deleteIndex(String indexName);
 }
