@@ -1,7 +1,6 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 
 import java.io.IOException;
@@ -38,4 +37,8 @@ public interface Driver {
     DBIterator queryIndex(String indexName) throws IOException;
     void addIndex(String indexName, String indexQuery) throws IOException;
     void deleteIndex(String indexName);
+
+    void beginTransaction() throws IOException;
+    void commitTransaction() throws IOException;
+    void rollbackTransaction() throws IOException;
 }

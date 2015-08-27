@@ -10,11 +10,18 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Queue;
+import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MicroDB {
 
@@ -24,17 +31,97 @@ public class MicroDB {
     private int mSchemaVersion;
     private DBCallback mCallback;
     private final HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<UBValue, SoftReference<DBObject>>();
-    private final Queue<UBObject> mSaveQueue = new ConcurrentLinkedQueue<UBObject>();
-    private boolean mAutoSave = true;
+    private final Queue<WriteCommand> mSaveQueue = new ConcurrentLinkedQueue<WriteCommand>();
+    private final ScheduledExecutorService mWriteThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "MicroDB Write Thread");
+        }
+    });
+    private AtomicBoolean mAutoSave = new AtomicBoolean(true);
 
 
-    private class WriteCommand {
-        private static final int TYPE_SAVE = 0;
-        private static final int TYPE_DELETE = 1;
-
-        int mType;
-        UBValue mData;
+    private interface WriteCommand {
+        void write() throws IOException;
     }
+
+    private class SaveDBData implements WriteCommand {
+
+        private final UBObject mData;
+
+        SaveDBData(UBObject obj) {
+            mData = obj;
+        }
+
+        @Override
+        public void write() throws IOException {
+            mDriver.beginTransaction();
+
+            if(mData.containsKey("id")) {
+                mDriver.delete(mData.get("id"));
+            }
+            mDriver.insert(mData);
+
+            mDriver.commitTransaction();
+        }
+    }
+
+    private class SaveObject implements WriteCommand {
+
+        private final DBObject mObject;
+
+        SaveObject(DBObject object) {
+            mObject = object;
+        }
+
+        @Override
+        public void write() throws IOException {
+            UBObject data = new UBObject();
+            mObject.writeUBObject(data);
+
+            mDriver.beginTransaction();
+
+            if(data.containsKey("id")) {
+                mDriver.delete(data.get("id"));
+            }
+            mDriver.insert(data);
+
+            mDriver.commitTransaction();
+            mObject.mDirty = false;
+        }
+    }
+
+    private class DeleteObject implements WriteCommand {
+
+        private final DBObject mObject;
+
+        DeleteObject(DBObject obj) {
+            mObject = obj;
+        }
+
+        @Override
+        public void write() throws IOException {
+            mDriver.delete(mObject.getId());
+        }
+    }
+
+    private Future<?> processWriteQueue() {
+        return mWriteThread.submit(mSave);
+    }
+
+    private final Runnable mSave = new Runnable() {
+        @Override
+        public void run() {
+            WriteCommand cmd;
+            while ((cmd = mSaveQueue.poll()) != null) {
+                try {
+                    cmd.write();
+                } catch (Throwable t) {
+                    logger.error("error writing to db", t);
+                }
+            }
+        }
+    };
 
     MicroDB(Driver driver, int schemaVersion, DBCallback cb) throws IOException {
         mDriver = driver;
@@ -57,37 +144,35 @@ public class MicroDB {
             metaObj.put("id", key);
             mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-            save(metaObj);
+            mSaveQueue.offer(new SaveDBData(metaObj));
         } else {
             UBObject metaObj = storedValue.asObject();
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if(currentVersion < mSchemaVersion) {
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-                save(metaObj);
+                mSaveQueue.offer(new SaveDBData(metaObj));
             }
         }
 
+        mWriteThread.scheduleWithFixedDelay(mSave, 2, 2, TimeUnit.SECONDS);
+
     }
 
-    private void save(UBObject obj) throws IOException {
-        if(obj.containsKey("id")) {
-            mDriver.delete(obj.get("id"));
-        }
-        mDriver.insert(obj);
-    }
+
 
     /**
      * called when a dbobject is being finalized by the GC
      * @param obj
      */
-    protected synchronized void finalizing(DBObject obj) {
-        if(mAutoSave && obj.mDirty){
-            UBObject data = new UBObject();
-            obj.writeUBObject(data);
-            mSaveQueue.add(data);
+    protected void finalizing(DBObject obj) {
+        if(mAutoSave.get() && obj.mDirty){
+            mSaveQueue.offer(new SaveObject(obj));
+            //processWriteQueue();
         }
-        mLiveObjects.remove(obj.getId());
+        synchronized (this) {
+            mLiveObjects.remove(obj.getId());
+        }
 
     }
 
@@ -104,10 +189,11 @@ public class MicroDB {
     public synchronized void flush() throws IOException {
         for(SoftReference<DBObject> ref : mLiveObjects.values()) {
             DBObject obj = ref.get();
-            if(obj != null) {
-                save(obj);
+            if(obj != null && obj.mDirty) {
+                mSaveQueue.offer(new SaveObject(obj));
             }
         }
+        sync();
     }
 
     public synchronized <T extends DBObject> T create(Class<T> classType) {
@@ -159,29 +245,19 @@ public class MicroDB {
     }
 
     public synchronized void save(DBObject obj) throws IOException {
-        UBObject data = new UBObject();
-        obj.writeUBObject(data);
-        save(data);
-        obj.mDirty = false;
+        mSaveQueue.offer(new SaveObject(obj));
     }
-
-
 
     public synchronized void delete(DBObject obj) throws IOException {
+        mSaveQueue.offer(new DeleteObject(obj));
         mLiveObjects.remove(obj.getId());
-        mDriver.delete(obj.getId());
     }
 
-    public Transaction beginTransaction() {
-
-        return new Transaction(this);
-    }
-
-    void commitTransaction() {
-
-    }
-
-    void rollbackTransaction() {
-
+    public void sync() {
+        try {
+            processWriteQueue().get();
+        } catch (Exception e) {
+            logger.error("", e);
+        }
     }
 }

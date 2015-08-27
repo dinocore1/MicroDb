@@ -19,9 +19,9 @@ public class Transaction implements Closeable {
 
     public void endTransaction() {
         if(mSuccess) {
-            mDB.commitTransaction();
+            //mDB.commitTransaction();
         } else {
-            mDB.rollbackTransaction();
+            //mDB.rollbackTransaction();
         }
 
     }

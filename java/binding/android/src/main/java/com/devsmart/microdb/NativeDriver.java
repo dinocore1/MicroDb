@@ -84,4 +84,19 @@ public class NativeDriver implements Driver {
 
     @Override
     public native void deleteIndex(String indexName);
+
+    @Override
+    public void beginTransaction() throws IOException {
+
+    }
+
+    @Override
+    public void commitTransaction() throws IOException {
+
+    }
+
+    @Override
+    public void rollbackTransaction() throws IOException {
+
+    }
 }
