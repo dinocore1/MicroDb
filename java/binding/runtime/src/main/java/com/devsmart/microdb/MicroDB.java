@@ -112,13 +112,22 @@ public class MicroDB {
     private final Runnable mSave = new Runnable() {
         @Override
         public void run() {
+            int numCommands = 0;
             WriteCommand cmd;
             while ((cmd = mSaveQueue.poll()) != null) {
                 try {
                     cmd.write();
+
+                    if(++numCommands == 100) {
+                        logger.info("executed {} commands", numCommands);
+                        numCommands = 0;
+                    }
                 } catch (Throwable t) {
                     logger.error("error writing to db", t);
                 }
+            }
+            if(numCommands > 0) {
+                logger.info("executed {} commands", numCommands);
             }
         }
     };
@@ -128,6 +137,7 @@ public class MicroDB {
         mSchemaVersion = schemaVersion;
         mCallback = cb;
 
+        mWriteThread.scheduleWithFixedDelay(mSave, 2, 2, TimeUnit.SECONDS);
         init();
     }
 
@@ -154,8 +164,6 @@ public class MicroDB {
                 mSaveQueue.offer(new SaveDBData(metaObj));
             }
         }
-
-        mWriteThread.scheduleWithFixedDelay(mSave, 2, 2, TimeUnit.SECONDS);
 
     }
 
@@ -186,11 +194,13 @@ public class MicroDB {
      * Saves all DBObjects that are marked dirty
      * @throws IOException
      */
-    public synchronized void flush() throws IOException {
-        for(SoftReference<DBObject> ref : mLiveObjects.values()) {
-            DBObject obj = ref.get();
-            if(obj != null && obj.mDirty) {
-                mSaveQueue.offer(new SaveObject(obj));
+    public void flush() throws IOException {
+        synchronized (this) {
+            for (SoftReference<DBObject> ref : mLiveObjects.values()) {
+                DBObject obj = ref.get();
+                if (obj != null && obj.mDirty) {
+                    mSaveQueue.offer(new SaveObject(obj));
+                }
             }
         }
         sync();

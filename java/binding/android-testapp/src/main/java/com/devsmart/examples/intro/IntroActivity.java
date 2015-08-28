@@ -37,7 +37,7 @@ public class IntroActivity extends Activity {
                     Stopwatch sw = Stopwatch.createStarted();
 
                     //LinkedList<Person> myList = new LinkedList<Person>();
-                    for(int i=0;i<100000;i++) {
+                    for(int i=0;i<10000;i++) {
                         Person newPersion = mDatabase.create(Person.class);
                         newPersion.setFirstName("Santa");
                         newPersion.setLastName("Clause");
