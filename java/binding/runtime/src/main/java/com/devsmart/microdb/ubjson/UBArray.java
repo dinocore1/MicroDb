@@ -6,6 +6,8 @@ public class UBArray extends UBValue {
     public enum ArrayType {
         Generic,
         Int8,
+        Int16,
+        Int32,
         Float32,
         Float64
     }
