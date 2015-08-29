@@ -5,6 +5,7 @@ import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.ubjson.UBObject;
+import com.devsmart.microdb.ubjson.UBString;
 import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBValueFactory;
 import com.squareup.javapoet.*;
@@ -636,8 +637,9 @@ public class ProxyFileGenerator {
                     final String fieldName = field.getSimpleName().toString();
                     if("id".equals(fieldName)) {
                         error("field with name 'id' is reserved");
+                    } else if("type".equals(fieldName)) {
+                        error("field with name 'type' is reserved");
                     } else {
-
 
                         if(isLinkType(field)){
                             if(!field.getModifiers().contains(Modifier.PUBLIC)) {
@@ -681,6 +683,12 @@ public class ProxyFileGenerator {
                     }
                 }
             }
+
+            classBuilder.addField(
+                    FieldSpec.builder(UBString.class, "TYPE", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                            .initializer("$T.createString($S)", UBValueFactory.class, mClassElement.getSimpleName())
+                            .build());
+
 
             classBuilder.addMethod(generateToUBValueMethod(fields));
 
@@ -730,6 +738,7 @@ public class ProxyFileGenerator {
                 .returns(TypeName.VOID);
 
         builder.addStatement("super.init(obj, db)");
+        builder.addStatement("obj.put($S, TYPE)", "type");
 
         for(FieldMethodCodeGen fieldGen : fieldGens) {
             fieldGen.deserializeCode(builder);

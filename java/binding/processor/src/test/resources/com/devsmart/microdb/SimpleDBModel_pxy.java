@@ -1,11 +1,14 @@
 package com.devsmart.microdb;
 
 import com.devsmart.microdb.ubjson.UBObject;
+import com.devsmart.microdb.ubjson.UBString;
 import com.devsmart.microdb.ubjson.UBValueFactory;
 import pkg.project.SimpleDBModel;
 
 
 public final class SimpleDBModel_pxy extends SimpleDBModel {
+
+    private static final UBString TYPE = UBValueFactory.createString("SimpleDBModel");
 
     @Override
     public void writeUBObject(UBObject data) {
@@ -35,6 +38,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
+        obj.put("type", TYPE);
         if(obj.containsKey("myString")) {
             setMyString(obj.get("myString").asString());
         }

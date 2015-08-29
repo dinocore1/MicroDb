@@ -176,7 +176,6 @@ public class MicroDB {
     protected void finalizing(DBObject obj) {
         if(mAutoSave.get() && obj.mDirty){
             mSaveQueue.offer(new SaveObject(obj));
-            //processWriteQueue();
         }
         synchronized (this) {
             mLiveObjects.remove(obj.getId());
