@@ -13,6 +13,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void writeUBObject(UBObject data) {
         super.writeUBObject(data);
+        data.put("type", TYPE);
         data.put("myString", UBValueFactory.createString(getMyString()));
         data.put("myBool", UBValueFactory.createBool(getMyBool()));
         data.put("myByte", UBValueFactory.createInt(getMyByte()));
@@ -38,7 +39,6 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
-        obj.put("type", TYPE);
         if(obj.containsKey("myString")) {
             setMyString(obj.get("myString").asString());
         }

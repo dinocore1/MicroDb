@@ -155,6 +155,9 @@ public class MicroDB {
             mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mSaveQueue.offer(new SaveDBData(metaObj));
+            mDriver.addIndex("type", "emit(obj.type)");
+            mCallback.onUpgrade(this, -1, mSchemaVersion);
+
         } else {
             UBObject metaObj = storedValue.asObject();
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
@@ -268,5 +271,9 @@ public class MicroDB {
         } catch (Exception e) {
             logger.error("", e);
         }
+    }
+
+    public DBIterator queryIndex(String indexName) throws IOException {
+        return mDriver.queryIndex(indexName);
     }
 }

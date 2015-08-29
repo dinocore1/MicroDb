@@ -722,6 +722,7 @@ public class ProxyFileGenerator {
                 .returns(TypeName.VOID);
 
         builder.addStatement("super.writeUBObject(data)");
+        builder.addStatement("data.put($S, TYPE)", "type");
         for(FieldMethodCodeGen field : fieldGens) {
             field.serializeCode(builder);
         }
@@ -738,7 +739,6 @@ public class ProxyFileGenerator {
                 .returns(TypeName.VOID);
 
         builder.addStatement("super.init(obj, db)");
-        builder.addStatement("obj.put($S, TYPE)", "type");
 
         for(FieldMethodCodeGen fieldGen : fieldGens) {
             fieldGen.deserializeCode(builder);
