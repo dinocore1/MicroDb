@@ -256,11 +256,11 @@ public class MicroDB {
         }
     }
 
-    public synchronized void save(DBObject obj) throws IOException {
+    public synchronized void save(DBObject obj) {
         mSaveQueue.offer(new SaveObject(obj));
     }
 
-    public synchronized void delete(DBObject obj) throws IOException {
+    public synchronized void delete(DBObject obj) {
         mSaveQueue.offer(new DeleteObject(obj));
         mLiveObjects.remove(obj.getId());
     }
@@ -269,11 +269,15 @@ public class MicroDB {
         try {
             processWriteQueue().get();
         } catch (Exception e) {
-            logger.error("", e);
+            logger.error("sync operation ended with exception", e);
         }
     }
 
     public DBIterator queryIndex(String indexName) throws IOException {
         return mDriver.queryIndex(indexName);
+    }
+
+    public <T extends DBObject> ObjIterator<T> getAll(Class<T> classType) throws IOException {
+        return new ObjIterator<T>(queryIndex("type"), this, classType);
     }
 }

@@ -93,6 +93,10 @@ public abstract class UBValue implements Comparable<UBValue> {
         }
     }
 
+    public boolean isString() {
+        return getType() == Type.String;
+    }
+
     public String asString() {
         UBString thiz = (UBString)this;
         return thiz.getString();
