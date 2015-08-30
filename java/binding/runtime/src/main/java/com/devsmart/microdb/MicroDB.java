@@ -155,7 +155,7 @@ public class MicroDB {
             mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mSaveQueue.offer(new SaveDBData(metaObj));
-            mDriver.addIndex("type", "emit(obj.type)");
+            mDriver.addIndex("type", "if(obj.type != null) { emit(obj.type) }");
             mCallback.onUpgrade(this, -1, mSchemaVersion);
 
         } else {
