@@ -45,7 +45,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createString($L()))",
+            builder.addStatement("data.put($S, $T.createStringOrNull($L()))",
                     mField, UBValueFactory.class, createGetterName(mField));
 
         }
@@ -468,9 +468,7 @@ public class ProxyFileGenerator {
                     .indent()
 
                     .addStatement("$T inst = $N()", TypeName.get(mField.asType()), createGetterName(mField))
-                    .beginControlFlow("if(inst == null)")
-                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
-                    .nextControlFlow("else")
+                    .beginControlFlow("if(inst != null)")
                     .addStatement("$T obj = new $T()", UBObject.class, UBObject.class)
                     .addStatement("inst.writeUBObject(obj)")
                     .addStatement("data.put($S, obj)", mField)

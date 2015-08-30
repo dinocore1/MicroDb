@@ -2,14 +2,6 @@
 
 #include "log.h"
 
-#ifndef NELEM
-# define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-#endif
-
-#include <microdb/status.h>
-#include <microdb/value.h>
-#include <microdb/serialize.h>
-#include <microdb/microdb.h>
 
 using namespace microdb;
 
@@ -43,33 +35,6 @@ static void close_db(JNIEnv* env, jobject thiz) {
         delete database;
     }
     env->SetLongField(thiz, gNativeDriverClass.mNativePtr, 0);
-}
-
-static Value byteArrayToValue(JNIEnv* env, jbyteArray array) {
-    const size_t len = env->GetArrayLength(array);
-    jbyte* arrayData = env->GetByteArrayElements(array, NULL);
-    
-    MemInputStream in((const byte*)arrayData, len);
-    UBJSONReader reader(in);
-    
-    Value retval;
-    reader.read(retval);
-    env->ReleaseByteArrayElements(array, arrayData, JNI_ABORT);
-    return retval;
-}
-
-static jbyteArray valueToByteArray(JNIEnv* env, const Value& data) {
-    MemOutputStream out;
-    UBJSONWriter writer(out);
-    writer.write(data);
-    
-    jbyte* buf;
-    size_t len;
-    out.GetData((void*&)buf, len);
-    
-    jbyteArray retval = env->NewByteArray(len);
-    env->SetByteArrayRegion(retval, 0, len, buf);
-    return retval;
 }
 
 static jbyteArray get(JNIEnv* env, jobject thiz, jbyteArray key) {
@@ -109,15 +74,27 @@ static void queryIndex(JNIEnv* env, jobject thiz, jstring indexName, jobject it)
     DB* database = (DB*)env->GetLongField(thiz, gNativeDriverClass.mNativePtr);
     
     const char* indexNameStr = env->GetStringUTFChars(indexName, NULL);
-    std::string query;
     
-    Iterator* retit = database->QueryIndex(indexNameStr, query);
+    Iterator* retit = database->QueryIndex(indexNameStr, "");
     env->SetLongField(it, gNativeIteratorClass.mNativePtr, (jlong)retit);
     
     env->ReleaseStringUTFChars(indexName, indexNameStr);
 }
 
-static void addIndex(JNIEnv* env, jobject thiz, jstring indexName, jstring indexQuery) {
+static jboolean addIndex(JNIEnv* env, jobject thiz, jstring indexName, jstring indexQuery) {
+    DB* database = (DB*)env->GetLongField(thiz, gNativeDriverClass.mNativePtr);
+    
+    const char* indexNameStr = env->GetStringUTFChars(indexName, NULL);
+    const char* queryStr = env->GetStringUTFChars(indexQuery, NULL);
+    
+    Status retCode = database->AddIndex(indexNameStr, queryStr);
+    jboolean retval = retCode == OK ? JNI_TRUE : JNI_FALSE;
+    
+    env->ReleaseStringUTFChars(indexName, indexNameStr);
+    env->ReleaseStringUTFChars(indexQuery, queryStr);
+    
+    return retval;
+    
     
 }
 
@@ -133,7 +110,7 @@ JNIEXPORT JNINativeMethod gDriverMethods[] = {
     { "insert", "([B)[B", (void*)insert },
     { "delete", "([B)V", (void*)deleteobj },
     { "queryIndex", "(Ljava/lang/String;Lcom/devsmart/microdb/NativeIterator;)V", (void*)queryIndex },
-    { "addIndex", "(Ljava/lang/String;Ljava/lang/String;)V", (void*)addIndex },
+    { "addIndex", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)addIndex },
     { "deleteIndex", "(Ljava/lang/String;)V", (void*)deleteIndex }
 };
 

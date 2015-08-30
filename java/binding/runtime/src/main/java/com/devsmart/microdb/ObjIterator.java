@@ -56,4 +56,10 @@ public class ObjIterator<T extends DBObject> implements Closeable {
     public void close() throws IOException {
         mIterator.close();
     }
+
+    @Override
+    protected void finalize() throws Throwable {
+        close();
+        super.finalize();
+    }
 }

@@ -1,29 +1,78 @@
 #include "common.h"
-
 #include "log.h"
-#include <jni.h>
-
-#ifndef NELEM
-# define NELEM(x) ((int) (sizeof(x) / sizeof((x)[0])))
-#endif
-
-#include <microdb/status.h>
-#include <microdb/value.h>
-#include <microdb/serialize.h>
-#include <microdb/microdb.h>
 
 using namespace microdb;
 
 nativeIteratorClass_t gNativeIteratorClass;
 
 static jbyteArray getKey(JNIEnv* env, jobject thiz) {
-    jbyteArray retval = env->NewByteArray(0);    
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    jbyteArray retval = NULL;
+    Value value = it->GetKey();
+    retval = valueToByteArray(env, value);
+    return retval;    
 }
 
+static jbyteArray primaryKey(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    jbyteArray retval = NULL;
+    Value value = it->GetPrimaryKey();
+    retval = valueToByteArray(env, value);
+    return retval;
+}
 
+static jbyteArray value(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    jbyteArray retval = NULL;
+    Value value = it->GetValue();
+    retval = valueToByteArray(env, value);
+    return retval;
+}
+
+static void destroy(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    delete it;
+    env->SetLongField(thiz, gNativeIteratorClass.mNativePtr, 0);
+}
+
+static void seek(JNIEnv* env, jobject thiz, jbyteArray key) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    Value keyValue = byteArrayToValue(env, key);
+    it->SeekTo(keyValue);
+}
+
+static jboolean valid(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    return it->Valid() ? JNI_TRUE : JNI_FALSE;
+}
+
+static void next(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    it->Next();
+}
+
+static void prev(JNIEnv* env, jobject thiz) {
+    Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
+    
+    it->Prev();
+}
 
 JNIEXPORT JNINativeMethod gIteratorMethods[] = {
-    { "key", "()[B", (void*)getKey }
+    { "key", "()[B", (void*)getKey },
+    { "primaryKey", "()[B", (void*)primaryKey },
+    { "value", "()[B", (void*)value },
+    { "destroy", "()V", (void*)destroy },
+    { "seek", "([B)V", (void*)seek },
+    { "valid", "()Z", (void*)valid },
+    { "next", "()V", (void*)next },
+    { "prev", "()V", (void*)prev }
+    
 };
 
 jint iterator_OnLoad(JNIEnv* env) {

@@ -35,7 +35,7 @@ public interface Driver {
     void delete(UBValue key) throws IOException;
 
     DBIterator queryIndex(String indexName) throws IOException;
-    void addIndex(String indexName, String indexQuery) throws IOException;
+    boolean addIndex(String indexName, String indexQuery) throws IOException;
     void deleteIndex(String indexName);
 
     void beginTransaction() throws IOException;

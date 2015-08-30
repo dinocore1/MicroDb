@@ -1,6 +1,7 @@
 package com.devsmart.examples.intro.model;
 
 import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
 
 @DBObj
@@ -8,6 +9,7 @@ public class Person extends DBObject {
 
     private String firstName;
     private String lastName;
+    //public Link<Address> address;
 
 
     public String getFirstName() {

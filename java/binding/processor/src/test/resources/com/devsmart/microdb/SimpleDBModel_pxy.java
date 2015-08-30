@@ -14,7 +14,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     public void writeUBObject(UBObject data) {
         super.writeUBObject(data);
         data.put("type", TYPE);
-        data.put("myString", UBValueFactory.createString(getMyString()));
+        data.put("myString", UBValueFactory.createStringOrNull(getMyString()));
         data.put("myBool", UBValueFactory.createBool(getMyBool()));
         data.put("myByte", UBValueFactory.createInt(getMyByte()));
         data.put("myShort", UBValueFactory.createInt(getMyShort()));
@@ -23,9 +23,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
 
         {
             SimpleDBModel inst = getInternal();
-            if(inst == null) {
-                data.put("internal", UBValueFactory.createNull());
-            } else {
+            if(inst != null) {
                 UBObject obj = new UBObject();
                 inst.writeUBObject(obj);
                 data.put("internal", obj);

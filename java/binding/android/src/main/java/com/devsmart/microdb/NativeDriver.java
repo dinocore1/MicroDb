@@ -80,7 +80,7 @@ public class NativeDriver implements Driver {
     }
 
     @Override
-    public native void addIndex(String indexName, String indexQuery) throws IOException;
+    public native boolean addIndex(String indexName, String indexQuery) throws IOException;
 
     @Override
     public native void deleteIndex(String indexName);
