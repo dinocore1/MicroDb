@@ -54,9 +54,7 @@ public class Test1 extends AndroidTestCase {
 
     @Override
     protected void tearDown() throws Exception {
-
         mDatabase.close();
-
         super.tearDown();
     }
 
@@ -88,6 +86,8 @@ public class Test1 extends AndroidTestCase {
 
                 it.next();
             }
+
+            //it.close();
         }
 
         {
@@ -121,7 +121,40 @@ public class Test1 extends AndroidTestCase {
             assertEquals(2, count);
         }
 
+        person.delete();
+        mDatabase.flush();
 
+
+        {
+            ObjIterator<Person> it = mDatabase.getAll(Person.class);
+            int count = 0;
+            while (it.valid()) {
+                person = it.get();
+                count++;
+
+                it.next();
+            }
+
+            it.close();
+
+            assertEquals(1, count);
+        }
+
+        {
+            ObjIterator<Address> it = mDatabase.getAll(Address.class);
+
+            int count = 0;
+            while (it.valid()) {
+                address = it.get();
+                count++;
+
+                it.next();
+            }
+
+            it.close();
+
+            assertEquals(2, count);
+        }
 
 
     }

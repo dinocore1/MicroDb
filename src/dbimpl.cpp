@@ -177,7 +177,7 @@ namespace microdb {
             return ERROR;
         }
         
-        Transaction tr(mDBDriver.get());
+        //Transaction tr(mDBDriver.get());
         
         mPrimaryIndex->index(value, [&](Value key, Value obj, Value indexEntry) {
             returnKey = key;
@@ -189,7 +189,7 @@ namespace microdb {
             entry.second->index(value, cb);
         }
         
-        tr.success();
+        //tr.success();
         
         return OK;
     }
@@ -203,13 +203,15 @@ namespace microdb {
             
             auto cb = std::bind(deleteDBObj, mDBDriver.get(), _3);
             
-            Transaction tr(mDBDriver.get());
+            //Transaction tr(mDBDriver.get());
             
             for(auto& entry : mIndicies) {
                 entry.second->index(value, cb);
             }
             
             mPrimaryIndex->index(value, cb);
+            
+            //tr.success();
         }
         
         return OK;

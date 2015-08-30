@@ -4,18 +4,22 @@ package com.devsmart.microdb;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBValue;
 import com.devsmart.microdb.ubjson.UBValueFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Queue;
-import java.util.Timer;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,6 +43,8 @@ public class MicroDB {
         }
     });
     private AtomicBoolean mAutoSave = new AtomicBoolean(true);
+    private Set<WeakReference<DBIterator>> mIterators = new HashSet<WeakReference<DBIterator>>();
+    private ReferenceQueue<DBIterator> mItQueue = new ReferenceQueue<DBIterator>();
 
 
     private interface WriteCommand {
@@ -101,6 +107,7 @@ public class MicroDB {
 
         @Override
         public void write() throws IOException {
+            mObject.mDirty = false;
             mDriver.delete(mObject.getId());
         }
     }
@@ -188,6 +195,7 @@ public class MicroDB {
 
     public synchronized void close() throws IOException {
         flush();
+        closeAllIterators();
         mLiveObjects.clear();
         mDriver.close();
     }
@@ -242,6 +250,12 @@ public class MicroDB {
             if(ref != null && (cached = ref.get()) != null){
                 retval = (T)cached;
             } else {
+
+                if(!classType.getSimpleName().endsWith("_pxy")) {
+                    String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
+                    classType = (Class<T>) Class.forName(proxyClassName);
+                }
+
                 UBObject data = mDriver.get(id).asObject();
                 T newObj = classType.newInstance();
                 newObj.init(data, this);
@@ -273,8 +287,38 @@ public class MicroDB {
         }
     }
 
-    public DBIterator queryIndex(String indexName) throws IOException {
-        return mDriver.queryIndex(indexName);
+    private void processItQueue() {
+        Reference<? extends DBIterator> ref;
+        while((ref = mItQueue.poll()) != null) {
+            mIterators.remove(ref);
+            ref.clear();
+        }
+    }
+
+    private synchronized void closeAllIterators() {
+        processItQueue();
+        Iterator<WeakReference<DBIterator>> itit = mIterators.iterator();
+        while(itit.hasNext()) {
+            WeakReference<DBIterator> ref = itit.next();
+            DBIterator it = ref.get();
+            if(it != null) {
+                try {
+                    it.close();
+                } catch (IOException e) {
+                    logger.error("", e);
+                }
+            }
+            itit.remove();
+        }
+    }
+
+    public synchronized DBIterator queryIndex(String indexName) throws IOException {
+        processItQueue();
+
+        DBIterator iterator = mDriver.queryIndex(indexName);
+        mIterators.add(new WeakReference<DBIterator>(iterator, mItQueue));
+
+        return iterator;
     }
 
     public <T extends DBObject> ObjIterator<T> getAll(Class<T> classType) throws IOException {

@@ -7,10 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class NativeIterator implements DBIterator {
 
     private static final Logger logger = LoggerFactory.getLogger(NativeIterator.class);
+    private final StackTraceElement[] mCreateStackTrace;
 
     private long mNativePtr;
 
@@ -20,10 +22,21 @@ public class NativeIterator implements DBIterator {
     private native void destroy();
     private native void seek(byte[] data);
 
+    NativeIterator() {
+        mNativePtr = 0;
+        mCreateStackTrace = Thread.currentThread().getStackTrace();
+    }
+
     @Override
     protected void finalize() throws Throwable {
-        close();
-        super.finalize();
+        try {
+            if (mNativePtr != 0) {
+                logger.warn("Iterator not closed. {}", Arrays.toString(mCreateStackTrace));
+                close();
+            }
+        } finally {
+            super.finalize();
+        }
     }
 
     @Override
