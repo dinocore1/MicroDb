@@ -249,12 +249,28 @@ namespace microdb {
         
         unique_ptr<Index> idx(new Index(indexName));
         idx->setQuery( std::move(query) );
-        mIndicies[idx->getName()] = std::move(idx);
         
+        //run the new index on all the objects in the database
+        auto cb = std::bind(saveDBObj, mDBDriver.get(), _3, _2);
+        unique_ptr<IteratorImpl> it(new IteratorImpl( mDBDriver->CreateIterator(), mPrimaryIndex->getName() ));
+        it->SeekToFirst();
+        while(it->Valid()) {
+            Value obj = it->GetValue();
+            idx->index(obj, cb);
+            it->Next();
+        }
+        
+        
+        mIndicies[idx->getName()] = std::move(idx);
         return OK;
     }
     
     Status DBImpl::DeleteIndex(const std::string& indexName) {
+        
+        //can not delete the primary index
+        if(mPrimaryIndex->getName().compare(indexName) == 0) {
+            return ERROR;
+        }
         
         auto it = mIndicies.find(indexName);
         if(it != mIndicies.end()) {
