@@ -255,8 +255,14 @@ namespace microdb {
     }
     
     Status DBImpl::DeleteIndex(const std::string& indexName) {
-        //TODO: implement
-        return ERROR;
+        
+        auto it = mIndicies.find(indexName);
+        if(it != mIndicies.end()) {
+            it->second->remove(mDBDriver.get());
+            mIndicies.erase(it);
+        }
+        
+        return OK;
     }
 
 }

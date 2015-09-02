@@ -87,6 +87,35 @@ namespace microdb {
 		mQuery->execute(this);
 	}
 	
+	inline bool isValid(Driver::Iterator* it, const std::string& indexName) {
+		if(!it->IsValid()) {
+			return false;
+		} else {
+			MemSlice keySlice;
+			it->GetKey(keySlice);
+			Value indexEntry = MemSliceToValue(keySlice);
+			
+			return indexEntry[0] == 'i' && indexEntry[1] == indexName;
+		} 
+	}
+	
+	void Index::remove(Driver* driver) {
+		Driver::Iterator* it = driver->CreateIterator();
+		
+		Value indexEntry;
+		indexEntry.Add('i');
+		indexEntry.Add(mName);
+		
+		MemOutputStream out;
+        MemSlice keySlice = ValueToMemSlice(indexEntry, out);
+		
+		it->Seek(keySlice);
+		while(isValid(it, mName)) {
+			it->GetKey(keySlice);
+			driver->Delete(keySlice);
+		}
+	}
+	
 	#define KEY_NAME "name"
 	#define KEY_SEQUENCE "sequence"
 	#define KEY_QUERY "query"

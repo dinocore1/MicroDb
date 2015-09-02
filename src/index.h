@@ -30,6 +30,10 @@ namespace microdb {
 		
 		virtual void index(Value&, emitCallback);
 		
+		//removes all index entries from database
+		//effectivly deletes the index
+		virtual void remove(Driver* driver);
+		
 		//Serializable API
 		Value toValue();
 		void fromValue(const Value&);
