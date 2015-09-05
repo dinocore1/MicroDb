@@ -35,6 +35,7 @@ public class MicroDB {
     private int mSchemaVersion;
     private DBCallback mCallback;
     private final HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<UBValue, SoftReference<DBObject>>();
+    private final Set<UBValue> mDeletedObjects = new HashSet<UBValue>();
     private final Queue<WriteCommand> mSaveQueue = new ConcurrentLinkedQueue<WriteCommand>();
     private final ScheduledExecutorService mWriteThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         @Override
@@ -107,8 +108,12 @@ public class MicroDB {
 
         @Override
         public void write() throws IOException {
+            final UBValue id = mObject.getId();
             mObject.mDirty = false;
-            mDriver.delete(mObject.getId());
+            mDriver.delete(id);
+            synchronized (MicroDB.this) {
+                mDeletedObjects.remove(id);
+            }
         }
     }
 
@@ -216,6 +221,12 @@ public class MicroDB {
         sync();
     }
 
+    /**
+     * create a new object of type {@code classType}.
+     * @param classType
+     * @param <T>
+     * @return
+     */
     public synchronized <T extends DBObject> T create(Class<T> classType) {
         try {
             if(!classType.getSimpleName().endsWith("_pxy")) {
@@ -240,7 +251,17 @@ public class MicroDB {
         }
     }
 
+    /**
+     * fetch and load database object with primary key {@code id}.
+     * @param id
+     * @param classType they type of database object with {@code id}
+     * @param <T>
+     * @return
+     */
     public synchronized <T extends DBObject> T get(UBValue id, Class<T> classType) {
+        if(mDeletedObjects.contains(id)) {
+            return null;
+        }
         try {
 
             T retval;
@@ -256,12 +277,19 @@ public class MicroDB {
                     classType = (Class<T>) Class.forName(proxyClassName);
                 }
 
-                UBObject data = mDriver.get(id).asObject();
-                T newObj = classType.newInstance();
-                newObj.init(data, this);
-                retval = newObj;
-                mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                UBValue data = mDriver.get(id);
+                if(data == null) {
+                    return null;
+                } else {
 
+                    if(!data.isObject()) {
+                        throw new RuntimeException("database entry with id: " + id + " is not an object");
+                    }
+                    T newObj = classType.newInstance();
+                    newObj.init(data.asObject(), this);
+                    retval = newObj;
+                    mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                }
             }
 
             return retval;
@@ -270,15 +298,25 @@ public class MicroDB {
         }
     }
 
+    /**
+     * saves/updates {@code obj} to the database. This method is not normally necessary for users to call
+     * because database objects will automatically be saved when the garbage collector collects them if
+     * they are marked dirty.
+     * @param obj the data to be saved
+     */
     public synchronized void save(DBObject obj) {
         mSaveQueue.offer(new SaveObject(obj));
     }
 
     public synchronized void delete(DBObject obj) {
+        mDeletedObjects.add(obj.getId());
         mSaveQueue.offer(new DeleteObject(obj));
         mLiveObjects.remove(obj.getId());
     }
 
+    /**
+     * This method blocks until all queued write operation are completed.
+     */
     public void sync() {
         try {
             processWriteQueue().get();
@@ -287,7 +325,7 @@ public class MicroDB {
         }
     }
 
-    private void processItQueue() {
+    private void processDeadIterators() {
         Reference<? extends DBIterator> ref;
         while((ref = mItQueue.poll()) != null) {
             mIterators.remove(ref);
@@ -296,7 +334,7 @@ public class MicroDB {
     }
 
     private synchronized void closeAllIterators() {
-        processItQueue();
+        processDeadIterators();
         Iterator<WeakReference<DBIterator>> itit = mIterators.iterator();
         while(itit.hasNext()) {
             WeakReference<DBIterator> ref = itit.next();
@@ -313,7 +351,7 @@ public class MicroDB {
     }
 
     public synchronized DBIterator queryIndex(String indexName) throws IOException {
-        processItQueue();
+        processDeadIterators();
 
         DBIterator iterator = mDriver.queryIndex(indexName);
         mIterators.add(new WeakReference<DBIterator>(iterator, mItQueue));
