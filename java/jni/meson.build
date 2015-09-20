@@ -3,7 +3,7 @@
 ld_flags = []
 
 if meson.is_cross_build()
-  if host.name() == 'android'
+  if host_machine.system() == 'android'
     jni_inc = []
     ld_flags = '-llog'
   endif

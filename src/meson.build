@@ -23,15 +23,15 @@ dep = []
 cpp_args = [ ]
 	
 if meson.is_cross_build()
-  if host.name() == 'mingw'
+  if host_machine.system() == 'mingw'
     cpp_args = [ cpp_args, '-D_WIN32_WINNT=0x0600' ]
 	sources = [port_src, 'uuid_generic.cpp']
-  elif host.name() == 'android'
+  elif host_machine.system() == 'android'
     cpp_args = [ cpp_args, '-DOS_ANDROID' ]
 	sources = [port_src, 'uuid_generic.cpp']
   endif
 else
-  if host.name() == 'darwin'
+  if host_machine.system() == 'darwin'
     dep = dependency('appleframeworks', modules : 'foundation')
     sources = [port_src, 'uuid_mac.cpp']
   else

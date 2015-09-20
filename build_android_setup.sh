@@ -26,7 +26,11 @@ fi
 $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=arm --toolchain=arm-linux-androideabi-4.9 --platform=android-19 --install-dir="$TOOLCHAIN_PREFIX/arm"
 
 cat << EOF > android-arm_cross.txt
-name = 'android'
+[host_machine]
+system = 'android'
+cpu = 'arm'
+
+[binaries]
 c = '$TOOLCHAIN_PREFIX/arm/bin/arm-linux-androideabi-gcc'
 cpp = '$TOOLCHAIN_PREFIX/arm/bin/arm-linux-androideabi-g++'
 ar = '$TOOLCHAIN_PREFIX/arm/bin/arm-linux-androideabi-ar'
@@ -34,6 +38,9 @@ ld = '$TOOLCHAIN_PREFIX/arm/bin/arm-linux-androideabi-ld'
 strip = '$TOOLCHAIN_PREFIX/arm/bin/arm-linux-androideabi-strip'
 
 root = '$TOOLCHAIN_PREFIX/arm'
+
+[properties]
+
 EOF
 
 if [ -d "build-android-arm" ]; then
@@ -56,7 +63,11 @@ $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh --arch=x86 --toolchai
 
 
 cat << EOF > android-x86_cross.txt
-name = 'android'
+[host_machine]
+system = 'android'
+cpu = 'x86'
+
+[binaries]
 c = '$TOOLCHAIN_PREFIX/x86/bin/i686-linux-android-gcc'
 cpp = '$TOOLCHAIN_PREFIX/x86/bin/i686-linux-android-g++'
 ar = '$TOOLCHAIN_PREFIX/x86/bin/i686-linux-android-ar'
@@ -64,6 +75,9 @@ ld = '$TOOLCHAIN_PREFIX/x86/bin/i686-linux-android-ld'
 strip = '$TOOLCHAIN_PREFIX/x86/bin/i686-linux-android-strip'
 
 root = '$TOOLCHAIN_PREFIX/x86'
+
+[properties]
+
 EOF
 
 if [ -d "build-android-x86" ]; then
