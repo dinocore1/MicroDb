@@ -11,7 +11,8 @@ if meson.is_cross_build()
   elif host_machine.system() == 'android'
     cpp_args = [ '-DOS_ANDROID' ]
   endif
-endif
+
+else
 
 main_incdir = [ include_directories('../src'), incdir, gtestinc, leveldb_inc]
 
@@ -63,3 +64,5 @@ test('db', executable('db', ['db.cpp', gtestmain],
     link_with : [ gtest_lib ],
     link_args : '-lpthread'
     ))
+
+endif
