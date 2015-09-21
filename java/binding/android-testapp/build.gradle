@@ -43,7 +43,7 @@ android {
 
 dependencies {
     compile 'com.google.guava:guava:18.0'
-    compile project(':android')
+    compile project(':microdb-android')
     apt files('../processor/build/libs/processor.jar')
     androidTestCompile 'com.android.support.test:runner:0.3'
 }

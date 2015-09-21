@@ -225,7 +225,7 @@ public class MicroDB {
      * create a new object of type {@code classType}.
      * @param classType
      * @param <T>
-     * @return
+     * @return newly created object
      */
     public synchronized <T extends DBObject> T create(Class<T> classType) {
         try {
@@ -256,7 +256,7 @@ public class MicroDB {
      * @param id
      * @param classType they type of database object with {@code id}
      * @param <T>
-     * @return
+     * @return dbobject
      */
     public synchronized <T extends DBObject> T get(UBValue id, Class<T> classType) {
         if(mDeletedObjects.contains(id)) {

@@ -1,0 +1,87 @@
+
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+sourceCompatibility = 1.6
+
+dependencies {
+  compile 'org.slf4j:slf4j-api:1.7.7'
+  compile 'org.slf4j:slf4j-simple:1.7.7'
+  compile 'com.squareup:javapoet:1.2.0'
+  compile project(':microdb-runtime')
+  testCompile 'junit:junit:4.11'
+  testCompile files("${System.properties['java.home']}/../lib/tools.jar") // This is needed otherwise compile-testing won't be able to find it
+  testCompile 'com.google.testing.compile:compile-testing:0.6'
+
+}
+
+jar {
+  from {
+    configurations.compile.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+    configurations.runtime.collect {
+      it.isDirectory() ? it : zipTree(it)
+    }
+  }
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from 'build/docs/javadoc'
+}
+
+task sourceJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives javadocJar
+  archives sourceJar
+}
+
+signing {
+  sign configurations.archives
+}
+
+uploadArchives {
+  repositories.mavenDeployer {
+
+    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+        authentication(userName: sonatypeUsername, password: sonatypePassword)
+    }
+
+    pom.project {
+      name 'microdb-processor'
+      description 'Annotation processor for MicroDb'
+      url 'http://github.com/dinocore1/MicroDb'
+
+      scm {
+        url 'scm:git@github.com:dinocore1/MicroDb.git'
+        connection 'scm:git@github.com:dinocore1/MicroDb.git'
+        developerConnection 'scm:git@github.com:dinocore1/MicroDb.git'
+      }
+
+      licenses {
+        license {
+          name 'MIT License'
+          url 'https://github.com/dinocore1/MicroDb/blob/master/LICENSE.txt'
+          distribution 'repo'
+        }
+      }
+
+      developers {
+        developer {
+          id 'psoucy'
+          name 'Paul Soucy'
+        }
+      }
+    }
+
+  }
+}

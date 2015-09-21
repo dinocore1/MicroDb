@@ -1,4 +1,4 @@
-include ':runtime'
-include ':processor'
-include ':android'
+include ':microdb-runtime'
+include ':microdb-processor'
+include ':microdb-android'
 include ':android-testapp'

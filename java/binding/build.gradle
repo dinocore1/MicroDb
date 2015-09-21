@@ -1,4 +1,9 @@
 allprojects {
+
+  group = 'com.dev-smart'
+  version = '0.6.0'
+  description = 'A embedded NoSQL Database'
+
   repositories {
     jcenter()
   }
