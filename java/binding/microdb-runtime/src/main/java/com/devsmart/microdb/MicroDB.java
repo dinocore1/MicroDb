@@ -363,6 +363,25 @@ public class MicroDB {
         return iterator;
     }
 
+    public synchronized <T extends DBObject> T getOne(Class<T> classType, String indexName, String value) throws IOException {
+        return getOne(classType, indexName, UBValueFactory.createString(value));
+    }
+
+    public synchronized <T extends DBObject> T getOne(Class<T> classType, String indexName, UBValue key) throws IOException {
+        DBIterator it = queryIndex(indexName);
+        try {
+            it.seekTo(key);
+            if (it.valid() && it.getKey().equals(key)) {
+                UBValue id = it.getPrimaryKey();
+                return get(id, classType);
+            } else {
+                return null;
+            }
+        } finally {
+            it.close();
+        }
+    }
+
     public <T extends DBObject> ObjIterator<T> getAll(Class<T> classType) throws IOException {
         return new ObjIterator<T>(queryIndex("type"), this, classType);
     }
