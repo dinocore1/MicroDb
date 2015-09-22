@@ -350,6 +350,10 @@ public class MicroDB {
         }
     }
 
+    public boolean addIndex(String indexName, String indexScript) throws IOException {
+        return mDriver.addIndex(indexName, indexScript);
+    }
+
     public synchronized DBIterator queryIndex(String indexName) throws IOException {
         processDeadIterators();
 
