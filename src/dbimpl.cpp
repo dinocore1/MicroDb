@@ -231,6 +231,10 @@ namespace microdb {
     
     Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
         
+        if(mIndicies.find(index) == mIndicies.end()) {
+            return NULL;
+        }
+        
         IteratorImpl* retval = new IteratorImpl( mDBDriver->CreateIterator(), index );
         retval->mQuery.compile(query.c_str());
         

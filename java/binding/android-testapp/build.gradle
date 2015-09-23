@@ -44,6 +44,6 @@ android {
 dependencies {
     compile 'com.google.guava:guava:18.0'
     compile project(':microdb-android')
-    apt files('../processor/build/libs/processor.jar')
+    apt files('../microdb-processor/build/libs/microdb-processor-0.1.0-SNAPSHOT.jar')
     androidTestCompile 'com.android.support.test:runner:0.3'
 }

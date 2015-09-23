@@ -358,7 +358,9 @@ public class MicroDB {
         processDeadIterators();
 
         DBIterator iterator = mDriver.queryIndex(indexName);
-        mIterators.add(new WeakReference<DBIterator>(iterator, mItQueue));
+        if(iterator != null) {
+            mIterators.add(new WeakReference<DBIterator>(iterator, mItQueue));
+        }
 
         return iterator;
     }

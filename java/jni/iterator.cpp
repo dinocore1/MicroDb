@@ -34,8 +34,10 @@ static jbyteArray value(JNIEnv* env, jobject thiz) {
 
 static void destroy(JNIEnv* env, jobject thiz) {
     Iterator* it = (Iterator*)env->GetLongField(thiz, gNativeIteratorClass.mNativePtr);
-    delete it;
-    env->SetLongField(thiz, gNativeIteratorClass.mNativePtr, 0);
+    if(it != NULL) {
+        delete it;
+        env->SetLongField(thiz, gNativeIteratorClass.mNativePtr, 0);
+    }
 }
 
 static void seek(JNIEnv* env, jobject thiz, jbyteArray key) {

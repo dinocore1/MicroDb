@@ -24,7 +24,7 @@ public class NativeDriver implements Driver {
     private native byte[] get(byte[] key);
     private native byte[] insert(byte[] data);
     private native void delete(byte[] key);
-    private native void queryIndex(String indexName, NativeIterator it);
+    private native boolean queryIndex(String indexName, NativeIterator it);
 
     private NativeDriver() {}
 
@@ -75,8 +75,11 @@ public class NativeDriver implements Driver {
     @Override
     public DBIterator queryIndex(String indexName) {
         NativeIterator retval = new NativeIterator();
-        queryIndex(indexName, retval);
-        return retval;
+        if(queryIndex(indexName, retval)){
+            return retval;
+        } else {
+            return null;
+        }
     }
 
     @Override

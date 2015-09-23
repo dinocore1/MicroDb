@@ -51,7 +51,8 @@ meson build-android-arm --cross-file android-arm_cross.txt -Dbuild_jni=true
 
 pushd build-android-arm
 ninja
-cp java/jni/libmicrodb-jni.so ../java/binding/android/src/main/jniLibs/armeabi/
+mkdir -p ../java/binding/microdb-android/src/main/jniLibs/armeabi/
+cp java/jni/libmicrodb-jni.so ../java/binding/microdb-android/src/main/jniLibs/armeabi/
 popd
 
 ####### x86 #######
@@ -88,5 +89,6 @@ meson build-android-x86 --cross-file android-x86_cross.txt -Dbuild_jni=true
 
 pushd build-android-x86
 ninja
-cp java/jni/libmicrodb-jni.so ../java/binding/android/src/main/jniLibs/x86/
+mkdir -p ../java/binding/microdb-android/src/main/jniLibs/x86/
+cp java/jni/libmicrodb-jni.so ../java/binding/microdb-android/src/main/jniLibs/x86/
 popd

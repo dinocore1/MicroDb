@@ -70,7 +70,7 @@ static void deleteobj(JNIEnv* env, jobject thiz, jbyteArray key) {
     database->Delete(keyValue);
 }
 
-static void queryIndex(JNIEnv* env, jobject thiz, jstring indexName, jobject it) {
+static jboolean queryIndex(JNIEnv* env, jobject thiz, jstring indexName, jobject it) {
     DB* database = (DB*)env->GetLongField(thiz, gNativeDriverClass.mNativePtr);
     
     const char* indexNameStr = env->GetStringUTFChars(indexName, NULL);
@@ -79,6 +79,8 @@ static void queryIndex(JNIEnv* env, jobject thiz, jstring indexName, jobject it)
     env->SetLongField(it, gNativeIteratorClass.mNativePtr, (jlong)retit);
     
     env->ReleaseStringUTFChars(indexName, indexNameStr);
+    
+    return retit != NULL;
 }
 
 static jboolean addIndex(JNIEnv* env, jobject thiz, jstring indexName, jstring indexQuery) {
@@ -109,7 +111,7 @@ JNIEXPORT JNINativeMethod gDriverMethods[] = {
     { "get", "([B)[B", (void*)get },
     { "insert", "([B)[B", (void*)insert },
     { "delete", "([B)V", (void*)deleteobj },
-    { "queryIndex", "(Ljava/lang/String;Lcom/devsmart/microdb/NativeIterator;)V", (void*)queryIndex },
+    { "queryIndex", "(Ljava/lang/String;Lcom/devsmart/microdb/NativeIterator;)Z", (void*)queryIndex },
     { "addIndex", "(Ljava/lang/String;Ljava/lang/String;)Z", (void*)addIndex },
     { "deleteIndex", "(Ljava/lang/String;)V", (void*)deleteIndex }
 };
