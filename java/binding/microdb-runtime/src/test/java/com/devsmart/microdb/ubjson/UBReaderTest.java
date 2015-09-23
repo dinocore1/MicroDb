@@ -109,6 +109,20 @@ public class UBReaderTest {
     }
 
     @Test
+    public void reatFloat64() throws Exception {
+        byte[] data;
+        UBReader reader;
+        UBValue value;
+
+        data = new byte[] {'D', (byte)0x40, (byte)0x09, (byte)0x1E, (byte)0xB8,
+                (byte)0x51, (byte)0xEB, (byte)0x85, (byte)0x1F };
+        reader = new UBReader(new ByteArrayInputStream(data));
+        value = reader.read();
+        assertTrue(value.isNumber());
+        assertEquals(3.14, value.asFloat64(), 0.000001);
+    }
+
+    @Test
     public void readArray() throws Exception {
         byte[] data;
         UBReader reader;

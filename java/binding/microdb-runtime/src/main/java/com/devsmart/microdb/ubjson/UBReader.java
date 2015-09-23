@@ -92,10 +92,10 @@ public class UBReader implements Closeable {
     }
 
     private double readFloat64() throws IOException {
-        long intvalue = (readControl() & 0xFF) << 56 | (readControl() & 0xFF) << 48
-                | (readControl() & 0xFF) << 40 | (readControl() & 0xFF) << 32
-                | (readControl() & 0xFF) << 24 | (readControl() & 0xFF) << 16
-                | (readControl() & 0xFF) << 8 | (readControl() & 0xFF);
+        long intvalue = ((long)readControl() & 0xFF) << 56 | ((long)readControl() & 0xFF) << 48
+                | ((long)readControl() & 0xFF) << 40 | ((long)readControl() & 0xFF) << 32
+                | ((long)readControl() & 0xFF) << 24 | ((long)readControl() & 0xFF) << 16
+                | ((long)readControl() & 0xFF) << 8 | ((long)readControl() & 0xFF);
 
 
         double value = Double.longBitsToDouble(intvalue);
