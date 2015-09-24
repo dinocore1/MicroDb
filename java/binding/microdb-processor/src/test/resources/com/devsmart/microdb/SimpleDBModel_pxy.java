@@ -38,34 +38,34 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     public void init(UBObject obj, MicroDB db) {
         super.init(obj, db);
         if(obj.containsKey("myString")) {
-            setMyString(obj.get("myString").asString());
+            super.setMyString(obj.get("myString").asString());
         }
         if(obj.containsKey("myBool")) {
-            setMyBool(obj.get("myBool").asBool());
+            super.setMyBool(obj.get("myBool").asBool());
         }
         if(obj.containsKey("myByte")) {
-            setMyByte(obj.get("myByte").asByte());
+            super.setMyByte(obj.get("myByte").asByte());
         }
         if(obj.containsKey("myShort")) {
-            setMyShort(obj.get("myShort").asShort());
+            super.setMyShort(obj.get("myShort").asShort());
         }
         if(obj.containsKey("myInt")) {
-            setMyInt(obj.get("myInt").asInt());
+            super.setMyInt(obj.get("myInt").asInt());
         }
         if(obj.containsKey("myLong")) {
-            setMyLong(obj.get("myLong").asLong());
+            super.setMyLong(obj.get("myLong").asLong());
         }
         if(obj.containsKey("internal")) {
             SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
             tmp.init(obj.get("internal").asObject(), db);
-            setInternal(tmp);
+            super.setInternal(tmp);
         }
         link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
         if(obj.containsKey("myFloatArray")) {
-            setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
+            super.setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
         }
         if(obj.containsKey("myDoubleArray")) {
-            setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
+            super.setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
         }
     }
 
