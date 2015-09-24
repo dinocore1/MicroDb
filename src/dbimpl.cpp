@@ -139,7 +139,10 @@ namespace microdb {
         if(metaObj.IsNull()) {
             mInstanceId = UUID::createRandom();
             metaObj.Set(KEY_INSTANCEID, mInstanceId.getString());
-            metaObj.Set(KEY_INDICIES, Value());
+            
+            Value emptyIndicies;
+            emptyIndicies.SetObject();
+            metaObj.Set(KEY_INDICIES, emptyIndicies);
             
             saveDBObj(mDBDriver.get(), META_KEY, metaObj);
         } else {
@@ -147,12 +150,11 @@ namespace microdb {
             
             //load all secondary indicies
             Value indicies = metaObj[KEY_INDICIES];
-            const int numIndicies = indicies.Size();
-            for(int i=0;i<numIndicies;i++){
-                Value index = indicies[i];
+            for(std::string& key : indicies.GetKeys()){
+                Value index = indicies.Get(key);
                 unique_ptr<Index> idxPtr(new Index());
                 idxPtr->fromValue(index);
-                mIndicies[idxPtr->getName()] = std::move(idxPtr);
+                mIndicies[key] = std::move(idxPtr);
             }
         }
         
@@ -231,7 +233,7 @@ namespace microdb {
     
     Iterator* DBImpl::QueryIndex(const std::string& index, const std::string& query) {
         
-        if(mIndicies.find(index) == mIndicies.end()) {
+        if(mIndicies.find(index) == mIndicies.end() && index.compare("primary") != 0) {
             return NULL;
         }
         
@@ -264,8 +266,14 @@ namespace microdb {
             it->Next();
         }
         
+        Value metaObj;
+        loadDBObj(mDBDriver.get(), META_KEY, metaObj);
+        Value indicies = metaObj[KEY_INDICIES];
+        indicies.Set(indexName, idx->toValue());
+        metaObj[KEY_INDICIES] = indicies;
+        saveDBObj(mDBDriver.get(), META_KEY, metaObj);
         
-        mIndicies[idx->getName()] = std::move(idx);
+        mIndicies[indexName] = std::move(idx);
         return OK;
     }
     

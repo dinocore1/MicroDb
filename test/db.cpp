@@ -15,6 +15,54 @@ void deleteIfExists(const std::string& path) {
 	system(buf.str().c_str());
 }
 
+
+TEST(db, persistant_index) {
+	deleteIfExists("test.db");
+	{
+		DB* db = nullptr;
+		ASSERT_EQ(OK, DB::Open("test.db", &db));
+		unique_ptr<DB> dbPtr(db);
+		
+		dbPtr->AddIndex("age", "if(obj.age != null) { emit(obj.age); }");
+		
+		Value v1;
+		Value key;
+		v1.Set("age", 5);
+		
+		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
+		
+		v1.Set("age", 3);
+		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
+		
+	}
+
+	{
+		DB* db = nullptr;
+		ASSERT_EQ(OK, DB::Open("test.db", &db));
+		unique_ptr<DB> dbPtr(db);
+		
+		Iterator* itptr = dbPtr->QueryIndex("age", "");
+		ASSERT_TRUE(itptr != NULL);
+		unique_ptr<Iterator> it(itptr);
+		
+		ASSERT_TRUE(it->Valid());
+		Value key;
+		key = it->GetKey();
+		ASSERT_TRUE(key.IsInteger());
+		ASSERT_EQ(3, key.asInt());
+		
+		it->Next();
+		
+		ASSERT_TRUE(it->Valid());
+		key = it->GetKey();
+		ASSERT_TRUE(key.IsInteger());
+		ASSERT_EQ(5, key.asInt());
+	}
+
+	
+}
+
+
 TEST(db, insert) {
 	
 	deleteIfExists("test.db");
@@ -58,7 +106,9 @@ TEST(db, insert) {
 		ASSERT_EQ(OK, dbPtr->Insert(key, v1));
 	}
 	
-	unique_ptr<Iterator> it( dbPtr->QueryIndex("primary", ""));
+	Iterator* itptr = dbPtr->QueryIndex("primary", "");
+	ASSERT_TRUE(itptr != NULL);
+	unique_ptr<Iterator> it(itptr);
 	
 	it->SeekTo(firstKey);
 	ASSERT_TRUE(it->Valid());

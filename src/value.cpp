@@ -397,6 +397,8 @@ namespace microdb {
   }
 
   std::string Value::asString() const {
+    if(IsNull())
+        return "null";
     if(IsString())
         return mValue.String;
     if(IsBool())
@@ -411,6 +413,32 @@ namespace microdb {
         return to_string(mValue.UnsignedInt);
     if(IsFloat())
         return to_string(mValue.Float);
+    if(IsArray()) {
+      stringstream buf;
+      buf << '[';
+      for(unsigned int i=0;i<Size();i++) {
+        buf << this[i].asString();
+        if(i + 1 < Size()) {
+          buf << ", ";
+        }
+      }
+      buf << ']';
+      return buf.str();
+    }
+    if(IsObject()) {
+      stringstream buf;
+      buf << '{';
+      std::vector<std::string> keys = GetKeys();
+      for(unsigned int i=0;i<keys.size();i++) {
+        auto key = keys[i];
+        buf << '"' << key << "\": " << this->Get(key).asString();
+        if(i + 1 < keys.size()) {
+          buf << ", ";
+        }
+      }
+      buf << '}';
+      return buf.str();
+    }
     return "";
   }
 

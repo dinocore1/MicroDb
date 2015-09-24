@@ -45,7 +45,7 @@ namespace microdb {
 	}
 	
 	Index::Index(const std::string& name)
-	: mName(name) { }
+	: mName(name), mSequence(0) { }
 	
 	const std::string Index::getName() const {
 		return mName;
