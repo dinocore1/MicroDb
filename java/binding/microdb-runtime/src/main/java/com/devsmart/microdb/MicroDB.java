@@ -371,6 +371,10 @@ public class MicroDB {
 
     public synchronized <T extends DBObject> T getOne(Class<T> classType, String indexName, UBValue key) throws IOException {
         DBIterator it = queryIndex(indexName);
+        if(it == null) {
+            logger.warn("no index named: '{}'", indexName);
+            return null;
+        }
         try {
             it.seekTo(key);
             if (it.valid() && it.getKey().equals(key)) {
