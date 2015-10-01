@@ -317,7 +317,7 @@ public class MicroDB {
     /**
      * This method blocks until all queued write operation are completed.
      */
-    public void sync() {
+    protected void sync() {
         try {
             processWriteQueue().get();
         } catch (Exception e) {

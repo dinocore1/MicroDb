@@ -98,7 +98,7 @@ public class IndexTest extends AndroidTestCase {
         person.setAge(30);
         person.save();
 
-        mDatabase.sync();
+        mDatabase.flush();
 
         DBIterator it = mDatabase.queryIndex(IDX_AGE);
         assertTrue(it.valid());
