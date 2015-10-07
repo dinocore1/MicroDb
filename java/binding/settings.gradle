@@ -1,4 +1,5 @@
 include ':microdb-runtime'
 include ':microdb-processor'
 include ':microdb-android'
+include ':microdb-desktop'
 include ':android-testapp'
