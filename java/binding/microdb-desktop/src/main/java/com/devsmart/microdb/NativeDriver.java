@@ -67,12 +67,16 @@ public class NativeDriver implements Driver {
         String libpathStr = System.getProperty("java.library.path");
         if(!libpathStr.isEmpty()) {
             libpathStr = libpathStr + ":" + libdir.getAbsolutePath();
-            System.setProperty("java.library.path", libpathStr);
         }
+
+        logger.info("setting java.library.path to {}", libpathStr);
+        System.setProperty("java.library.path", libpathStr);
 
         File lib = new File(libdir, filename);
         lib.deleteOnExit();
         IOUtils.pump(resourceStream, new FileOutputStream(lib));
+
+        logger.info("loading lib: {}", lib.getAbsolutePath());
 
         int i = filename.lastIndexOf('.');
         String libName = i > 0 ? filename.substring(0, i) : filename;
