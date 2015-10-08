@@ -81,7 +81,7 @@ jint iterator_OnLoad(JNIEnv* env) {
     const char* className = "com/devsmart/microdb/NativeIterator";
     jclass clazz = env->FindClass(className);
     if(clazz == NULL) {
-        ALOGE("Can not find %s", className);
+        LOGE("Can not find %s", className);
         return -1;
     }
     
@@ -89,7 +89,7 @@ jint iterator_OnLoad(JNIEnv* env) {
     gNativeIteratorClass.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
     
     if(env->RegisterNatives(clazz, gIteratorMethods, NELEM(gIteratorMethods)) < 0) {
-        ALOGE("RegisterNatives failed for %s", className);
+        LOGE("RegisterNatives failed for %s", className);
         return -1;
     }
 

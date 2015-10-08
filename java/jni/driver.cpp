@@ -120,7 +120,7 @@ jint driver_OnLoad(JNIEnv* env) {
     const char* className = "com/devsmart/microdb/NativeDriver";
     jclass clazz = env->FindClass(className);
     if(clazz == NULL) {
-        ALOGE("Can not find %s", className);
+        LOGE("Can not find %s", className);
         return -1;
     }
 
@@ -128,7 +128,7 @@ jint driver_OnLoad(JNIEnv* env) {
     gNativeDriverClass.mNativePtr = env->GetFieldID(clazz, "mNativePtr", "J");
 
     if(env->RegisterNatives(clazz, gDriverMethods, NELEM(gDriverMethods)) < 0) {
-        ALOGE("RegisterNatives failed for %s", className);
+        LOGE("RegisterNatives failed for %s", className);
         return -1;
     }
 

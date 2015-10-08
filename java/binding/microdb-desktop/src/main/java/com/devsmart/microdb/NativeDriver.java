@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class NativeDriver implements Driver {
 
@@ -29,19 +30,63 @@ public class NativeDriver implements Driver {
         return OS_NAME.contains("Linux") || OS_NAME.contains("LINUX");
     }
 
-    private static void loadNativeLibFromResources(String resourcePath) throws IOException {
-        File tmp = File.createTempFile("lib", null);
-        tmp.deleteOnExit();
-        IOUtils.pump(NativeDriver.class.getResourceAsStream(resourcePath), new FileOutputStream(tmp));
-        System.loadLibrary(tmp.getAbsolutePath());
+
+    private static void loadNativeLinuxLibFromResources(String resourcePath) throws IOException {
+        InputStream resourceStream = NativeDriver.class.getResourceAsStream(resourcePath);
+
+        String[] parts = resourcePath.split("/");
+        String filename = parts.length > 1 ? parts[parts.length-1] : parts[0];
+
+        final File libdir = new File("").getCanonicalFile();
+
+        String libpathStr = System.getProperty("java.library.path");
+        if(!libpathStr.isEmpty()) {
+            libpathStr = libpathStr + ":" + libdir.getAbsolutePath();
+            System.setProperty("java.library.path", libpathStr);
+        }
+
+        File lib = new File(libdir, "lib" + filename);
+        lib.deleteOnExit();
+        IOUtils.pump(resourceStream, new FileOutputStream(lib));
+
+        int i = filename.lastIndexOf('.');
+        String libName = i > 0 ? filename.substring(0, i) : filename;
+
+        System.loadLibrary(libName);
+
+    }
+
+    private static void loadNativeWindowsLibFromResources(String resourcePath) throws IOException {
+        InputStream resourceStream = NativeDriver.class.getResourceAsStream(resourcePath);
+
+        String[] parts = resourcePath.split("/");
+        String filename = parts.length > 1 ? parts[parts.length-1] : parts[0];
+
+        final File libdir = new File("").getCanonicalFile();
+
+        String libpathStr = System.getProperty("java.library.path");
+        if(!libpathStr.isEmpty()) {
+            libpathStr = libpathStr + ":" + libdir.getAbsolutePath();
+            System.setProperty("java.library.path", libpathStr);
+        }
+
+        File lib = new File(libdir, filename);
+        lib.deleteOnExit();
+        IOUtils.pump(resourceStream, new FileOutputStream(lib));
+
+        int i = filename.lastIndexOf('.');
+        String libName = i > 0 ? filename.substring(0, i) : filename;
+
+        System.loadLibrary(libName);
+
     }
 
     static {
         try {
             if (isWindows()) {
-                loadNativeLibFromResources("/microdb-jni-windows.dll");
+                loadNativeWindowsLibFromResources("/microdb-jni-win.dll");
             } else {
-                loadNativeLibFromResources("/microdb-jni-linux.so");
+                loadNativeLinuxLibFromResources("/microdb-jni-linux.so");
             }
         } catch (Exception e) {
             logger.error("", e);

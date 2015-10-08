@@ -164,7 +164,6 @@ public class MicroDB {
         if(storedValue == null) {
             UBObject metaObj = new UBObject();
             metaObj.put("id", key);
-            mCallback.onUpgrade(this, -1, mSchemaVersion);
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mSaveQueue.offer(new SaveDBData(metaObj));
             mDriver.addIndex("type", "if(obj.type != null) { emit(obj.type) }");
