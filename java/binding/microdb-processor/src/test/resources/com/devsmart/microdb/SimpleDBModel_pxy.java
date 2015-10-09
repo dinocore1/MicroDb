@@ -1,5 +1,6 @@
 package com.devsmart.microdb;
 
+import com.devsmart.microdb.ubjson.UBArray;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBString;
 import com.devsmart.microdb.ubjson.UBValueFactory;
@@ -32,6 +33,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         data.put("link", link.getId());
         data.put("myFloatArray", UBValueFactory.createArray(getMyFloatArray()));
         data.put("myDoubleArray", UBValueFactory.createArray(getMyDoubleArray()));
+        data.put("addresses", Utils.toUBArray(getAddresses()));
     }
 
     @Override
@@ -66,6 +68,17 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         if(obj.containsKey("myDoubleArray")) {
             super.setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
+        }
+        if(obj.containsKey("addresses")) {
+            UBArray input = obj.get("addresses").asArray();
+            final int size = input.size();
+            SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
+            for(int i=0;i<size;i++) {
+                SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
+                tmp.init(input.get(i).asObject(), db);
+                output[i] = tmp;
+            }
+            super.setAddresses(output);
         }
     }
 
@@ -121,6 +134,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void setMyDoubleArray(double[] value) {
         super.setMyDoubleArray(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setAddresses(SimpleDBModel[] value) {
+        super.setAddresses(value);
         mDirty = true;
     }
 }

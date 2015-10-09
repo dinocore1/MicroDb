@@ -99,5 +99,13 @@ public class SimpleDBModel extends DBObject {
         this.myDoubleArray = myDoubleArray;
     }
 
+    private SimpleDBModel[] addresses;
 
+    public SimpleDBModel[] getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(SimpleDBModel[] addresses) {
+        this.addresses = addresses;
+    }
 }

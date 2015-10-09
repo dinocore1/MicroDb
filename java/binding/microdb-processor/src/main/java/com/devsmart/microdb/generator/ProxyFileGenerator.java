@@ -4,6 +4,8 @@ package com.devsmart.microdb.generator;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.MicroDB;
+import com.devsmart.microdb.Utils;
+import com.devsmart.microdb.ubjson.UBArray;
 import com.devsmart.microdb.ubjson.UBObject;
 import com.devsmart.microdb.ubjson.UBString;
 import com.devsmart.microdb.ubjson.UBValue;
@@ -12,6 +14,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -509,6 +512,60 @@ public class ProxyFileGenerator {
         }
     }
 
+    private class EmbeddedDBObjectArrayField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public EmbeddedDBObjectArrayField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+
+            builder.addStatement("data.put($S, $T.toUBArray($L()))",
+                    mField, Utils.class, createGetterName(mField));
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            TypeMirror fieldType = ((ArrayType) mField.asType()).getComponentType();
+            Element typeElement = mEnv.getTypeUtils().asElement(fieldType);
+            String simpleName = typeElement.getSimpleName().toString();
+            ClassName proxyClassName = ClassName.get(MICRODB_PACKAGE, simpleName+"_pxy");
+            ArrayTypeName proxyArrayClassName = ArrayTypeName.of(proxyClassName);
+
+
+            builder.addCode(CodeBlock.builder()
+                    .beginControlFlow("if(obj.containsKey($S))", mField)
+                    .addStatement("$T input = obj.get($S).asArray()", UBArray.class, mField)
+                    .addStatement("final int size = input.size()")
+                    .addStatement("$T output = new $T[size]", proxyArrayClassName, proxyClassName)
+                    .beginControlFlow("for(int i=0;i<size;i++)")
+                    .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
+                    .addStatement("tmp.init(input.get(i).asObject(), db)")
+                    .addStatement("output[i] = tmp")
+                    .endControlFlow()
+                    .addStatement("super.$L(output)", createSetterName(mField))
+                    .endControlFlow()
+                    .build());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+        }
+    }
+
 
     private final ProcessingEnvironment mEnv;
     private final TypeElement mClassElement;
@@ -612,6 +669,11 @@ public class ProxyFileGenerator {
                 mEnv.getTypeUtils().getArrayType(mEnv.getTypeUtils().getPrimitiveType(TypeKind.DOUBLE)));
     }
 
+    private boolean isEmbeddedDBObjectArrayType(VariableElement field) {
+        return mEnv.getTypeUtils().isSubtype(field.asType(),
+                mEnv.getTypeUtils().getArrayType(toTypeMirror(DBObject.class)));
+    }
+
     public void generate() {
         final String proxyClassName = String.format("%s_pxy", mSimpleProxyClassName);
         final String fqClassName = String.format("%s.%s", MICRODB_PACKAGE, proxyClassName);
@@ -671,6 +733,8 @@ public class ProxyFileGenerator {
                                     fields.add(new FloatArrayDBOBjectField(field));
                                 } else if(isDoubleArrayType(field)){
                                     fields.add(new DoubleArrayDBOBjectField(field));
+                                } else if(isEmbeddedDBObjectArrayType(field)){
+                                    fields.add(new EmbeddedDBObjectArrayField(field));
                                 } else {
                                     error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field));
                                 }
