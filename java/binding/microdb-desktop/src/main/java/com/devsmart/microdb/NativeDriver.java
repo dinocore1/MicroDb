@@ -51,10 +51,10 @@ public class NativeDriver implements Driver {
         lib.deleteOnExit();
         IOUtils.pump(resourceStream, new FileOutputStream(lib));
 
-        logger.info("loading lib: {}", lib.getAbsolutePath());
-
         int i = filename.lastIndexOf('.');
         String libName = i > 0 ? filename.substring(0, i) : filename;
+
+        logger.info("loading lib: {}", libName);
 
         System.loadLibrary(libName);
 
