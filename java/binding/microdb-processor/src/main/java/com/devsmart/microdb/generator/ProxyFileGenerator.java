@@ -38,6 +38,44 @@ public class ProxyFileGenerator {
 
     }
 
+    private class GenericUBValueField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public GenericUBValueField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("data.put($S, $T.createValueOrNull($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
+            builder.addStatement("super.$L(obj.get($S))",
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+        }
+    }
+
     private class StringDBOBjectField implements FieldMethodCodeGen {
 
         private final VariableElement mField;
@@ -674,6 +712,10 @@ public class ProxyFileGenerator {
                 mEnv.getTypeUtils().getArrayType(toTypeMirror(DBObject.class)));
     }
 
+    private boolean isUBValueType(VariableElement field) {
+        return mEnv.getTypeUtils().isSubtype(field.asType(), toTypeMirror(UBValue.class));
+    }
+
     public void generate() {
         final String proxyClassName = String.format("%s_pxy", mSimpleProxyClassName);
         final String fqClassName = String.format("%s.%s", MICRODB_PACKAGE, proxyClassName);
@@ -735,6 +777,8 @@ public class ProxyFileGenerator {
                                     fields.add(new DoubleArrayDBOBjectField(field));
                                 } else if(isEmbeddedDBObjectArrayType(field)){
                                     fields.add(new EmbeddedDBObjectArrayField(field));
+                                } else if(isUBValueType(field)){
+                                    fields.add(new GenericUBValueField(field));
                                 } else {
                                     error(String.format("'%s' is not an acceptable type. Persistable objects need to extend DBObject.", field));
                                 }

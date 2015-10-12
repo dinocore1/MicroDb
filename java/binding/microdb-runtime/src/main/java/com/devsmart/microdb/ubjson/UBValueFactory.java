@@ -59,6 +59,14 @@ public class UBValueFactory {
         return createString(string.getBytes(UBString.UTF_8));
     }
 
+    public static UBValue createValueOrNull(UBValue obj) {
+        if(obj == null) {
+            return createNull();
+        } else {
+            return obj;
+        }
+    }
+
     public static UBValue createStringOrNull(String string) {
         if(string == null) {
             return createNull();

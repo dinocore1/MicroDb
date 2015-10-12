@@ -4,6 +4,7 @@ package pkg.project;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
+import com.devsmart.microdb.ubjson.UBValue;
 
 @DBObj
 public class SimpleDBModel extends DBObject {
@@ -107,5 +108,15 @@ public class SimpleDBModel extends DBObject {
 
     public void setAddresses(SimpleDBModel[] addresses) {
         this.addresses = addresses;
+    }
+
+    private UBValue genericValue;
+
+    public UBValue getGenericValue() {
+        return genericValue;
+    }
+
+    public void setGenericValue(UBValue genericValue) {
+        this.genericValue = genericValue;
     }
 }
