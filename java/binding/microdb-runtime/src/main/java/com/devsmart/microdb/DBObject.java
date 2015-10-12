@@ -52,5 +52,9 @@ public class DBObject {
         }
         mDB.delete(this);
     }
+
+    protected void setDirty() {
+        mDirty = true;
+    }
 	
 }
