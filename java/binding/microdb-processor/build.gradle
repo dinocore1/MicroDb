@@ -4,8 +4,6 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-sourceCompatibility = 1.6
-
 dependencies {
   compile 'org.slf4j:slf4j-api:1.7.7'
   compile 'org.slf4j:slf4j-simple:1.7.7'
@@ -14,7 +12,12 @@ dependencies {
   testCompile 'junit:junit:4.11'
   testCompile files("${System.properties['java.home']}/../lib/tools.jar") // This is needed otherwise compile-testing won't be able to find it
   testCompile 'com.google.testing.compile:compile-testing:0.6'
+  testCompile 'com.dev-smart:ubjson:0.1.0-SNAPSHOT'
 
+}
+
+compileJava {
+  sourceCompatibility = 1.6
 }
 
 jar {

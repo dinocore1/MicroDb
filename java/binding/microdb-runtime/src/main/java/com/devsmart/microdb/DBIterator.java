@@ -1,7 +1,7 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.microdb.ubjson.UBValue;
+import com.devsmart.ubjson.UBValue;
 
 import java.io.Closeable;
 

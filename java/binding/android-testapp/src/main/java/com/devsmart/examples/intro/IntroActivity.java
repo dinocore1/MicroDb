@@ -12,7 +12,7 @@ import com.devsmart.microdb.DBBuilder;
 import com.devsmart.microdb.DBIterator;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.ObjIterator;
-import com.devsmart.microdb.ubjson.UBValue;
+import com.devsmart.ubjson.UBValue;
 import com.google.common.base.Stopwatch;
 
 import java.io.File;

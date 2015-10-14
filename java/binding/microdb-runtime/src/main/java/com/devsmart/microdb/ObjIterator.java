@@ -1,8 +1,8 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.microdb.ubjson.UBValue;
-import com.devsmart.microdb.ubjson.UBValueFactory;
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 
 import java.io.Closeable;
 import java.io.IOException;

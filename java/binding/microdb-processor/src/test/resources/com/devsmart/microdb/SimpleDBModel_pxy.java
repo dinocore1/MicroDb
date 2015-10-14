@@ -1,10 +1,10 @@
 package com.devsmart.microdb;
 
-import com.devsmart.microdb.ubjson.UBArray;
-import com.devsmart.microdb.ubjson.UBObject;
-import com.devsmart.microdb.ubjson.UBString;
-import com.devsmart.microdb.ubjson.UBValue;
-import com.devsmart.microdb.ubjson.UBValueFactory;
+import com.devsmart.ubjson.UBArray;
+import com.devsmart.ubjson.UBObject;
+import com.devsmart.ubjson.UBString;
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 import pkg.project.SimpleDBModel;
 
 
@@ -32,8 +32,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             }
         }
         data.put("link", link.getId());
-        data.put("myFloatArray", UBValueFactory.createArray(getMyFloatArray()));
-        data.put("myDoubleArray", UBValueFactory.createArray(getMyDoubleArray()));
+        data.put("myFloatArray", UBValueFactory.createArrayOrNull(getMyFloatArray()));
+        data.put("myDoubleArray", UBValueFactory.createArrayOrNull(getMyDoubleArray()));
         data.put("addresses", Utils.toUBArray(getAddresses()));
         data.put("genericValue", UBValueFactory.createValueOrNull(getGenericValue()));
     }

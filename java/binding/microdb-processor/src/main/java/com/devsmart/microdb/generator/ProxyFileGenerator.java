@@ -5,11 +5,11 @@ import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.Utils;
-import com.devsmart.microdb.ubjson.UBArray;
-import com.devsmart.microdb.ubjson.UBObject;
-import com.devsmart.microdb.ubjson.UBString;
-import com.devsmart.microdb.ubjson.UBValue;
-import com.devsmart.microdb.ubjson.UBValueFactory;
+import com.devsmart.ubjson.UBArray;
+import com.devsmart.ubjson.UBObject;
+import com.devsmart.ubjson.UBString;
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -268,6 +268,45 @@ public class ProxyFileGenerator {
         }
     }
 
+    private class IntArrayDBOBjectField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public IntArrayDBOBjectField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addStatement("data.put($S, $T.createArrayOrNull($L()))",
+                    mField, UBValueFactory.class, createGetterName(mField));
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if(obj.containsKey($S))", mField);
+            builder.addStatement("super.$L(obj.get($S).asInt32Array())",
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+
+        }
+    }
+
     private class LongDBOBjectField implements FieldMethodCodeGen {
 
         private final VariableElement mField;
@@ -356,7 +395,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createArray($L()))",
+            builder.addStatement("data.put($S, $T.createArrayOrNull($L()))",
                     mField, UBValueFactory.class, createGetterName(mField));
 
         }
@@ -433,7 +472,7 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $T.createArray($L()))",
+            builder.addStatement("data.put($S, $T.createArrayOrNull($L()))",
                     mField, UBValueFactory.class, createGetterName(mField));
 
         }
@@ -686,6 +725,11 @@ public class ProxyFileGenerator {
         return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.INT));
     }
 
+    private boolean isIntArrayType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(),
+                mEnv.getTypeUtils().getArrayType(mEnv.getTypeUtils().getPrimitiveType(TypeKind.INT)));
+    }
+
     private boolean isLongType(VariableElement field) {
         return mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.LONG));
     }
@@ -772,6 +816,8 @@ public class ProxyFileGenerator {
                                     fields.add(new FloatDBOBjectField(field));
                                 } else if (isDoubleType(field)) {
                                     fields.add(new DoubleDBOBjectField(field));
+                                } else if(isIntArrayType(field)){
+                                    fields.add(new IntArrayDBOBjectField(field));
                                 } else if(isFloatArrayType(field)){
                                     fields.add(new FloatArrayDBOBjectField(field));
                                 } else if(isDoubleArrayType(field)){

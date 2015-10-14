@@ -11,7 +11,7 @@ import com.devsmart.microdb.DBCallback;
 import com.devsmart.microdb.DBIterator;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.ObjIterator;
-import com.devsmart.microdb.ubjson.UBValue;
+import com.devsmart.ubjson.UBValue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

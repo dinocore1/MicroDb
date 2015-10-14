@@ -4,7 +4,7 @@ package pkg.project;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
-import com.devsmart.microdb.ubjson.UBValue;
+import com.devsmart.ubjson.UBValue;
 
 @DBObj
 public class SimpleDBModel extends DBObject {

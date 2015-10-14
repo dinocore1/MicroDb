@@ -25,14 +25,6 @@ public class ProxyWriterTest {
     }
 
     @Test
-    public void compileProcessedModel() {
-        ASSERT.about(javaSource())
-                .that(simpleModel)
-                .processedWith(new DBAnnotationProcessor())
-                .compilesWithoutError();
-    }
-
-    @Test
     public void expectedSourceCompiles() {
         ASSERT.about(javaSource())
                 .that(expectedSimpleProxy)

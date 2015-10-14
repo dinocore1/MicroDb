@@ -1,7 +1,7 @@
 package com.devsmart.microdb;
 
-import com.devsmart.microdb.ubjson.UBObject;
-import com.devsmart.microdb.ubjson.UBValue;
+import com.devsmart.ubjson.UBObject;
+import com.devsmart.ubjson.UBValue;
 
 import java.io.IOException;
 

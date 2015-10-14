@@ -2,9 +2,9 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.IOUtils;
-import com.devsmart.microdb.ubjson.UBReader;
-import com.devsmart.microdb.ubjson.UBValue;
-import com.devsmart.microdb.ubjson.UBWriter;
+import com.devsmart.ubjson.UBReader;
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBWriter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +90,7 @@ public class NativeDriver implements Driver {
     }
 
     static {
+        Loader.load();
         try {
             if (isWindows()) {
                 loadNativeWindowsLibFromResources("/microdb-jni-win.dll");

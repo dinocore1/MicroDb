@@ -1,9 +1,9 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.microdb.ubjson.UBObject;
-import com.devsmart.microdb.ubjson.UBValue;
-import com.devsmart.microdb.ubjson.UBValueFactory;
+import com.devsmart.ubjson.UBObject;
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -3,16 +3,17 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
-sourceCompatibility = 1.6
 
 dependencies {
   compile 'org.slf4j:slf4j-api:1.7.7'
+  compile 'com.dev-smart:ubjson:0.1.0-SNAPSHOT'
   testCompile 'junit:junit:4.11'
 
 }
 
 compileJava {
   targetCompatibility = 1.6
+  sourceCompatibility = 1.6
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {

@@ -10,7 +10,6 @@ import java.io.File;
 
 public class DBBuilderTest {
 
-    /*
     @Test
     public void testLoad() throws Exception {
         File dbpath = new File("testdb");
@@ -28,5 +27,4 @@ public class DBBuilderTest {
         db.close();
 
     }
-    */
 }
