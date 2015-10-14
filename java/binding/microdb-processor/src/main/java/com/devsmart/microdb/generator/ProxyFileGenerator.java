@@ -55,9 +55,10 @@ public class ProxyFileGenerator {
 
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
+
             builder.beginControlFlow("if(obj.containsKey($S))", mField);
-            builder.addStatement("super.$L(obj.get($S))",
-                    createSetterName(mField), mField);
+            builder.addStatement("super.$L(($T)obj.get($S))",
+                    createSetterName(mField), mField, mField);
             builder.endControlFlow();
 
         }

@@ -83,7 +83,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             super.setAddresses(output);
         }
         if (obj.containsKey("genericValue")) {
-            super.setGenericValue(obj.get("genericValue"));
+            super.setGenericValue((UBValue)obj.get("genericValue"));
         }
     }
 
