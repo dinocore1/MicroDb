@@ -6,7 +6,7 @@ apply plugin: 'signing'
 
 dependencies {
   compile 'org.slf4j:slf4j-api:1.7.7'
-  compile 'com.dev-smart:ubjson:0.1.0-SNAPSHOT'
+  compile 'com.dev-smart:ubjson:0.1.1-SNAPSHOT'
   testCompile 'junit:junit:4.11'
 
 }
