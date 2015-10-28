@@ -1,10 +1,7 @@
 .DS_Store
 xcuserdata
 *.pbxuser
-subprojects/packagecache
-subprojects/leveldb*
-subprojects/gtest*
 build/
-
-android-arm_cross.txt
-android-x86_cross.txt
+*.iml
+local.properties
+.idea/
