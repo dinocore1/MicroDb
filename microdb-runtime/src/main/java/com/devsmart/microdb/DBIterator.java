@@ -4,17 +4,18 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBValue;
 
 import java.io.Closeable;
+import java.util.UUID;
 
-public interface DBIterator extends Closeable {
+public interface DBIterator<T extends Comparable<?>> extends Closeable {
 
-    void seekTo(UBValue key);
+    void seekTo(T key);
 
     boolean valid();
     void next();
     void prev();
 
-    UBValue getKey();
-    UBValue getPrimaryKey();
+    T getKey();
+    UUID getPrimaryKey();
     UBValue getValue();
 
 }
