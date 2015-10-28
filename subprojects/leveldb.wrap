@@ -1,4 +1,0 @@
-[wrap-git]
-directory = leveldb
-url = https://github.com/dinocore1/leveldb.git
-revision = master

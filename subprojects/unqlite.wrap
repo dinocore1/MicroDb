@@ -1,4 +1,0 @@
-[wrap-git]
-directory = unqlite
-url = https://github.com/dinocore1/unqlite.git
-revision = head
