@@ -1,9 +1,7 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.ubjson.UBReader;
-import com.devsmart.ubjson.UBValue;
-import com.devsmart.ubjson.UBWriter;
+import com.devsmart.ubjson.*;
 import org.mapdb.*;
 
 import java.io.*;
@@ -13,9 +11,12 @@ import java.util.*;
 public class MapDBDriver implements Driver {
 
     private final DB mMapDB;
+    private final Atomic.Var<UBValue> mMetadata;
     private BTreeMap<UUID, UBValue> mObjects;
 
-    public static final Serializer<UBValue> SERIALIZER_UBVALUE = new Serializer<UBValue>() {
+
+    public static class UBValueSerializer implements Serializer<UBValue>, Serializable {
+
         @Override
         public void serialize(DataOutput out, UBValue value) throws IOException {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -44,7 +45,9 @@ public class MapDBDriver implements Driver {
         public int fixedSize() {
             return -1;
         }
-    };
+    }
+
+    public static final Serializer<UBValue> SERIALIZER_UBVALUE = new UBValueSerializer();
 
     public MapDBDriver(DB mapdb) {
         mMapDB = mapdb;
@@ -54,11 +57,23 @@ public class MapDBDriver implements Driver {
                 .valuesOutsideNodesEnable()
                 .comparator(BTreeMap.COMPARABLE_COMPARATOR)
                 .makeOrGet();
+
+        mMetadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
     }
 
     @Override
     public void close() {
         mMapDB.close();
+    }
+
+    @Override
+    public UBObject getMeta() throws IOException {
+        return mMetadata.get().asObject();
+    }
+
+    @Override
+    public void saveMeta(UBObject obj) throws IOException {
+        mMetadata.set(obj);
     }
 
     @Override
@@ -78,17 +93,26 @@ public class MapDBDriver implements Driver {
     }
 
     @Override
+    public void update(UUID id, UBValue value) throws IOException {
+        mObjects.put(id, value);
+    }
+
+    @Override
     public void delete(UUID key) throws IOException {
         mObjects.remove(key);
     }
 
     @Override
     public <T extends Comparable<?>> KeyIterator<T> queryIndex(String indexName) throws IOException {
+
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
         return new MapDBKeyIterator<T>(index);
     }
 
     private static class MapDBKeyIterator<T extends Comparable<?>> implements KeyIterator<T> {
+
+        //private static final UUID MAX_UUID = new UUID(-1, -1);
+        private static final UUID MIN_UUID = new UUID(0, 0);
 
         private final NavigableSet<Fun.Tuple2<T, UUID>> mIndex;
         private Fun.Tuple2<T, UUID> mNextValue;
@@ -106,7 +130,7 @@ public class MapDBDriver implements Driver {
 
         @Override
         public void seekTo(T key) {
-            mNextValue = mIndex.floor(new Fun.Tuple2<T, UUID>(key, null));
+            mNextValue = mIndex.ceiling(new Fun.Tuple2<T, UUID>(key, null));
         }
 
         @Override
@@ -150,16 +174,9 @@ public class MapDBDriver implements Driver {
     private static class MapDBEmitter<T extends Comparable<?>> implements Emitter<T> {
 
         ArrayList<T> mKeys = new ArrayList<T>(3);
-        T[] mArray;
-
-        @SuppressWarnings("unchecked")
-        public MapDBEmitter() {
-            mArray = (T[]) new Comparable[3];
-        }
 
         public void clear() {
             mKeys.clear();
-            Array.set(mArray, mArray.length, null);
         }
 
 
@@ -170,8 +187,9 @@ public class MapDBDriver implements Driver {
 
 
         public T[] getKeys() {
-            mArray = mKeys.toArray(mArray);
-            return mArray;
+            T[] retval = (T[]) new Comparable[mKeys.size()];
+            retval = mKeys.toArray(retval);
+            return retval;
         }
     }
 

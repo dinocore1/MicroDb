@@ -44,10 +44,8 @@ public class MicroDB {
         }
     });
     private AtomicBoolean mAutoSave = new AtomicBoolean(true);
-    private Set<WeakReference<DBIterator>> mIterators = new HashSet<WeakReference<DBIterator>>();
-    private ReferenceQueue<DBIterator> mItQueue = new ReferenceQueue<DBIterator>();
 
-    private static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
+    static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
         @Override
         public void map(UBValue value, Emitter<String> emitter) {
             if(value != null && value.isObject()) {
@@ -195,7 +193,6 @@ public class MicroDB {
 
     public synchronized void close() throws IOException {
         flush();
-        closeAllIterators();
         mLiveObjects.clear();
         mDriver.close();
     }
@@ -320,70 +317,7 @@ public class MicroDB {
         }
     }
 
-    private void processDeadIterators() {
-        Reference<? extends DBIterator> ref;
-        while((ref = mItQueue.poll()) != null) {
-            mIterators.remove(ref);
-            ref.clear();
-        }
-    }
-
-    private synchronized void closeAllIterators() {
-        processDeadIterators();
-        Iterator<WeakReference<DBIterator>> itit = mIterators.iterator();
-        while(itit.hasNext()) {
-            WeakReference<DBIterator> ref = itit.next();
-            DBIterator it = ref.get();
-            if(it != null) {
-                try {
-                    it.close();
-                } catch (IOException e) {
-                    logger.error("", e);
-                }
-            }
-            itit.remove();
-        }
-    }
-
-    public boolean addIndex(String indexName, String indexScript) throws IOException {
-        return mDriver.addIndex(indexName, indexScript);
-    }
-
-    public synchronized DBIterator queryIndex(String indexName) throws IOException {
-        processDeadIterators();
-
-        DBIterator iterator = mDriver.queryIndex(indexName);
-        if(iterator != null) {
-            mIterators.add(new WeakReference<DBIterator>(iterator, mItQueue));
-        }
-
-        return iterator;
-    }
-
-    public synchronized <T extends DBObject> T getOne(Class<T> classType, String indexName, String value) throws IOException {
-        return getOne(classType, indexName, UBValueFactory.createString(value));
-    }
-
-    public synchronized <T extends DBObject> T getOne(Class<T> classType, String indexName, UBValue key) throws IOException {
-        DBIterator it = queryIndex(indexName);
-        if(it == null) {
-            logger.warn("no index named: '{}'", indexName);
-            return null;
-        }
-        try {
-            it.seekTo(key);
-            if (it.valid() && it.getKey().equals(key)) {
-                UBValue id = it.getPrimaryKey();
-                return get(id, classType);
-            } else {
-                return null;
-            }
-        } finally {
-            it.close();
-        }
-    }
-
-    public <T extends DBObject> ObjIterator<T> getAll(Class<T> classType) throws IOException {
-        return new ObjIterator<T>(queryIndex("type"), this, classType);
+    public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
+        mDriver.addIndex(indexName, mapFunction);
     }
 }

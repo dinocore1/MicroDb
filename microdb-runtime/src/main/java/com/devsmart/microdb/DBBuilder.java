@@ -1,6 +1,9 @@
 package com.devsmart.microdb;
 
 
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -37,10 +40,11 @@ public class DBBuilder {
     }
 
     public MicroDB build() throws IOException {
-        NativeDriver driver = NativeDriver.open(mDBPath.getAbsolutePath());
-        if(driver == null) {
-            throw new IOException("could not open db from path: " + mDBPath.getAbsolutePath());
-        }
+        DB db = DBMaker.newFileDB(mDBPath)
+                .make();
+
+        MapDBDriver driver = new MapDBDriver(db);
+
         return new MicroDB(driver, mSchemaVersion, mCallback);
 
     }
