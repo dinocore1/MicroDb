@@ -320,4 +320,10 @@ public class MicroDB {
     public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
         mDriver.addIndex(indexName, mapFunction);
     }
+
+    public <T extends DBObject> ObjectIterator<String, T> queryObjects(Class<T> classType) throws IOException {
+        KeyIterator<String> keyIt = mDriver.queryIndex("type");
+        keyIt.seekTo(classType.getSimpleName());
+        return new ObjRangeIterator<T>(keyIt, this, classType);
+    }
 }

@@ -111,8 +111,8 @@ public class MapDBDriver implements Driver {
 
     private static class MapDBKeyIterator<T extends Comparable<?>> implements KeyIterator<T> {
 
-        //private static final UUID MAX_UUID = new UUID(-1, -1);
-        private static final UUID MIN_UUID = new UUID(0, 0);
+        private static final UUID MAX_UUID = new UUID(Long.MAX_VALUE, Long.MAX_VALUE);
+        private static final UUID MIN_UUID = new UUID(Long.MIN_VALUE, Long.MIN_VALUE);
 
         private final NavigableSet<Fun.Tuple2<T, UUID>> mIndex;
         private Fun.Tuple2<T, UUID> mNextValue;

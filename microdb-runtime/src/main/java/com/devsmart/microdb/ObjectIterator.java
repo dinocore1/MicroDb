@@ -6,9 +6,9 @@ import java.util.UUID;
 
 public class ObjectIterator<K extends Comparable<?>, T extends DBObject> implements Iterator<DBObject> {
 
-    private final KeyIterator<K> mKeyIterator;
-    private final MicroDB mDb;
-    private final Class<T> mClassType;
+    final KeyIterator<K> mKeyIterator;
+    final MicroDB mDb;
+    final Class<T> mClassType;
 
     public ObjectIterator(KeyIterator<K> keyIterator, MicroDB db, Class<T> classType) {
         mKeyIterator = keyIterator;
