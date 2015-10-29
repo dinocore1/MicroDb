@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.UUID;
 
 
-public class ObjectIterator<K extends Comparable<?>, T extends DBObject> implements Iterator<DBObject> {
+public class ObjectIterator<K extends Comparable<?>, T extends DBObject> implements Iterator<T> {
 
     final KeyIterator<K> mKeyIterator;
     final MicroDB mDb;
@@ -26,7 +26,7 @@ public class ObjectIterator<K extends Comparable<?>, T extends DBObject> impleme
     }
 
     @Override
-    public DBObject next() {
+    public T next() {
         mKeyIterator.next();
         UUID id = mKeyIterator.getPrimaryKey();
         return mDb.get(id, mClassType);

@@ -37,7 +37,7 @@ public class ObjRangeIterator<T extends DBObject> extends ObjectIterator<String,
             retval = mNextValue;
             mNextValue = null;
         } else {
-            retval = (T) super.next();
+            retval = super.next();
         }
         return retval;
     }

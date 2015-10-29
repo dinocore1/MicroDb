@@ -4,6 +4,7 @@ package pkg.project;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
+import com.devsmart.microdb.annotations.Index;
 import com.devsmart.ubjson.UBValue;
 
 @DBObj
@@ -11,6 +12,7 @@ public class SimpleDBModel extends DBObject {
 
     //only private fields will be persisted. You must create
     //getters and setters for every field
+    @Index
     private String myString;
 
     public String getMyString() {
