@@ -2,12 +2,14 @@ package com.devsmart.microdb;
 
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 
 import java.io.IOException;
+import java.util.UUID;
 
 public class DBObject {
 
-    private UBValue mId;
+    private UUID mId;
     private MicroDB mDB;
     protected boolean mDirty;
 
@@ -23,19 +25,19 @@ public class DBObject {
         }
     }
 
-    protected void init(UBObject data, MicroDB db) {
-        mId = data.get("id");
+    protected void init(UUID id, UBObject data, MicroDB db) {
+        mId = id;
         mDB = db;
         mDirty = false;
     }
 
     public void writeUBObject(UBObject data) {
         if(mId != null) {
-            data.put("id", mId);
+            data.put("id", UBValueFactory.createString(mId.toString()));
         }
     }
 
-    public UBValue getId() {
+    public UUID getId() {
         return mId;
     }
 

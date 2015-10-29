@@ -34,8 +34,8 @@ public class MicroDB {
     private Driver mDriver;
     private int mSchemaVersion;
     private DBCallback mCallback;
-    private final HashMap<UBValue, SoftReference<DBObject>> mLiveObjects = new HashMap<UBValue, SoftReference<DBObject>>();
-    private final Set<UBValue> mDeletedObjects = new HashSet<UBValue>();
+    private final HashMap<UUID, SoftReference<DBObject>> mLiveObjects = new HashMap<UUID, SoftReference<DBObject>>();
+    private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final Queue<WriteCommand> mSaveQueue = new ConcurrentLinkedQueue<WriteCommand>();
     private final ScheduledExecutorService mWriteThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
         @Override
@@ -47,6 +47,19 @@ public class MicroDB {
     private Set<WeakReference<DBIterator>> mIterators = new HashSet<WeakReference<DBIterator>>();
     private ReferenceQueue<DBIterator> mItQueue = new ReferenceQueue<DBIterator>();
 
+    private static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
+        @Override
+        public void map(UBValue value, Emitter<String> emitter) {
+            if(value != null && value.isObject()) {
+                UBObject obj = value.asObject();
+                UBValue typevar = obj.get("type");
+                if(typevar != null && typevar.isString()) {
+                    emitter.emit(typevar.asString());
+                }
+            }
+        }
+    };
+
 
     private interface WriteCommand {
         void write() throws IOException;
@@ -54,22 +67,17 @@ public class MicroDB {
 
     private class SaveDBData implements WriteCommand {
 
+        private final UUID mId;
         private final UBObject mData;
 
-        SaveDBData(UBObject obj) {
+        SaveDBData(UUID id, UBObject obj) {
+            mId = id;
             mData = obj;
         }
 
         @Override
         public void write() throws IOException {
-            mDriver.beginTransaction();
-
-            if(mData.containsKey("id")) {
-                mDriver.delete(mData.get("id"));
-            }
-            mDriver.insert(mData);
-
-            mDriver.commitTransaction();
+            mDriver.update(mId, mData);
         }
     }
 
@@ -85,15 +93,7 @@ public class MicroDB {
         public void write() throws IOException {
             UBObject data = new UBObject();
             mObject.writeUBObject(data);
-
-            mDriver.beginTransaction();
-
-            if(data.containsKey("id")) {
-                mDriver.delete(data.get("id"));
-            }
-            mDriver.insert(data);
-
-            mDriver.commitTransaction();
+            mDriver.update(mObject.getId(), data);
             mObject.mDirty = false;
         }
     }
@@ -108,7 +108,7 @@ public class MicroDB {
 
         @Override
         public void write() throws IOException {
-            final UBValue id = mObject.getId();
+            final UUID id = mObject.getId();
             mObject.mDirty = false;
             mDriver.delete(id);
             synchronized (MicroDB.this) {
@@ -153,34 +153,30 @@ public class MicroDB {
         init();
     }
 
-    private static final String METAKEY = "dbmeta";
     private static final String METAKEY_DBVERSION = "schema_version";
+    private static final String METAKEY_INSTANCE = "instance";
 
     private void init() throws IOException {
 
-        UBValue key = UBValueFactory.createString(METAKEY);
-
-        UBValue storedValue = mDriver.get(key);
-        if(storedValue == null) {
-            UBObject metaObj = new UBObject();
-            metaObj.put("id", key);
+        UBObject metaObj = mDriver.getMeta();
+        if(metaObj == null) {
+            metaObj = new UBObject();
+            metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-            mSaveQueue.offer(new SaveDBData(metaObj));
-            mDriver.addIndex("type", "if(obj.type != null) { emit(obj.type) }");
+            mDriver.saveMeta(metaObj);
+            mDriver.addIndex("type", INDEX_OBJECT_TYPE);
             mCallback.onUpgrade(this, -1, mSchemaVersion);
 
         } else {
-            UBObject metaObj = storedValue.asObject();
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if(currentVersion < mSchemaVersion) {
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-                mSaveQueue.offer(new SaveDBData(metaObj));
+                mDriver.saveMeta(metaObj);
             }
         }
 
     }
-
 
 
     /**
@@ -236,10 +232,10 @@ public class MicroDB {
             T retval = classType.newInstance();
 
             UBObject data = new UBObject();
-            //UBValue key = mDriver.insert(data);
-            UBValue key = UBValueFactory.createString(UUID.randomUUID().toString());
-            data.put("id", key);
-            retval.init(data, this);
+            UUID key = mDriver.insert(data);
+
+            data.put("id", UBValueFactory.createString(key.toString()));
+            retval.init(key, data, this);
 
             mLiveObjects.put(key, new SoftReference<DBObject>(retval));
 
@@ -257,7 +253,7 @@ public class MicroDB {
      * @param <T>
      * @return dbobject
      */
-    public synchronized <T extends DBObject> T get(UBValue id, Class<T> classType) {
+    public synchronized <T extends DBObject> T get(UUID id, Class<T> classType) {
         if(mDeletedObjects.contains(id)) {
             return null;
         }
@@ -285,7 +281,7 @@ public class MicroDB {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
                     T newObj = classType.newInstance();
-                    newObj.init(data.asObject(), this);
+                    newObj.init(id, data.asObject(), this);
                     retval = newObj;
                     mLiveObjects.put(id, new SoftReference<DBObject>(retval));
                 }
