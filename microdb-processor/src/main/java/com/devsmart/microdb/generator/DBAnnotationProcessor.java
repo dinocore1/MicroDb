@@ -3,6 +3,7 @@ package com.devsmart.microdb.generator;
 
 import com.devsmart.microdb.Link;
 import com.devsmart.microdb.annotations.DBObj;
+import com.devsmart.microdb.annotations.DataSet;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
@@ -59,9 +60,19 @@ public class DBAnnotationProcessor extends AbstractProcessor {
                 generator.generate();
             }
 
+        }
 
+        for(Element classElement : roundEnv.getElementsAnnotatedWith(DataSet.class)) {
+            if(!classElement.getKind().equals(ElementKind.CLASS)) {
+                error("DataSet annotation can only be applied to classes", classElement);
+            }
 
+            note("Processing class: " + classElement.getSimpleName());
 
+            DatasetGenerator generator = new DatasetGenerator(processingEnv, (TypeElement)classElement);
+            if(generator.validate()) {
+                generator.generate();
+            }
         }
 
         return false;
