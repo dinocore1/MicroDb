@@ -10,7 +10,7 @@ dependencies {
   compile project(':microdb-runtime')
   testCompile 'junit:junit:4.11'
   testCompile 'org.slf4j:slf4j-simple:1.7.7'
-  testCompile files("${System.properties['java.home']}/../lib/tools.jar") // This is needed otherwise compile-testing won't be able to find it
+  compile files("${System.properties['java.home']}/../lib/tools.jar") // This is needed otherwise compile-testing won't be able to find it
   testCompile 'com.google.testing.compile:compile-testing:0.6'
   testCompile 'com.dev-smart:ubjson:0.1.1-SNAPSHOT'
 

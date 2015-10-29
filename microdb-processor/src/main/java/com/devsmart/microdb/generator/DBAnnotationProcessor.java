@@ -28,6 +28,7 @@ public class DBAnnotationProcessor extends AbstractProcessor {
         HashSet<String> retval = new HashSet<String>();
         retval.add(DBObj.class.getCanonicalName());
         retval.add(Link.class.getCanonicalName());
+        retval.add(DataSet.class.getCanonicalName());
 
         return retval;
     }
