@@ -5,6 +5,7 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import java.util.UUID;
 import pkg.project.SimpleDBModel;
 
 
@@ -39,8 +40,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     }
 
     @Override
-    public void init(UBObject obj, MicroDB db) {
-        super.init(obj, db);
+    public void init(UUID id, UBObject obj, MicroDB db) {
+        super.init(id, obj, db);
         if (obj.containsKey("myString")) {
             super.setMyString(obj.get("myString").asString());
         }
@@ -61,7 +62,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         if (obj.containsKey("internal")) {
             SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-            tmp.init(obj.get("internal").asObject(), db);
+            tmp.init(null, obj.get("internal").asObject(), db);
             super.setInternal(tmp);
         }
         link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
@@ -77,7 +78,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
             for (int i = 0; i < size; i++) {
                 SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                tmp.init(input.get(i).asObject(), db);
+                tmp.init(null, input.get(i).asObject(), db);
                 output[i] = tmp;
             }
             super.setAddresses(output);

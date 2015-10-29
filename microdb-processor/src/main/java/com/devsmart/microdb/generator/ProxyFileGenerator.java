@@ -25,6 +25,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
+import java.util.UUID;
 
 public class ProxyFileGenerator {
 
@@ -567,7 +568,7 @@ public class ProxyFileGenerator {
             builder.addCode(CodeBlock.builder()
                             .beginControlFlow("if(obj.containsKey($S))", mField)
                             .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                            .addStatement("tmp.init(obj.get($S).asObject(), db)", mField)
+                            .addStatement("tmp.init(null, obj.get($S).asObject(), db)", mField)
                             .addStatement("super.$L(tmp)", createSetterName(mField))
                             .endControlFlow()
                             .build()
@@ -621,7 +622,7 @@ public class ProxyFileGenerator {
                     .addStatement("$T output = new $T[size]", proxyArrayClassName, proxyClassName)
                     .beginControlFlow("for(int i=0;i<size;i++)")
                     .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                    .addStatement("tmp.init(input.get(i).asObject(), db)")
+                    .addStatement("tmp.init(null, input.get(i).asObject(), db)")
                     .addStatement("output[i] = tmp")
                     .endControlFlow()
                     .addStatement("super.$L(output)", createSetterName(mField))
@@ -887,11 +888,12 @@ public class ProxyFileGenerator {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("init")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
+                .addParameter(UUID.class, "id")
                 .addParameter(UBObject.class, "obj")
                 .addParameter(MicroDB.class, "db")
                 .returns(TypeName.VOID);
 
-        builder.addStatement("super.init(obj, db)");
+        builder.addStatement("super.init(id, obj, db)");
 
         for(FieldMethodCodeGen fieldGen : fieldGens) {
             fieldGen.deserializeCode(builder);

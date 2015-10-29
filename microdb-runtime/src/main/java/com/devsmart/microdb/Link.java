@@ -1,6 +1,9 @@
 package com.devsmart.microdb;
 
 
+import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
+
 import java.util.UUID;
 
 public class Link<T extends DBObject> {
@@ -9,14 +12,22 @@ public class Link<T extends DBObject> {
     private MicroDB mDB;
     private Class<? extends T> mClassType;
 
-    public Link(UUID id, MicroDB db, Class<? extends T> classType) {
-        mId = id;
+    public Link(UBValue id, MicroDB db, Class<? extends T> classType) {
+        if(id != null && id.isString()) {
+            mId = UUID.fromString(id.asString());
+        } else {
+            mId = null;
+        }
         mDB = db;
         mClassType = classType;
     }
 
-    public UUID getId() {
-        return mId;
+    public UBValue getId() {
+        if(mId == null) {
+            return UBValueFactory.createNull();
+        } else {
+            return UBValueFactory.createString(mId.toString());
+        }
     }
 
     public T get() {

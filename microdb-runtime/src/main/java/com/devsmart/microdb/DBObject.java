@@ -45,6 +45,9 @@ public class DBObject {
         if(mDB == null) {
             throw new RuntimeException("DBObject does not reference a database");
         }
+        if(mId == null) {
+            throw new RuntimeException("DBObject does not have an ID");
+        }
         mDB.save(this);
     }
 
