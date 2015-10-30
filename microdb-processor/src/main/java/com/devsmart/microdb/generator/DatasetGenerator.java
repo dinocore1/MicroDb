@@ -1,10 +1,10 @@
 package com.devsmart.microdb.generator;
 
-import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.MapFunction;
+import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.annotations.DataSet;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.TypeName;
-import com.squareup.javapoet.TypeSpec;
+import com.devsmart.microdb.annotations.Index;
+import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -14,6 +14,8 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import com.sun.tools.javac.code.Attribute;
 
@@ -47,7 +49,7 @@ public class DatasetGenerator {
     }
 
 
-    private static AnnotationMirror getAnnotationMirror(TypeElement typeElement, Class<?> clazz) {
+    private static AnnotationMirror getAnnotationMirror(Element typeElement, Class<?> clazz) {
         String clazzName = clazz.getName();
         for(AnnotationMirror m : typeElement.getAnnotationMirrors()) {
             if(m.getAnnotationType().toString().equals(clazzName)) {
@@ -66,6 +68,20 @@ public class DatasetGenerator {
         return null;
     }
 
+    private TypeMirror toTypeMirror(Class<?> type) {
+        TypeElement element = toTypeElement(type);
+        return element.asType();
+    }
+
+    private TypeElement toTypeElement(Class<?> type) {
+        TypeElement element = mEnv.getElementUtils().getTypeElement(type.getCanonicalName());
+        return element;
+    }
+
+    private boolean isStringType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), toTypeMirror(String.class));
+    }
+
     public void generate() {
 
         final String proxyClassName = String.format("MicroDB%s", mClassName);
@@ -82,11 +98,11 @@ public class DatasetGenerator {
             Attribute.Array array = (Attribute.Array) getAnnotationValue(am, "objects");
             for(Attribute attribute : array.getValue()) {
                 DeclaredType type = (DeclaredType) attribute.getValue();
-
-
-
+                visitObjectTypes(classBuilder, type);
             }
 
+
+            generateInstallMethod(classBuilder);
 
 
             JavaFile proxySourceFile = JavaFile.builder(packageName.toString(), classBuilder.build())
@@ -103,4 +119,83 @@ public class DatasetGenerator {
         }
 
     }
+
+    private void generateInstallMethod(TypeSpec.Builder classBuilder) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("installIndex")
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(MicroDB.class, "db")
+                .returns(TypeName.VOID);
+
+        for(IndexGenCode indexGen : mCodeGen) {
+            indexGen.genInstallIndex(builder);
+        }
+
+        classBuilder.addMethod(builder.build());
+    }
+
+    private abstract class IndexGenCode {
+        private final TypeElement mClassElement;
+        private final VariableElement mFieldElement;
+
+        public IndexGenCode(TypeElement classElement, VariableElement field) {
+            mClassElement = classElement;
+            mFieldElement = field;
+        }
+
+        public String indexName() {
+            return String.format("%s.%s", mClassElement.getSimpleName(), mFieldElement);
+        }
+
+        public abstract void genInstallIndex(MethodSpec.Builder builder);
+    }
+
+    private class StringIndex extends IndexGenCode {
+
+        public StringIndex(TypeElement classElement, VariableElement field) {
+            super(classElement, field);
+        }
+
+        @Override
+        public void genInstallIndex(MethodSpec.Builder builder) {
+
+
+
+            CodeBlock block = CodeBlock.builder()
+                    .add("db.addIndex($S, new $T<String>() {", indexName(), MapFunction.class)
+                    .indent()
+
+                    .addStatement(")")
+                    .unindent()
+                    .build();
+
+            builder.addCode(block);
+
+
+        }
+    }
+
+    private List<IndexGenCode> mCodeGen = new ArrayList<IndexGenCode>();
+
+    private void visitObjectTypes(TypeSpec.Builder classBuilder, DeclaredType type) {
+        TypeElement classElement = (TypeElement) type.asElement();
+
+        for(Element member : classElement.getEnclosedElements()) {
+
+            AnnotationMirror am;
+            if(member.getKind() == ElementKind.FIELD
+                    && !member.getModifiers().contains(Modifier.STATIC)
+                    && !member.getModifiers().contains(Modifier.TRANSIENT)
+                    && (am = getAnnotationMirror(member, Index.class)) != null) {
+
+
+                VariableElement field = (VariableElement)member;
+                if(isStringType(field)) {
+                    mCodeGen.add(new StringIndex(classElement, field));
+                }
+
+            }
+        }
+    }
+
+
 }
