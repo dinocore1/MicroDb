@@ -11,7 +11,7 @@ import pkg.project.SimpleDBModel;
 
 public final class SimpleDBModel_pxy extends SimpleDBModel {
 
-    private static final UBString TYPE = UBValueFactory.createString("SimpleDBModel");
+    public static final UBString TYPE = UBValueFactory.createString("SimpleDBModel");
 
     @Override
     public void writeUBObject(UBObject data) {

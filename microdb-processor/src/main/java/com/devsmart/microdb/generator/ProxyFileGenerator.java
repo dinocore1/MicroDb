@@ -839,7 +839,7 @@ public class ProxyFileGenerator {
             }
 
             classBuilder.addField(
-                    FieldSpec.builder(UBString.class, "TYPE", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                    FieldSpec.builder(UBString.class, "TYPE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                             .initializer("$T.createString($S)", UBValueFactory.class, mClassElement.getSimpleName())
                             .build());
 

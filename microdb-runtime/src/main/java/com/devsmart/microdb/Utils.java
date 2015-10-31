@@ -1,9 +1,7 @@
 package com.devsmart.microdb;
 
 
-import com.devsmart.ubjson.UBArray;
-import com.devsmart.ubjson.UBObject;
-import com.devsmart.ubjson.UBValueFactory;
+import com.devsmart.ubjson.*;
 
 public class Utils {
 
@@ -15,6 +13,14 @@ public class Utils {
             input[i].writeUBObject(output[i]);
         }
         return UBValueFactory.createArray(output);
+    }
+
+    public static boolean isValidObject(UBValue value, UBString type) {
+        if(value != null && value.isObject()) {
+            UBValue typeStr = value.asObject().get("type");
+            return typeStr != null && typeStr.isString() && type.equals(typeStr);
+        }
+        return false;
     }
 
 }

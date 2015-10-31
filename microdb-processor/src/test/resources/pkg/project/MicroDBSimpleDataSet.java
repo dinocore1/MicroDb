@@ -4,22 +4,25 @@ import com.devsmart.microdb.Emitter;
 import com.devsmart.microdb.MapFunction;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.ObjectIterator;
+import com.devsmart.microdb.SimpleDBModel_pxy;
+import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBValue;
+import java.io.IOException;
 
 public class MicroDBSimpleDataSet extends SimpleDataSet {
 
-    private MicroDB mDb;
+    private final MicroDB mDb;
 
     public MicroDBSimpleDataSet(MicroDB db) {
         mDb = db;
     }
 
-    private void install(MicroDB db) {
+    public void install(MicroDB db) throws IOException {
 
         db.addIndex("SimpleDBModel.myString", new MapFunction<String>() {
             @Override
             public void map(UBValue value, Emitter<String> emitter) {
-                if(value != null && value.isObject()) {
+                if(Utils.isValidObject(value, SimpleDBModel_pxy.TYPE)) {
                     UBValue v = value.asObject().get("myString");
                     if(v != null && v.isString()) {
                         emitter.emit(v.asString());
@@ -30,7 +33,7 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
 
     }
 
-    public ObjectIterator<String, SimpleDBModel> querySimpleDBModelMyString() {
+    public ObjectIterator<String, SimpleDBModel> querySimpleDBModelBymyString() throws IOException {
         return mDb.queryIndex("SimpleDBModel.myString", SimpleDBModel.class);
     }
 

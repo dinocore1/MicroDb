@@ -1,9 +1,9 @@
 package com.devsmart.microdb.generator;
 
-import com.devsmart.microdb.MapFunction;
-import com.devsmart.microdb.MicroDB;
+import com.devsmart.microdb.*;
 import com.devsmart.microdb.annotations.DataSet;
 import com.devsmart.microdb.annotations.Index;
+import com.devsmart.ubjson.UBValue;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -14,6 +14,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,6 +95,14 @@ public class DatasetGenerator {
                     .superclass(TypeName.get(mClassElement.asType()))
                     .addModifiers(Modifier.PUBLIC);
 
+            classBuilder.addField(MicroDB.class, "mDb", Modifier.PRIVATE, Modifier.FINAL);
+
+            classBuilder.addMethod(MethodSpec.constructorBuilder()
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(MicroDB.class, "db")
+                    .addCode(CodeBlock.builder().addStatement("mDb = db").build())
+                    .build());
+
             AnnotationMirror am = getAnnotationMirror(mClassElement, DataSet.class);
             Attribute.Array array = (Attribute.Array) getAnnotationValue(am, "objects");
             for(Attribute attribute : array.getValue()) {
@@ -103,6 +112,10 @@ public class DatasetGenerator {
 
 
             generateInstallMethod(classBuilder);
+
+            for(IndexGenCode genCode : mCodeGen) {
+                classBuilder.addMethod(genCode.genQueryIndex());
+            }
 
 
             JavaFile proxySourceFile = JavaFile.builder(packageName.toString(), classBuilder.build())
@@ -121,10 +134,12 @@ public class DatasetGenerator {
     }
 
     private void generateInstallMethod(TypeSpec.Builder classBuilder) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("installIndex")
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("install")
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(MicroDB.class, "db")
-                .returns(TypeName.VOID);
+                .returns(TypeName.VOID)
+                .addException(IOException.class)
+                ;
 
         for(IndexGenCode indexGen : mCodeGen) {
             indexGen.genInstallIndex(builder);
@@ -134,12 +149,19 @@ public class DatasetGenerator {
     }
 
     private abstract class IndexGenCode {
-        private final TypeElement mClassElement;
-        private final VariableElement mFieldElement;
+        final TypeElement mClassElement;
+        final VariableElement mFieldElement;
 
         public IndexGenCode(TypeElement classElement, VariableElement field) {
             mClassElement = classElement;
             mFieldElement = field;
+        }
+
+        ClassName createProxyClassname() {
+            TypeMirror fieldType = mClassElement.asType();
+            Element typeElement = mEnv.getTypeUtils().asElement(fieldType);
+            String simpleName = typeElement.getSimpleName().toString();
+            return ClassName.get(ProxyFileGenerator.MICRODB_PACKAGE, simpleName+"_pxy");
         }
 
         public String indexName() {
@@ -147,6 +169,7 @@ public class DatasetGenerator {
         }
 
         public abstract void genInstallIndex(MethodSpec.Builder builder);
+        public abstract MethodSpec genQueryIndex();
     }
 
     private class StringIndex extends IndexGenCode {
@@ -158,20 +181,46 @@ public class DatasetGenerator {
         @Override
         public void genInstallIndex(MethodSpec.Builder builder) {
 
-
-
             CodeBlock block = CodeBlock.builder()
-                    .add("db.addIndex($S, new $T<String>() {", indexName(), MapFunction.class)
+                    .add("db.addIndex($S, new $T<String>() {\n", indexName(), MapFunction.class)
                     .indent()
-
-                    .addStatement(")")
+                    .add("@$T\npublic void map($T value, $T<String> emitter) {\n", Override.class, UBValue.class, Emitter.class)
+                    .indent()
+                    .beginControlFlow("if($T.isValidObject(value, $T.TYPE))", Utils.class, createProxyClassname())
+                    .addStatement("$T v = value.asObject().get($S)", UBValue.class, mFieldElement)
+                    .beginControlFlow("if(v != null && v.isString())")
+                    .addStatement("emitter.emit(v.asString())")
+                    .endControlFlow()
+                    .endControlFlow()
                     .unindent()
+                    .add("}\n")
+                    .unindent()
+                    .addStatement("})")
                     .build();
 
             builder.addCode(block);
 
-
         }
+
+        @Override
+        public MethodSpec genQueryIndex() {
+            final String name = String.format("query%sBy%s", mClassElement.getSimpleName(), mFieldElement);
+
+            ParameterizedTypeName objItType = ParameterizedTypeName.get(ClassName.get(ObjectIterator.class),
+                    TypeName.get(String.class),
+                    TypeName.get(mClassElement.asType()));
+
+            return MethodSpec.methodBuilder(name)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addException(IOException.class)
+                    .returns(objItType)
+                    .addCode(CodeBlock.builder()
+                            .addStatement("return mDb.queryIndex($S, $T.class)", indexName(), mClassElement.asType())
+                            .build())
+                    .build();
+        }
+
+
     }
 
     private List<IndexGenCode> mCodeGen = new ArrayList<IndexGenCode>();
