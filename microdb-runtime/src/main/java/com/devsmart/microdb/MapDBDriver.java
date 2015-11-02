@@ -13,6 +13,7 @@ public class MapDBDriver implements Driver {
     private final DB mMapDB;
     private final Atomic.Var<UBValue> mMetadata;
     private BTreeMap<UUID, UBValue> mObjects;
+    private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
 
 
     public static class UBValueSerializer implements Serializer<UBValue>, Serializable {
@@ -77,28 +78,53 @@ public class MapDBDriver implements Driver {
     }
 
     @Override
+    public void installChangeListener(ChangeListener changeListener) {
+        mChangeListeners.add(changeListener);
+    }
+
+    @Override
     public UBValue get(UUID key) throws IOException {
         return mObjects.get(key);
     }
 
     @Override
     public UUID insert(UBValue value) throws IOException {
+
+        for(ChangeListener l : mChangeListeners) {
+            l.onBeforeInsert(this, value);
+        }
+
         UUID key = UUID.randomUUID();
         while(mObjects.containsKey(key)) {
             key = UUID.randomUUID();
         }
 
         mObjects.put(key, value);
+
+        for(ChangeListener l : mChangeListeners) {
+            l.onAfterInsert(this, key, value);
+        }
+
         return key;
     }
 
     @Override
     public void update(UUID id, UBValue value) throws IOException {
+
+        for (ChangeListener l : mChangeListeners) {
+            l.onBeforeUpdate(this, id, value);
+        }
+
         mObjects.put(id, value);
     }
 
     @Override
     public void delete(UUID key) throws IOException {
+
+        for(ChangeListener l : mChangeListeners) {
+            l.onBeforeDelete(this, key);
+        }
+
         mObjects.remove(key);
     }
 
