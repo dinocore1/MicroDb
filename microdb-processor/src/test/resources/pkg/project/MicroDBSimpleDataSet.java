@@ -1,5 +1,7 @@
 package pkg.project;
 
+import com.devsmart.microdb.DefaultChangeListener;
+import com.devsmart.microdb.Driver;
 import com.devsmart.microdb.Emitter;
 import com.devsmart.microdb.MapFunction;
 import com.devsmart.microdb.MicroDB;
@@ -7,6 +9,7 @@ import com.devsmart.microdb.ObjectIterator;
 import com.devsmart.microdb.SimpleDBModel_pxy;
 import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 import java.io.IOException;
 
 public class MicroDBSimpleDataSet extends SimpleDataSet {
@@ -29,6 +32,18 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
                     }
                 }
             }
+        });
+
+        db.addChangeListener(new DefaultChangeListener() {
+            @Override
+            public void onBeforeInsert(Driver driver, UBValue value) {
+                if(Utils.isValidObject(value, SimpleDBModel_pxy.TYPE)) {
+                    final long longValue = driver.incrementLongField("varSimpleDBModel.myLong");
+                    value.asObject().put("myLong", UBValueFactory.createInt(longValue));
+                }
+
+            }
+
         });
 
     }

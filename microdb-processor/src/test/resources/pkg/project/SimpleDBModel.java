@@ -3,6 +3,7 @@ package pkg.project;
 
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
+import com.devsmart.microdb.annotations.AutoIncrement;
 import com.devsmart.microdb.annotations.DBObj;
 import com.devsmart.microdb.annotations.Index;
 import com.devsmart.ubjson.UBValue;
@@ -62,6 +63,7 @@ public class SimpleDBModel extends DBObject {
         myInt = value;
     }
 
+    @AutoIncrement
     private long myLong;
     public long getMyLong() {
         return myLong;

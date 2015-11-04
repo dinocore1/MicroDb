@@ -78,7 +78,7 @@ public class MapDBDriver implements Driver {
     }
 
     @Override
-    public void installChangeListener(ChangeListener changeListener) {
+    public void addChangeListener(ChangeListener changeListener) {
         mChangeListeners.add(changeListener);
     }
 
@@ -223,6 +223,11 @@ public class MapDBDriver implements Driver {
     public void deleteIndex(String indexName) {
         mMapDB.delete(indexName);
 
+    }
+
+    @Override
+    public long incrementLongField(String fieldName) {
+        return mMapDB.getAtomicLong(fieldName).getAndIncrement();
     }
 
     @Override

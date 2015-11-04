@@ -14,7 +14,7 @@ public interface Driver {
     UBObject getMeta() throws IOException;
     void saveMeta(UBObject obj) throws IOException;
 
-    void installChangeListener(ChangeListener changeListener);
+    void addChangeListener(ChangeListener changeListener);
 
     /**
      * loads the database value with {@code key}
@@ -41,6 +41,8 @@ public interface Driver {
      * @throws IOException
      */
     void delete(UUID key) throws IOException;
+
+    long incrementLongField(String fieldName);
 
     <T extends Comparable<?>> KeyIterator<T> queryIndex(String indexName) throws IOException;
     <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;

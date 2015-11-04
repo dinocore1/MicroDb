@@ -9,13 +9,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
@@ -319,6 +315,10 @@ public class MicroDB {
 
     public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
         mDriver.addIndex(indexName, mapFunction);
+    }
+
+    public void addChangeListener(ChangeListener listener) {
+        mDriver.addChangeListener(listener);
     }
 
     public <K extends Comparable<?>, T extends DBObject> ObjectIterator<K, T> queryIndex(String indexName, Class<T> classType) throws IOException {

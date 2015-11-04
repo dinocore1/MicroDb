@@ -1,14 +1,17 @@
 package com.devsmart.microdb.generator;
 
 import com.devsmart.microdb.*;
+import com.devsmart.microdb.annotations.AutoIncrement;
 import com.devsmart.microdb.annotations.DataSet;
 import com.devsmart.microdb.annotations.Index;
 import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -83,6 +86,12 @@ public class DatasetGenerator {
         return mEnv.getTypeUtils().isSameType(field.asType(), toTypeMirror(String.class));
     }
 
+    private boolean isLongType(VariableElement field) {
+        return mEnv.getTypeUtils().isSameType(field.asType(), toTypeMirror(Long.class))
+                || mEnv.getTypeUtils().isSameType(field.asType(), mEnv.getTypeUtils().getPrimitiveType(TypeKind.LONG));
+
+    }
+
     public void generate() {
 
         final String proxyClassName = String.format("MicroDB%s", mClassName);
@@ -113,8 +122,10 @@ public class DatasetGenerator {
 
             generateInstallMethod(classBuilder);
 
-            for(IndexGenCode genCode : mCodeGen) {
-                classBuilder.addMethod(genCode.genQueryIndex());
+            for(GenCode genCode : mCodeGen) {
+                if(genCode instanceof IndexGenCode) {
+                    classBuilder.addMethod(((IndexGenCode) genCode).genQueryIndex());
+                }
             }
 
 
@@ -141,18 +152,22 @@ public class DatasetGenerator {
                 .addException(IOException.class)
                 ;
 
-        for(IndexGenCode indexGen : mCodeGen) {
-            indexGen.genInstallIndex(builder);
+        for(GenCode indexGen : mCodeGen) {
+            if(indexGen instanceof IndexGenCode) {
+                ((IndexGenCode)indexGen).genInstallIndex(builder);
+            } else if(indexGen instanceof IncrementGenCode) {
+                ((IncrementGenCode)indexGen).genInstall(builder);
+            }
         }
 
         classBuilder.addMethod(builder.build());
     }
 
-    private abstract class IndexGenCode {
+    private abstract class GenCode {
         final TypeElement mClassElement;
         final VariableElement mFieldElement;
 
-        public IndexGenCode(TypeElement classElement, VariableElement field) {
+        public GenCode(TypeElement classElement, VariableElement field) {
             mClassElement = classElement;
             mFieldElement = field;
         }
@@ -163,6 +178,13 @@ public class DatasetGenerator {
             String simpleName = typeElement.getSimpleName().toString();
             return ClassName.get(ProxyFileGenerator.MICRODB_PACKAGE, simpleName+"_pxy");
         }
+    }
+
+    private abstract class IndexGenCode extends GenCode {
+
+        public IndexGenCode(TypeElement classElement, VariableElement field) {
+            super(classElement, field);
+        }
 
         public String indexName() {
             return String.format("%s.%s", mClassElement.getSimpleName(), mFieldElement);
@@ -170,6 +192,19 @@ public class DatasetGenerator {
 
         public abstract void genInstallIndex(MethodSpec.Builder builder);
         public abstract MethodSpec genQueryIndex();
+    }
+
+    private abstract class IncrementGenCode extends GenCode {
+
+        public IncrementGenCode(TypeElement classElement, VariableElement field) {
+            super(classElement, field);
+        }
+
+        public String varName() {
+            return String.format("var%s.%s", mClassElement.getSimpleName(), mFieldElement);
+        }
+
+        public abstract void genInstall(MethodSpec.Builder builder);
     }
 
     private class StringIndex extends IndexGenCode {
@@ -223,7 +258,35 @@ public class DatasetGenerator {
 
     }
 
-    private List<IndexGenCode> mCodeGen = new ArrayList<IndexGenCode>();
+    private class LongAutoIncrement extends IncrementGenCode {
+
+        public LongAutoIncrement(TypeElement classElement, VariableElement field) {
+            super(classElement, field);
+        }
+
+        @Override
+        public void genInstall(MethodSpec.Builder builder) {
+            CodeBlock block = CodeBlock.builder()
+                    .add("db.addChangeListener(new $T() {\n", DefaultChangeListener.class)
+                    .indent()
+                    .add("@$T\npublic void onBeforeInsert($T driver, $T value) {\n", Override.class, Driver.class, UBValue.class)
+                    .indent()
+                    .beginControlFlow("if($T.isValidObject(value, $T.TYPE))", Utils.class, createProxyClassname())
+                    .addStatement("final long longValue = driver.incrementLongField($S)", varName())
+                    .addStatement("value.asObject().put($S, $T.createInt(longValue))", mFieldElement, UBValueFactory.class)
+                    .endControlFlow()
+                    .unindent()
+                    .add("}\n")
+                    .unindent()
+                    .addStatement("})")
+                    .build();
+
+            builder.addCode(block);
+
+        }
+    }
+
+    private List<GenCode> mCodeGen = new ArrayList<GenCode>();
 
     private void visitObjectTypes(TypeSpec.Builder classBuilder, DeclaredType type) {
         TypeElement classElement = (TypeElement) type.asElement();
@@ -243,6 +306,20 @@ public class DatasetGenerator {
                 }
 
             }
+
+
+            if(member.getKind() == ElementKind.FIELD
+                    && !member.getModifiers().contains(Modifier.STATIC)
+                    && !member.getModifiers().contains(Modifier.TRANSIENT)
+                    && (am = getAnnotationMirror(member, AutoIncrement.class)) != null) {
+
+                VariableElement field = (VariableElement) member;
+                if(isLongType(field)) {
+                    mCodeGen.add(new LongAutoIncrement(classElement, field));
+                }
+
+            }
+
         }
     }
 
