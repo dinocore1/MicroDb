@@ -10,9 +10,9 @@ import java.util.*;
 
 public class MapDBDriver implements Driver {
 
-    private final DB mMapDB;
-    private final Atomic.Var<UBValue> mMetadata;
-    private BTreeMap<UUID, UBValue> mObjects;
+    final DB mMapDB;
+    final Atomic.Var<UBObject> mMetadata;
+    BTreeMap<UUID, UBValue> mObjects;
     private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
 
 
@@ -59,7 +59,8 @@ public class MapDBDriver implements Driver {
                 .comparator(BTreeMap.COMPARABLE_COMPARATOR)
                 .makeOrGet();
 
-        mMetadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
+        Atomic.Var<? extends UBValue> metadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
+        mMetadata = (Atomic.Var<UBObject>)metadata;
     }
 
     @Override
@@ -80,6 +81,10 @@ public class MapDBDriver implements Driver {
     @Override
     public void addChangeListener(ChangeListener changeListener) {
         mChangeListeners.add(changeListener);
+    }
+
+    public void addChangeListener(int index, ChangeListener changeListener) {
+        mChangeListeners.add(index, changeListener);
     }
 
     @Override

@@ -33,6 +33,14 @@ public interface Driver {
      */
     UUID insert(UBValue value) throws IOException;
 
+    /**
+     * replace value with key {@code id} with new value {@code value}.
+     * If a value with with {@code id} does not exist, insert the key-value
+     * pair.
+     * @param id
+     * @param value
+     * @throws IOException
+     */
     void update(UUID id, UBValue value) throws IOException;
 
     /**
