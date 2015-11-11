@@ -9,46 +9,46 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
 
-public class DatabaseVersion {
+public class Commit {
 
     private UUID mId;
     private UUID mParent;
     private Date mDate;
     private String mMessage;
 
-    private DatabaseVersion() {}
+    private Commit() {}
 
-    public static DatabaseVersion newRoot() {
-        DatabaseVersion retval = new DatabaseVersion();
+    public static Commit newRoot() {
+        Commit retval = new Commit();
         retval.mId = UUID.randomUUID();
         retval.mDate = new Date();
 
         return retval;
     }
 
-    public static DatabaseVersion withParent(DatabaseVersion parent) {
+    public static Commit withParent(Commit parent) {
         return withParent(parent.getId());
     }
 
-    public static DatabaseVersion withParent(UUID parent) {
-        DatabaseVersion retval = new DatabaseVersion();
+    public static Commit withParent(UUID parent) {
+        Commit retval = new Commit();
         retval.mId = UUID.randomUUID();
         retval.mParent = parent;
         retval.mDate = new Date();
         return retval;
     }
 
-    public static final Serializer<DatabaseVersion> SERIALIZER = new Serializer<DatabaseVersion>() {
+    public static final Serializer<Commit> SERIALIZER = new Serializer<Commit>() {
         @Override
-        public void serialize(DataOutput out, DatabaseVersion value) throws IOException {
+        public void serialize(DataOutput out, Commit value) throws IOException {
             Serializer.UUID.serialize(out, value.mId);
             Serializer.UUID.serialize(out, value.mParent);
 
         }
 
         @Override
-        public DatabaseVersion deserialize(DataInput in, int available) throws IOException {
-            DatabaseVersion retval = new DatabaseVersion();
+        public Commit deserialize(DataInput in, int available) throws IOException {
+            Commit retval = new Commit();
             retval.mId = Serializer.UUID.deserialize(in, available);
             retval.mParent = Serializer.UUID.deserialize(in, available);
             return retval;

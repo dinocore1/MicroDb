@@ -2,11 +2,10 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.microdb.version.Change;
-import com.devsmart.microdb.version.DatabaseVersion;
+import com.devsmart.microdb.version.Commit;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-import com.google.common.collect.ComparisonChain;
 import org.mapdb.*;
 
 import java.io.DataInput;
@@ -20,8 +19,8 @@ public class VersionManager {
     private final MapDBDriver mMapDBDriver;
     private final Atomic.Var<UBObject> mMetadata;
     private final BTreeMap<DiffKey, Change> mDiffs;
-    private final BTreeMap<UUID, DatabaseVersion> mCommits;
-    private DatabaseVersion mCurrentVersion;
+    private final BTreeMap<UUID, Commit> mCommits;
+    private Commit mCurrentVersion;
 
 
     public VersionManager(MicroDB microDB, MapDBDriver mapdbdriver) {
@@ -36,13 +35,13 @@ public class VersionManager {
 
         mCommits = mMapDBDriver.mMapDB.createTreeMap("commits")
                 .keySerializerWrap(Serializer.UUID)
-                .valueSerializer(DatabaseVersion.SERIALIZER)
+                .valueSerializer(Commit.SERIALIZER)
                 .makeOrGet();
 
         UBObject metadata = mMetadata.get();
         UBValue currentVersionStr = metadata.get("currentVersion");
         if(currentVersionStr == null || !currentVersionStr.isString()) {
-            mCurrentVersion = DatabaseVersion.newRoot();
+            mCurrentVersion = Commit.newRoot();
             mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
             metadata.put("currentVersion",
                     UBValueFactory.createString(mCurrentVersion.toString()));
@@ -52,7 +51,9 @@ public class VersionManager {
             mCurrentVersion = mCommits.get(commitId);
         }
 
-
+        if(mCurrentVersion == null) {
+            throw new RuntimeException("currentVersion is null");
+        }
 
         mMapDBDriver.addChangeListener(100, mChangeListener);
 
@@ -97,7 +98,7 @@ public class VersionManager {
         mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
             @Override
             public void write() throws IOException {
-                mCurrentVersion = DatabaseVersion.withParent(mCurrentVersion);
+                mCurrentVersion = Commit.withParent(mCurrentVersion);
                 mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
 
                 UBObject metadata = mMetadata.get();
