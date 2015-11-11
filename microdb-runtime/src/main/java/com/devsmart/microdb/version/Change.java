@@ -11,6 +11,7 @@ import org.mapdb.Serializer;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.UUID;
 
 public class Change {
@@ -18,7 +19,7 @@ public class Change {
     public static final byte TYPE_INSERT = 0;
     public static final byte TYPE_DELETE = 1;
 
-    public static final Serializer<Change> SERIALIZER = new Serializer<Change>() {
+    public static final class ChangeSerializer implements Serializer<Change>, Serializable {
         @Override
         public void serialize(DataOutput out, Change value) throws IOException {
             out.writeByte(value.mType);
@@ -40,7 +41,9 @@ public class Change {
         public int fixedSize() {
             return -1;
         }
-    };
+    }
+
+    public static final Serializer<Change> SERIALIZER = new ChangeSerializer();
 
     public static Change createDeleteChange(UUID key) {
         Change retval = new Change();

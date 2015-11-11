@@ -11,6 +11,7 @@ import org.mapdb.*;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.UUID;
 
 public class VersionManager {
@@ -116,7 +117,7 @@ public class VersionManager {
 
     private static class DiffKey implements Comparable<DiffKey> {
 
-        public static final Serializer<DiffKey> SERIALIZER = new Serializer<DiffKey>() {
+        public static class DiffKeySerializer implements Serializer<DiffKey>, Serializable {
             @Override
             public void serialize(DataOutput out, DiffKey value) throws IOException {
                 Serializer.UUID.serialize(out, value.patchId);
@@ -135,7 +136,9 @@ public class VersionManager {
             public int fixedSize() {
                 return 2*16;
             }
-        };
+        }
+
+        public static final Serializer<DiffKey> SERIALIZER = new DiffKeySerializer();
 
         public final UUID patchId;
         public final UUID objKey;

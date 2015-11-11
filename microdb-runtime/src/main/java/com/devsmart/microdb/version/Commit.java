@@ -6,6 +6,7 @@ import org.mapdb.Serializer;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ public class Commit {
     public static Commit newRoot() {
         Commit retval = new Commit();
         retval.mId = UUID.randomUUID();
+        retval.mParent = new UUID(0, 0);
         retval.mDate = new Date();
 
         return retval;
@@ -38,7 +40,7 @@ public class Commit {
         return retval;
     }
 
-    public static final Serializer<Commit> SERIALIZER = new Serializer<Commit>() {
+    public static class CommitSerializer implements Serializer<Commit>, Serializable {
         @Override
         public void serialize(DataOutput out, Commit value) throws IOException {
             Serializer.UUID.serialize(out, value.mId);
@@ -58,7 +60,9 @@ public class Commit {
         public int fixedSize() {
             return -1;
         }
-    };
+    }
+
+    public static final Serializer<Commit> SERIALIZER = new CommitSerializer();
 
     public UUID getId() {
         return mId;

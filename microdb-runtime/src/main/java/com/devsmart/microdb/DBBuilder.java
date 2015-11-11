@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class DBBuilder {
 
-    private static class NullCallback implements DBCallback {
+    static class NullCallback implements DBCallback {
 
         @Override
         public void onUpgrade(MicroDB db, int oldVersion, int newVersion) throws IOException {

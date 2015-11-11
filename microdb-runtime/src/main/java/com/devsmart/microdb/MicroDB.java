@@ -157,8 +157,7 @@ public class MicroDB {
     private void init() throws IOException {
 
         UBObject metaObj = mDriver.getMeta();
-        if(metaObj == null) {
-            metaObj = new UBObject();
+        if(!metaObj.containsKey(METAKEY_INSTANCE)) {
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
