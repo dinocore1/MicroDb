@@ -6,9 +6,8 @@ import com.devsmart.microdb.version.DatabaseVersion;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-import org.mapdb.Atomic;
-import org.mapdb.BTreeMap;
-import org.mapdb.Serializer;
+import com.google.common.collect.ComparisonChain;
+import org.mapdb.*;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -17,29 +16,43 @@ import java.util.UUID;
 
 public class VersionManager {
 
+    private final MicroDB mMicroDB;
     private final MapDBDriver mMapDBDriver;
     private final Atomic.Var<UBObject> mMetadata;
-    private final BTreeMap<Object, Object> mDiffs;
-    private final DatabaseVersion mCurrentVersion;
+    private final BTreeMap<DiffKey, Change> mDiffs;
+    private final BTreeMap<UUID, DatabaseVersion> mCommits;
+    private DatabaseVersion mCurrentVersion;
 
-    public VersionManager(MapDBDriver mapdbdriver) {
+
+    public VersionManager(MicroDB microDB, MapDBDriver mapdbdriver) {
+        mMicroDB = microDB;
         mMapDBDriver = mapdbdriver;
         mMetadata = mMapDBDriver.mMetadata;
-
-        UBObject metadata = mMetadata.get();
-        UBValue currentVersion = metadata.get("currentVersion");
-        if(currentVersion == null || !currentVersion.isObject()) {
-            mCurrentVersion = new DatabaseVersion();
-            metadata.put("currentVersion", mCurrentVersion.serialize());
-            mMetadata.set(metadata);
-        } else {
-            mCurrentVersion = DatabaseVersion.deserialize(currentVersion.asObject());
-        }
 
         mDiffs = mMapDBDriver.mMapDB.createTreeMap("diffs")
                 .keySerializerWrap(DiffKey.SERIALIZER)
                 .valueSerializer(Change.SERIALIZER)
                 .makeOrGet();
+
+        mCommits = mMapDBDriver.mMapDB.createTreeMap("commits")
+                .keySerializerWrap(Serializer.UUID)
+                .valueSerializer(DatabaseVersion.SERIALIZER)
+                .makeOrGet();
+
+        UBObject metadata = mMetadata.get();
+        UBValue currentVersionStr = metadata.get("currentVersion");
+        if(currentVersionStr == null || !currentVersionStr.isString()) {
+            mCurrentVersion = DatabaseVersion.newRoot();
+            mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
+            metadata.put("currentVersion",
+                    UBValueFactory.createString(mCurrentVersion.toString()));
+            mMetadata.set(metadata);
+        } else {
+            UUID commitId = UUID.fromString(currentVersionStr.asString());
+            mCurrentVersion = mCommits.get(commitId);
+        }
+
+
 
         mMapDBDriver.addChangeListener(100, mChangeListener);
 
@@ -48,7 +61,7 @@ public class VersionManager {
     private ChangeListener mChangeListener = new ChangeListener() {
         @Override
         public void onAfterInsert(Driver driver, UUID key, UBValue value) {
-            addInsertChange(mCurrentVersion.getBase(), key, value);
+            addInsertChange(mCurrentVersion.getId(), key, value);
         }
 
         @Override
@@ -58,13 +71,13 @@ public class VersionManager {
 
         @Override
         public void onBeforeDelete(Driver driver, UUID key) {
-            addDeleteChange(mCurrentVersion.getBase(), key);
+            addDeleteChange(mCurrentVersion.getId(), key);
 
         }
 
         @Override
         public void onBeforeUpdate(Driver driver, UUID key, UBValue newValue) {
-            addInsertChange(mCurrentVersion.getBase(), key, newValue);
+            addInsertChange(mCurrentVersion.getId(), key, newValue);
 
         }
     };
@@ -74,15 +87,33 @@ public class VersionManager {
     }
 
     public void addDeleteChange(UUID patch, UUID objId) {
-        mDiffs.put(new DiffKey(patch, objId), Change.createDeleteChange(objId));
+        final DiffKey key = new DiffKey(patch, objId);
+        if(mDiffs.remove(key) == null) {
+            mDiffs.put(key, Change.createDeleteChange(objId));
+        }
     }
 
     public void commit() {
+        mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
+            @Override
+            public void write() throws IOException {
+                mCurrentVersion = DatabaseVersion.withParent(mCurrentVersion);
+                mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
 
+                UBObject metadata = mMetadata.get();
+                metadata.put("currentVersion",
+                        UBValueFactory.createString(mCurrentVersion.getId().toString()));
+                mMetadata.set(metadata);
+            }
+        });
+    }
+
+    public boolean isDirty() {
+        return mDiffs.ceilingKey(new DiffKey(mCurrentVersion.getId(), null)) != null;
     }
 
 
-    private static class DiffKey {
+    private static class DiffKey implements Comparable<DiffKey> {
 
         public static final Serializer<DiffKey> SERIALIZER = new Serializer<DiffKey>() {
             @Override
@@ -113,6 +144,22 @@ public class VersionManager {
             this.objKey = objId;
         }
 
+        @Override
+        public int compareTo(DiffKey o) {
+            int retval = patchId.compareTo(o.patchId);
+            if(retval != 0) {
+                if(objKey != null && o.objKey != null) {
+                    retval = objKey.compareTo(o.objKey);
+                } else if(objKey == null && o.objKey == null){
+                    retval = 0;
+                } else if(objKey == null) {
+                    retval = -1;
+                } else {
+                    return 1;
+                }
+            }
+            return retval;
+        }
     }
 
 

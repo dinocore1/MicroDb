@@ -55,8 +55,12 @@ public class MicroDB {
     };
 
 
-    private interface WriteCommand {
+    interface WriteCommand {
         void write() throws IOException;
+    }
+
+    void enqueWriteCommand(WriteCommand cmd) {
+        mSaveQueue.add(cmd);
     }
 
     private class SaveDBData implements WriteCommand {
