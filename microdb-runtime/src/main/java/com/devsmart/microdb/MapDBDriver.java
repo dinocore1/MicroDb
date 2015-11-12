@@ -2,6 +2,8 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.ubjson.*;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.LinkedListMultimap;
 import org.mapdb.*;
 
 import java.io.*;
@@ -83,9 +85,6 @@ public class MapDBDriver implements Driver {
         mChangeListeners.add(changeListener);
     }
 
-    public void addChangeListener(int index, ChangeListener changeListener) {
-        mChangeListeners.add(index, changeListener);
-    }
 
     @Override
     public UBValue get(UUID key) throws IOException {

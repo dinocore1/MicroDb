@@ -6,6 +6,7 @@ import com.devsmart.microdb.MapDBDriver;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import com.google.common.base.Objects;
 import org.mapdb.Serializer;
 
 import java.io.DataInput;
@@ -91,5 +92,9 @@ public class Change {
         }
     }
 
-
+    @Override
+    public String toString() {
+        String retval = (mType == TYPE_INSERT ? "+" : "-") + mKey.toString().substring(0, 5);
+        return retval;
+    }
 }

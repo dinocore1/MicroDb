@@ -12,6 +12,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.NavigableMap;
 import java.util.UUID;
 
 public class VersionManager {
@@ -19,7 +20,7 @@ public class VersionManager {
     private final MicroDB mMicroDB;
     private final MapDBDriver mMapDBDriver;
     private final Atomic.Var<UBObject> mMetadata;
-    private final BTreeMap<DiffKey, Change> mDiffs;
+    private final BTreeMap<Fun.Tuple2<UUID, UUID>, Change> mDiffs;
     private final BTreeMap<UUID, Commit> mCommits;
     private Commit mCurrentVersion;
 
@@ -30,7 +31,9 @@ public class VersionManager {
         mMetadata = mMapDBDriver.mMetadata;
 
         mDiffs = mMapDBDriver.mMapDB.createTreeMap("diffs")
-                .keySerializerWrap(DiffKey.SERIALIZER)
+                .keySerializer(new BTreeKeySerializer.Tuple2KeySerializer<UUID, UUID>(
+                        Fun.COMPARATOR,
+                        Serializer.UUID, Serializer.UUID))
                 .valueSerializer(Change.SERIALIZER)
                 .makeOrGet();
 
@@ -56,7 +59,7 @@ public class VersionManager {
             throw new RuntimeException("currentVersion is null");
         }
 
-        mMapDBDriver.addChangeListener(100, mChangeListener);
+        mMapDBDriver.addChangeListener(mChangeListener);
 
     }
 
@@ -85,11 +88,11 @@ public class VersionManager {
     };
 
     public void addInsertChange(UUID patch, UUID objId, UBValue newValue) {
-        mDiffs.put(new DiffKey(patch, objId), Change.createInsertChange(objId, newValue));
+        mDiffs.put(Fun.t2(patch, objId), Change.createInsertChange(objId, newValue));
     }
 
     public void addDeleteChange(UUID patch, UUID objId) {
-        final DiffKey key = new DiffKey(patch, objId);
+        final Fun.Tuple2<UUID, UUID> key = Fun.t2(patch, objId);
         if(mDiffs.remove(key) == null) {
             mDiffs.put(key, Change.createDeleteChange(objId));
         }
@@ -111,7 +114,25 @@ public class VersionManager {
     }
 
     public boolean isDirty() {
-        return mDiffs.ceilingKey(new DiffKey(mCurrentVersion.getId(), null)) != null;
+        //dirty if there exists at least one diff associated with the current version
+        final UUID currentVersion = mCurrentVersion.getId();
+        Fun.Tuple2<UUID, UUID> key = mDiffs.ceilingKey(Fun.t2(currentVersion, (UUID)null));
+        if(key != null) {
+            return key.a.equals(currentVersion);
+        } else {
+            return false;
+        }
+    }
+
+    public Commit getHead() {
+        return mCurrentVersion;
+    }
+
+    public Iterable<Change> getChanges(UUID commit) {
+        return ((NavigableMap)mDiffs).subMap(
+                Fun.t2(commit, null),
+                Fun.t2(commit, Fun.HI()))
+                .values();
     }
 
 
@@ -151,7 +172,7 @@ public class VersionManager {
         @Override
         public int compareTo(DiffKey o) {
             int retval = patchId.compareTo(o.patchId);
-            if(retval != 0) {
+            if(retval == 0) {
                 if(objKey != null && o.objKey != null) {
                     retval = objKey.compareTo(o.objKey);
                 } else if(objKey == null && o.objKey == null){
