@@ -21,7 +21,7 @@ public class Commit {
 
     public static Commit newRoot() {
         Commit retval = new Commit();
-        retval.mId = UUID.randomUUID();
+        retval.mId = new UUID(0, 0);
         retval.mParent = new UUID(0, 0);
         retval.mDate = new Date();
 
@@ -33,11 +33,23 @@ public class Commit {
     }
 
     public static Commit withParent(UUID parent) {
+        return withParentAndId(parent, UUID.randomUUID());
+    }
+
+    public static Commit withParentAndId(Commit parent, UUID commitId) {
+        return withParentAndId(parent.getId(), commitId);
+    }
+
+    public static Commit withParentAndId(UUID parent, UUID commitId) {
         Commit retval = new Commit();
-        retval.mId = UUID.randomUUID();
+        retval.mId = commitId;
         retval.mParent = parent;
         retval.mDate = new Date();
         return retval;
+    }
+
+    public UUID getParent() {
+        return mParent;
     }
 
     public static class CommitSerializer implements Serializer<Commit>, Serializable {

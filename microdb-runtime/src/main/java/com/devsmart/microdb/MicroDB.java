@@ -54,6 +54,10 @@ public class MicroDB {
         }
     };
 
+    public Driver getDriver() {
+        return mDriver;
+    }
+
 
     interface WriteCommand {
         void write() throws IOException;

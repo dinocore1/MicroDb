@@ -10,7 +10,7 @@ dependencies {
   compile 'org.mapdb:mapdb:1.0.8'
   compile 'com.google.guava:guava:17.0'
   testCompile 'junit:junit:4.11'
-
+  testCompile 'org.slf4j:slf4j-simple:1.7.7'
 }
 
 compileJava {

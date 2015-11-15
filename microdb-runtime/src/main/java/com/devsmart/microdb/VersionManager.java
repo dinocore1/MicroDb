@@ -7,15 +7,20 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import org.mapdb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.NavigableMap;
 import java.util.UUID;
 
 public class VersionManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(VersionManager.class);
 
     private final MicroDB mMicroDB;
     private final MapDBDriver mMapDBDriver;
@@ -98,19 +103,28 @@ public class VersionManager {
         }
     }
 
-    public void commit() {
+    public UUID commit() {
+        final UUID newCommitId =  UUID.randomUUID();
         mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
             @Override
             public void write() throws IOException {
-                mCurrentVersion = Commit.withParent(mCurrentVersion);
+                logger.info("commit");
+                mCurrentVersion = Commit.withParentAndId(mCurrentVersion, newCommitId);
                 mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
 
-                UBObject metadata = mMetadata.get();
-                metadata.put("currentVersion",
-                        UBValueFactory.createString(mCurrentVersion.getId().toString()));
-                mMetadata.set(metadata);
+                setHEAD(mCurrentVersion.getId());
             }
         });
+
+        return newCommitId;
+    }
+
+    private void setHEAD(UUID commitID) {
+        logger.info("HEAD is now: " + commitID);
+        UBObject metadata = mMetadata.get();
+        metadata.put("currentVersion",
+                UBValueFactory.createString(commitID.toString()));
+        mMetadata.set(metadata);
     }
 
     public boolean isDirty() {
@@ -133,6 +147,64 @@ public class VersionManager {
                 Fun.t2(commit, null),
                 Fun.t2(commit, Fun.HI()))
                 .values();
+    }
+
+    public void addChanges(UUID commit, Iterable<Change> changes) {
+        logger.info("adding diff for " + commit);
+        for(Change c : changes) {
+            Fun.Tuple2<UUID, UUID> key = Fun.t2(commit, c.getObjId());
+            mDiffs.put(key, c);
+        }
+    }
+
+    public void addCommit(Commit commit) {
+        mCommits.put(commit.getId(), commit);
+    }
+
+    public void moveTo(final UUID dest) throws IOException {
+        mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
+            @Override
+            public void write() throws IOException {
+                logger.info("begining move to dest");
+                if(isDirty()) {
+                    logger.error("cannot move to " + dest + ". Dirty HEAD");
+                    return;
+                }
+
+                final UUID head = getHead().getId();
+
+                ArrayList<Commit> commits = new ArrayList<Commit>();
+                UUID currentCommit = dest;
+                Commit commit;
+                while((commit = mCommits.get(currentCommit)) != null) {
+                    if(commit.getId().equals(head)) {
+                        break;
+                    } else {
+                        commits.add(commit);
+                        currentCommit = commit.getParent();
+                    }
+                }
+                if(commit == null || !commit.getId().equals(head)) {
+                    logger.error("no commit path to " + dest + " found");
+                    return;
+                }
+
+                for(int i=commits.size()-1;i>=0;i--) {
+                    commit = commits.get(i);
+                    logger.info("applying commit " + commit);
+                    for(Change c : getChanges(commit.getId())) {
+                        c.apply(mMapDBDriver);
+                    }
+                }
+
+                assert(commit.getId().equals(dest));
+                mCurrentVersion = commit;
+                setHEAD(commit.getId());
+
+            }
+        });
+
+
     }
 
 
