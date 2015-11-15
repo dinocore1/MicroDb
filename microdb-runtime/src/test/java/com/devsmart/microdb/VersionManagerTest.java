@@ -110,7 +110,7 @@ public class VersionManagerTest {
 
         VersionManager vm = new VersionManager(db, dbDriver);
 
-        insert("dog", "fido", dbDriver);
+        final UUID fidoId = insert("dog", "fido", dbDriver);
         final UUID symoId = insert("cat", "symo", dbDriver);
 
         final UUID commitId = vm.commit();
@@ -133,11 +133,16 @@ public class VersionManagerTest {
 
         assertEquals(destCommit.getId(), vm.getHead().getId());
 
-        //assertNull(dbDriver.get(symoId));
+        assertNull(dbDriver.get(symoId));
         UBObject mondoValue = (UBObject) dbDriver.get(mondoId);
         assertNotNull(mondoValue);
         assertTrue(mondoValue.isObject());
         assertEquals("dog", mondoValue.get("type").asString());
         assertEquals("mondo", mondoValue.get("name").asString());
+
+        UBObject fido = (UBObject) dbDriver.get(fidoId);
+        assertNotNull(fido);
+        assertEquals("fido", fido.get("name").asString());
+
     }
 }
