@@ -9,7 +9,7 @@ public class Utils {
     public static UBArray toUBArray(DBObject[] input) {
         UBObject[] output = new UBObject[input.length];
         for(int i=0;i<input.length;i++) {
-            output[i] = new UBObject();
+            output[i] = UBValueFactory.createObject();
             input[i].writeUBObject(output[i]);
         }
         return UBValueFactory.createArray(output);

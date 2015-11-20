@@ -93,7 +93,7 @@ public class MicroDB {
 
         @Override
         public void write() throws IOException {
-            UBObject data = new UBObject();
+            UBObject data = UBValueFactory.createObject();
             mObject.writeUBObject(data);
             mDriver.update(mObject.getId(), data);
             mObject.mDirty = false;
@@ -231,7 +231,7 @@ public class MicroDB {
 
             T retval = classType.newInstance();
 
-            UBObject data = new UBObject();
+            UBObject data = UBValueFactory.createObject();
             UUID key = mDriver.insert(data);
 
             data.put("id", UBValueFactory.createString(key.toString()));
