@@ -73,8 +73,6 @@ public class SimpleDBModel extends DBObject {
         this.myLong = myLong;
     }
 
-
-
     private SimpleDBModel internal;
     public SimpleDBModel getInternal() {
         return internal;
@@ -123,4 +121,16 @@ public class SimpleDBModel extends DBObject {
     public void setGenericValue(UBValue genericValue) {
         this.genericValue = genericValue;
     }
+
+    private MyDatum myDatum;
+
+    public MyDatum getMyDatum() {
+        return myDatum;
+    }
+
+    public void setMyDatum(MyDatum myDatum) {
+        this.myDatum = myDatum;
+    }
+
+
 }

@@ -1,10 +1,7 @@
 package com.devsmart.microdb.generator;
 
 
-import com.devsmart.microdb.DBObject;
-import com.devsmart.microdb.Link;
-import com.devsmart.microdb.MicroDB;
-import com.devsmart.microdb.Utils;
+import com.devsmart.microdb.*;
 import com.devsmart.ubjson.UBArray;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
@@ -37,6 +34,65 @@ public class ProxyFileGenerator {
         void deserializeCode(MethodSpec.Builder builder);
         void specializedMethods(TypeSpec.Builder builder);
 
+    }
+
+    private class DatumField implements FieldMethodCodeGen {
+
+        private final VariableElement mField;
+
+        public DatumField(VariableElement field) {
+            mField = field;
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.addCode(CodeBlock.builder()
+                    .add("{\n")
+                    .indent()
+
+                    .addStatement("$T datum = $L()", TypeName.get(mField.asType()), createGetterName(mField))
+                    .beginControlFlow("if (datum == null)")
+                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
+                    .nextControlFlow("else")
+                    .addStatement("data.put($S, datum.toUBValue())", mField)
+                    .endControlFlow()
+
+                    .unindent()
+                    .add("}\n")
+                    .build());
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            builder.addCode(CodeBlock.builder()
+                    .beginControlFlow("if (obj.containsKey($S))", mField)
+                    .addStatement("$T datum", TypeName.get(mField.asType()))
+                    .addStatement("$T value = obj.get($S)", UBValue.class, mField)
+                    .beginControlFlow("if (value.isNull())")
+                    .addStatement("datum = null")
+                    .nextControlFlow("else")
+                    .addStatement("datum = new $T()", TypeName.get(mField.asType()))
+                    .addStatement("datum.fromUBValue(value)")
+                    .endControlFlow()
+                    .addStatement("super.$L(datum)", createSetterName(mField))
+                    .endControlFlow()
+                    .build());
+
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+            final String setterName = createSetterName(mField);
+            builder.addMethod(MethodSpec.methodBuilder(setterName)
+                            .addAnnotation(Override.class)
+                            .addModifiers(Modifier.PUBLIC)
+                            .addParameter(TypeName.get(mField.asType()), "value")
+                            .addStatement("super.$L(value)", setterName)
+                            .addStatement("mDirty = true")
+                            .build()
+            );
+        }
     }
 
     private class GenericUBValueField implements FieldMethodCodeGen {
@@ -550,11 +606,14 @@ public class ProxyFileGenerator {
                     .indent()
 
                     .addStatement("$T inst = $N()", TypeName.get(mField.asType()), createGetterName(mField))
-                    .beginControlFlow("if(inst != null)")
-                    .addStatement("$T obj = new $T()", UBObject.class, UBObject.class)
+                    .beginControlFlow("if (inst == null)")
+                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
+                    .nextControlFlow("else")
+                    .addStatement("$T obj = $T.createObject()", UBObject.class, UBValueFactory.class)
                     .addStatement("inst.writeUBObject(obj)")
                     .addStatement("data.put($S, obj)", mField)
                     .endControlFlow()
+
                     .unindent()
                     .add("}\n")
                     .build());
@@ -567,9 +626,14 @@ public class ProxyFileGenerator {
             ClassName proxyClassName = createDBObjName(mField);
             builder.addCode(CodeBlock.builder()
                             .beginControlFlow("if(obj.containsKey($S))", mField)
+                            .addStatement("$T value = obj.get($S)", UBValue.class, mField)
+                            .beginControlFlow("if (value.isNull())")
+                            .addStatement("super.$L(null)", createSetterName(mField))
+                            .nextControlFlow("else")
                             .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                            .addStatement("tmp.init(null, obj.get($S).asObject(), db)", mField)
+                            .addStatement("tmp.init(null, value.asObject(), db)")
                             .addStatement("super.$L(tmp)", createSetterName(mField))
+                            .endControlFlow()
                             .endControlFlow()
                             .build()
             );
@@ -702,6 +766,10 @@ public class ProxyFileGenerator {
         return mEnv.getTypeUtils().isAssignable(field.asType(), linkType);
     }
 
+    private boolean isDatumType(VariableElement field) {
+        return mEnv.getTypeUtils().isAssignable(field.asType(), toTypeMirror(Datum.class));
+    }
+
     private boolean isEmbeddedType(VariableElement field) {
         return mEnv.getTypeUtils().isSubtype(field.asType(), toTypeMirror(DBObject.class));
     }
@@ -799,13 +867,15 @@ public class ProxyFileGenerator {
                             if(!field.getModifiers().contains(Modifier.PRIVATE)) {
                                 error(String.format("'%s' field must be private", field));
                             } else {
-                                if(isEmbeddedType(field)) {
+                                if(isDatumType(field)) {
+                                    fields.add(new DatumField(field));
+                                } else if(isEmbeddedType(field)) {
                                     fields.add(new EmbeddedDBObjectField(field));
                                 } else if(isStringType(field)) {
                                     fields.add(new StringDBOBjectField(field));
-                                } else if(isBoolType(field)){
+                                } else if (isBoolType(field)){
                                     fields.add(new BoolDBObjectField(field));
-                                } else if(isByteType(field)){
+                                } else if (isByteType(field)){
                                     fields.add(new ByteDBObjectField(field));
                                 } else if (isShortType(field)) {
                                     fields.add(new ShortDBObjectField(field));

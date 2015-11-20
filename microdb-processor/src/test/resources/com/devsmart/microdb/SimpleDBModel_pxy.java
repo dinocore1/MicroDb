@@ -6,6 +6,8 @@ import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import java.util.UUID;
+
+import pkg.project.MyDatum;
 import pkg.project.SimpleDBModel;
 
 
@@ -26,8 +28,10 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
 
         {
             SimpleDBModel inst = getInternal();
-            if (inst != null) {
-                UBObject obj = new UBObject();
+            if(inst == null) {
+                data.put("internal", UBValueFactory.createNull());
+            } else {
+                UBObject obj = UBValueFactory.createObject();
                 inst.writeUBObject(obj);
                 data.put("internal", obj);
             }
@@ -37,6 +41,16 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         data.put("myDoubleArray", UBValueFactory.createArrayOrNull(getMyDoubleArray()));
         data.put("addresses", Utils.toUBArray(getAddresses()));
         data.put("genericValue", UBValueFactory.createValueOrNull(getGenericValue()));
+
+        {
+            MyDatum datum = getMyDatum();
+            if(datum == null) {
+                data.put("myDatum", UBValueFactory.createNull());
+            } else {
+                data.put("myDatum", datum.toUBValue());
+            }
+        }
+
     }
 
     @Override
@@ -61,9 +75,14 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             super.setMyLong(obj.get("myLong").asLong());
         }
         if (obj.containsKey("internal")) {
-            SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-            tmp.init(null, obj.get("internal").asObject(), db);
-            super.setInternal(tmp);
+            UBValue value = obj.get("internal");
+            if(value.isNull()) {
+                super.setInternal(null);
+            } else {
+                SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
+                tmp.init(null, value.asObject(), db);
+                super.setInternal(tmp);
+            }
         }
         link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
         if (obj.containsKey("myFloatArray")) {
@@ -85,6 +104,17 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         if (obj.containsKey("genericValue")) {
             super.setGenericValue((UBValue)obj.get("genericValue"));
+        }
+        if (obj.containsKey("myDatum")) {
+            MyDatum datum;
+            UBValue value = obj.get("myDatum");
+            if(value.isNull()) {
+                datum = null;
+            } else {
+                datum = new MyDatum();
+                datum.fromUBValue(value);
+            }
+            super.setMyDatum(datum);
         }
     }
 
@@ -152,6 +182,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void setGenericValue(UBValue value) {
         super.setGenericValue(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setMyDatum(MyDatum value) {
+        super.setMyDatum(value);
         mDirty = true;
     }
 }
