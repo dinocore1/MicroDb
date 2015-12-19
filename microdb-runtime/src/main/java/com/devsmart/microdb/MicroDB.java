@@ -16,11 +16,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MicroDB {
@@ -32,13 +27,148 @@ public class MicroDB {
     private DBCallback mCallback;
     private final HashMap<UUID, SoftReference<DBObject>> mLiveObjects = new HashMap<UUID, SoftReference<DBObject>>();
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
-    private final Queue<WriteCommand> mSaveQueue = new ConcurrentLinkedQueue<WriteCommand>();
-    private final ScheduledExecutorService mWriteThread = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r, "MicroDB Write Thread");
+    private final WriteQueue mWriteQueue = new WriteQueue();
+
+    public enum OperationType {
+        Write,
+        NoOp,
+        Shutdown
+    }
+
+    private abstract class Operation implements Runnable {
+        public final OperationType mCommandType;
+        private Exception mException;
+
+        Operation(OperationType type) {
+            mCommandType = type;
         }
-    });
+
+        synchronized void complete() {
+            notifyAll();
+        }
+
+        public synchronized void waitForCompletion() {
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                logger.warn("", e);
+            }
+        }
+
+        abstract void doIt() throws IOException;
+
+        @Override
+        public void run() {
+            try {
+                doIt();
+            } catch (Exception e) {
+                mException = e;
+            }
+        }
+    }
+
+    private class WriteQueue implements Runnable {
+        private static final long DEFAULT_WAIT = 2000;
+        private final Queue<Operation> mOperationQueue = new ConcurrentLinkedQueue<Operation>();
+        private Thread mWriteThread = new Thread(this, "MicroDB Write Thread");
+
+        @Override
+        public void run() {
+            while(true) {
+                Operation op = mOperationQueue.poll();
+                if(op == null) {
+                    waitForNextCommand();
+                } else {
+                    try {
+                        switch (op.mCommandType) {
+                            case Write:
+                                op.run();
+                                break;
+
+                            case NoOp:
+                                break;
+
+                            case Shutdown:
+                                return;
+                        }
+                    } finally {
+                        op.complete();
+                    }
+                }
+            }
+
+        }
+
+        private synchronized void waitForNextCommand() {
+            try {
+                wait(DEFAULT_WAIT);
+            } catch (InterruptedException e) {
+                logger.warn("unexpected interrupt", e);
+            }
+        }
+
+
+        public void start() {
+            mWriteThread.start();
+        }
+
+        public void enqueue(Operation op) {
+            mOperationQueue.offer(op);
+        }
+
+        public synchronized void kick() {
+            notify();
+        }
+    }
+
+
+
+    private Operation createNoOp() {
+        return new Operation(OperationType.NoOp) {
+            @Override
+            void doIt() throws IOException {
+            }
+        };
+    }
+
+    private Operation createWriteObject(final DBObject obj) {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException{
+                final UUID id = obj.getId();
+                obj.mDirty = false;
+                mDriver.delete(id);
+                synchronized (MicroDB.this) {
+                    mDeletedObjects.remove(id);
+                }
+            }
+        };
+    }
+
+    private Operation createSaveOperation(final UUID mId, final UBObject mData) {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException {
+                mDriver.update(mId, mData);
+
+            }
+        };
+    }
+
+    private Operation createDeleteOperation(final DBObject obj) {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException {
+                final UUID id = obj.getId();
+                obj.mDirty = false;
+                mDriver.delete(id);
+                synchronized (MicroDB.this) {
+                    mDeletedObjects.remove(id);
+                }
+            }
+        };
+    }
+
     private AtomicBoolean mAutoSave = new AtomicBoolean(true);
 
     static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
@@ -59,99 +189,12 @@ public class MicroDB {
     }
 
 
-    interface WriteCommand {
-        void write() throws IOException;
-    }
-
-    void enqueWriteCommand(WriteCommand cmd) {
-        mSaveQueue.add(cmd);
-    }
-
-    private class SaveDBData implements WriteCommand {
-
-        private final UUID mId;
-        private final UBObject mData;
-
-        SaveDBData(UUID id, UBObject obj) {
-            mId = id;
-            mData = obj;
-        }
-
-        @Override
-        public void write() throws IOException {
-            mDriver.update(mId, mData);
-        }
-    }
-
-    private class SaveObject implements WriteCommand {
-
-        private final DBObject mObject;
-
-        SaveObject(DBObject object) {
-            mObject = object;
-        }
-
-        @Override
-        public void write() throws IOException {
-            UBObject data = UBValueFactory.createObject();
-            mObject.writeUBObject(data);
-            mDriver.update(mObject.getId(), data);
-            mObject.mDirty = false;
-        }
-    }
-
-    private class DeleteObject implements WriteCommand {
-
-        private final DBObject mObject;
-
-        DeleteObject(DBObject obj) {
-            mObject = obj;
-        }
-
-        @Override
-        public void write() throws IOException {
-            final UUID id = mObject.getId();
-            mObject.mDirty = false;
-            mDriver.delete(id);
-            synchronized (MicroDB.this) {
-                mDeletedObjects.remove(id);
-            }
-        }
-    }
-
-    private Future<?> processWriteQueue() {
-        return mWriteThread.submit(mSave);
-    }
-
-    private final Runnable mSave = new Runnable() {
-        @Override
-        public void run() {
-            int numCommands = 0;
-            WriteCommand cmd;
-            while ((cmd = mSaveQueue.poll()) != null) {
-                try {
-                    cmd.write();
-
-                    if(++numCommands == 100) {
-                        logger.info("executed {} commands", numCommands);
-                        numCommands = 0;
-                    }
-                } catch (Throwable t) {
-                    logger.error("error writing to db", t);
-                }
-            }
-            if(numCommands > 0) {
-                logger.info("executed {} commands", numCommands);
-            }
-        }
-    };
-
     MicroDB(Driver driver, int schemaVersion, DBCallback cb) throws IOException {
         mDriver = driver;
         mSchemaVersion = schemaVersion;
         mCallback = cb;
 
-        mWriteThread.scheduleWithFixedDelay(mSave, 2, 2, TimeUnit.SECONDS);
+        mWriteQueue.start();
         init();
     }
 
@@ -186,7 +229,7 @@ public class MicroDB {
      */
     protected void finalizing(DBObject obj) {
         if(mAutoSave.get() && obj.mDirty){
-            mSaveQueue.offer(new SaveObject(obj));
+            mWriteQueue.enqueue(createWriteObject(obj));
         }
         synchronized (this) {
             mLiveObjects.remove(obj.getId());
@@ -209,7 +252,7 @@ public class MicroDB {
             for (SoftReference<DBObject> ref : mLiveObjects.values()) {
                 DBObject obj = ref.get();
                 if (obj != null && obj.mDirty) {
-                    mSaveQueue.offer(new SaveObject(obj));
+                    mWriteQueue.enqueue(createWriteObject(obj));
                 }
             }
         }
@@ -300,24 +343,23 @@ public class MicroDB {
      * @param obj the data to be saved
      */
     public synchronized void save(DBObject obj) {
-        mSaveQueue.offer(new SaveObject(obj));
+        mWriteQueue.enqueue(createWriteObject(obj));
     }
 
     public synchronized void delete(DBObject obj) {
         mDeletedObjects.add(obj.getId());
-        mSaveQueue.offer(new DeleteObject(obj));
+        mWriteQueue.enqueue(createDeleteOperation(obj));
         mLiveObjects.remove(obj.getId());
     }
 
     /**
      * This method blocks until all queued write operation are completed.
      */
-    protected void sync() {
-        try {
-            processWriteQueue().get();
-        } catch (Exception e) {
-            logger.error("sync operation ended with exception", e);
-        }
+    public void sync() {
+        Operation op = createNoOp();
+        mWriteQueue.enqueue(op);
+        mWriteQueue.kick();
+        op.waitForCompletion();
     }
 
     public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
