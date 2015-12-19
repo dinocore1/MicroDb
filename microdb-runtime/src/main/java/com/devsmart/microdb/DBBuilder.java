@@ -17,16 +17,14 @@ public class DBBuilder {
         }
     }
 
-    private final File mDBPath;
     private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion = 0;
 
-    public static DBBuilder builder(File dbpath) {
-        return new DBBuilder(dbpath);
+    public static DBBuilder builder() {
+        return new DBBuilder();
     }
 
-    private DBBuilder(File path) {
-        mDBPath = path;
+    private DBBuilder() {
     }
 
     public DBBuilder callback(DBCallback cb) {
@@ -39,14 +37,22 @@ public class DBBuilder {
         return this;
     }
 
-    public MicroDB build() throws IOException {
-        DB db = DBMaker.newFileDB(mDBPath)
+    public MicroDB build(File path) throws IOException {
+        DB db = DBMaker.newFileDB(path)
                 .make();
 
         MapDBDriver driver = new MapDBDriver(db);
 
         return new MicroDB(driver, mSchemaVersion, mCallback);
 
+    }
+
+    public MicroDB buildMemoryDB() throws IOException {
+        DB db = DBMaker.newMemoryDirectDB()
+                .make();
+
+        MapDBDriver driver = new MapDBDriver(db);
+        return new MicroDB(driver, mSchemaVersion, mCallback);
     }
 
 
