@@ -29,6 +29,21 @@ public class MicroDB {
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
 
+    @Override
+    protected void finalize() throws Throwable {
+        mWriteQueue.enqueue(createShutdownOperation());
+        super.finalize();
+    }
+
+    public void shutdown() {
+        mWriteQueue.enqueue(createShutdownOperation());
+        try {
+            mWriteQueue.mWriteThread.join();
+        } catch (InterruptedException e) {
+            logger.warn("", e);
+        }
+    }
+
     public enum OperationType {
         Write,
         NoOp,
@@ -38,20 +53,24 @@ public class MicroDB {
     abstract static class Operation implements Runnable {
         public final OperationType mCommandType;
         private Exception mException;
+        private boolean mCompleted = false;
 
         Operation(OperationType type) {
             mCommandType = type;
         }
 
         synchronized void complete() {
+            mCompleted = true;
             notifyAll();
         }
 
         public synchronized void waitForCompletion() {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                logger.warn("", e);
+            while(!mCompleted) {
+                try {
+                    wait(1000);
+                } catch (InterruptedException e) {
+                    logger.warn("", e);
+                }
             }
         }
 
@@ -89,6 +108,7 @@ public class MicroDB {
                                 break;
 
                             case Shutdown:
+                                logger.info("Write Thread exiting");
                                 return;
                         }
                     } finally {
@@ -96,6 +116,7 @@ public class MicroDB {
                     }
                 }
             }
+
 
         }
 
@@ -109,6 +130,7 @@ public class MicroDB {
 
 
         public void start() {
+            //mWriteThread.setDaemon(true);
             mWriteThread.start();
         }
 
@@ -124,6 +146,15 @@ public class MicroDB {
 
     void enqueueOperation(Operation op) {
         mWriteQueue.enqueue(op);
+    }
+
+    private Operation createShutdownOperation() {
+        return new Operation(OperationType.Shutdown) {
+            @Override
+            void doIt() throws IOException {
+
+            }
+        };
     }
 
     private Operation createNoOp() {
