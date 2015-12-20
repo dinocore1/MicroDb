@@ -51,6 +51,10 @@ public class DBObject {
         mDB.save(this);
     }
 
+    public MicroDB getDB() {
+        return mDB;
+    }
+
     public void delete() throws IOException {
         if(mDB == null) {
             throw new RuntimeException("DBObject does not reference a database");

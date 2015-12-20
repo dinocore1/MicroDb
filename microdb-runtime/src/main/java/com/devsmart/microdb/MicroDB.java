@@ -346,10 +346,18 @@ public class MicroDB {
      * @param obj the data to be saved
      */
     public void save(DBObject obj) {
+        checkValid(obj);
         mWriteQueue.enqueue(createWriteObject(obj));
     }
 
+    private void checkValid(DBObject obj) {
+        if(obj == null || obj.getDB() != this || obj.getId() == null) {
+            throw new RuntimeException("DBObject is invalid. DBObjects must be create with MicroDB.create() methods");
+        }
+    }
+
     public synchronized void delete(DBObject obj) {
+        checkValid(obj);
         mDeletedObjects.add(obj.getId());
         mWriteQueue.enqueue(createDeleteOperation(obj));
         mLiveObjects.remove(obj.getId());
