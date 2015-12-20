@@ -4,17 +4,12 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -65,7 +60,7 @@ public class MicroDB {
         }
 
         public synchronized void waitForCompletion() {
-            while(!mCompleted) {
+            while (!mCompleted) {
                 try {
                     wait(1000);
                 } catch (InterruptedException e) {
@@ -93,9 +88,9 @@ public class MicroDB {
 
         @Override
         public void run() {
-            while(true) {
+            while (true) {
                 Operation op = mOperationQueue.poll();
-                if(op == null) {
+                if (op == null) {
                     waitForNextCommand();
                 } else {
                     try {
@@ -152,7 +147,6 @@ public class MicroDB {
         return new Operation(OperationType.Shutdown) {
             @Override
             void doIt() throws IOException {
-
             }
         };
     }
@@ -168,13 +162,12 @@ public class MicroDB {
     private Operation createWriteObject(final DBObject obj) {
         return new Operation(OperationType.Write) {
             @Override
-            void doIt() throws IOException{
+            void doIt() throws IOException {
                 final UUID id = obj.getId();
+                UBObject data = UBValueFactory.createObject();
+                obj.writeUBObject(data);
+                mDriver.update(id, data);
                 obj.mDirty = false;
-                mDriver.delete(id);
-                synchronized (MicroDB.this) {
-                    mDeletedObjects.remove(id);
-                }
             }
         };
     }
@@ -184,7 +177,6 @@ public class MicroDB {
             @Override
             void doIt() throws IOException {
                 mDriver.update(mId, mData);
-
             }
         };
     }
@@ -208,10 +200,10 @@ public class MicroDB {
     static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
         @Override
         public void map(UBValue value, Emitter<String> emitter) {
-            if(value != null && value.isObject()) {
+            if (value != null && value.isObject()) {
                 UBObject obj = value.asObject();
                 UBValue typevar = obj.get("type");
-                if(typevar != null && typevar.isString()) {
+                if (typevar != null && typevar.isString()) {
                     emitter.emit(typevar.asString());
                 }
             }
@@ -238,7 +230,7 @@ public class MicroDB {
     private void init() throws IOException {
 
         UBObject metaObj = mDriver.getMeta();
-        if(!metaObj.containsKey(METAKEY_INSTANCE)) {
+        if (!metaObj.containsKey(METAKEY_INSTANCE)) {
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
@@ -247,7 +239,7 @@ public class MicroDB {
 
         } else {
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
-            if(currentVersion < mSchemaVersion) {
+            if (currentVersion < mSchemaVersion) {
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
                 mDriver.saveMeta(metaObj);
@@ -259,10 +251,11 @@ public class MicroDB {
 
     /**
      * called when a dbobject is being finalized by the GC
+     *
      * @param obj
      */
     protected void finalizing(DBObject obj) {
-        if(mAutoSave.get() && obj.mDirty){
+        if (mAutoSave.get() && obj.mDirty) {
             mWriteQueue.enqueue(createWriteObject(obj));
         }
         synchronized (this) {
@@ -279,6 +272,7 @@ public class MicroDB {
 
     /**
      * Saves all DBObjects that are marked dirty
+     *
      * @throws IOException
      */
     public void flush() throws IOException {
@@ -295,13 +289,14 @@ public class MicroDB {
 
     /**
      * create a new object of type {@code classType}.
+     *
      * @param classType
      * @param <T>
      * @return newly created object
      */
     public synchronized <T extends DBObject> T create(Class<T> classType) {
         try {
-            if(!classType.getSimpleName().endsWith("_pxy")) {
+            if (!classType.getSimpleName().endsWith("_pxy")) {
                 String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
                 classType = (Class<T>) Class.forName(proxyClassName);
             }
@@ -309,6 +304,7 @@ public class MicroDB {
             T retval = classType.newInstance();
 
             UBObject data = UBValueFactory.createObject();
+            retval.writeUBObject(data);
             UUID key = mDriver.insert(data);
 
             data.put("id", UBValueFactory.createString(key.toString()));
@@ -325,13 +321,14 @@ public class MicroDB {
 
     /**
      * fetch and load database object with primary key {@code id}.
+     *
      * @param id
      * @param classType they type of database object with {@code id}
      * @param <T>
      * @return dbobject
      */
     public synchronized <T extends DBObject> T get(UUID id, Class<T> classType) {
-        if(mDeletedObjects.contains(id)) {
+        if (mDeletedObjects.contains(id)) {
             return null;
         }
         try {
@@ -340,21 +337,21 @@ public class MicroDB {
             DBObject cached;
 
             SoftReference<DBObject> ref = mLiveObjects.get(id);
-            if(ref != null && (cached = ref.get()) != null){
-                retval = (T)cached;
+            if (ref != null && (cached = ref.get()) != null) {
+                retval = (T) cached;
             } else {
 
-                if(!classType.getSimpleName().endsWith("_pxy")) {
+                if (!classType.getSimpleName().endsWith("_pxy")) {
                     String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
                     classType = (Class<T>) Class.forName(proxyClassName);
                 }
 
                 UBValue data = mDriver.get(id);
-                if(data == null) {
+                if (data == null) {
                     return null;
                 } else {
 
-                    if(!data.isObject()) {
+                    if (!data.isObject()) {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
                     T newObj = classType.newInstance();
@@ -365,7 +362,7 @@ public class MicroDB {
             }
 
             return retval;
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("", e);
         }
     }
@@ -374,6 +371,7 @@ public class MicroDB {
      * saves/updates {@code obj} to the database. This method is not normally necessary for users to call
      * because database objects will automatically be saved when the garbage collector collects them if
      * they are marked dirty.
+     *
      * @param obj the data to be saved
      */
     public void save(DBObject obj) {
@@ -382,7 +380,7 @@ public class MicroDB {
     }
 
     private void checkValid(DBObject obj) {
-        if(obj == null || obj.getDB() != this || obj.getId() == null) {
+        if (obj == null || obj.getDB() != this || obj.getId() == null) {
             throw new RuntimeException("DBObject is invalid. DBObjects must be create with MicroDB.create() methods");
         }
     }
