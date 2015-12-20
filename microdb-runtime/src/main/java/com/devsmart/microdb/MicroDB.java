@@ -35,7 +35,7 @@ public class MicroDB {
         Shutdown
     }
 
-    private abstract class Operation implements Runnable {
+    abstract static class Operation implements Runnable {
         public final OperationType mCommandType;
         private Exception mException;
 
@@ -122,6 +122,9 @@ public class MicroDB {
     }
 
 
+    void enqueueOperation(Operation op) {
+        mWriteQueue.enqueue(op);
+    }
 
     private Operation createNoOp() {
         return new Operation(OperationType.NoOp) {
@@ -342,7 +345,7 @@ public class MicroDB {
      * they are marked dirty.
      * @param obj the data to be saved
      */
-    public synchronized void save(DBObject obj) {
+    public void save(DBObject obj) {
         mWriteQueue.enqueue(createWriteObject(obj));
     }
 

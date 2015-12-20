@@ -49,7 +49,7 @@ public class VersionManager {
 
         UBObject metadata = mMetadata.get();
         UBValue currentVersionStr = metadata.get("currentVersion");
-        if(currentVersionStr == null || !currentVersionStr.isString()) {
+        if (currentVersionStr == null || !currentVersionStr.isString()) {
             mCurrentVersion = Commit.newRoot();
             mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
             metadata.put("currentVersion",
@@ -60,7 +60,7 @@ public class VersionManager {
             mCurrentVersion = mCommits.get(commitId);
         }
 
-        if(mCurrentVersion == null) {
+        if (mCurrentVersion == null) {
             throw new RuntimeException("currentVersion is null");
         }
 
@@ -98,16 +98,17 @@ public class VersionManager {
 
     public void addDeleteChange(UUID patch, UUID objId) {
         final Fun.Tuple2<UUID, UUID> key = Fun.t2(patch, objId);
-        if(mDiffs.remove(key) == null) {
+        if (mDiffs.remove(key) == null) {
             mDiffs.put(key, Change.createDeleteChange(objId));
         }
     }
 
     public UUID commit() {
-        final UUID newCommitId =  UUID.randomUUID();
-        mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
+        final UUID newCommitId = UUID.randomUUID();
+        mMicroDB.enqueueOperation(new MicroDB.Operation(MicroDB.OperationType.Write) {
+
             @Override
-            public void write() throws IOException {
+            void doIt() throws IOException {
                 logger.info("commit");
                 mCurrentVersion = Commit.withParentAndId(mCurrentVersion, newCommitId);
                 mCommits.put(mCurrentVersion.getId(), mCurrentVersion);
@@ -115,7 +116,6 @@ public class VersionManager {
                 setHEAD(mCurrentVersion.getId());
             }
         });
-
         return newCommitId;
     }
 
@@ -130,8 +130,8 @@ public class VersionManager {
     public boolean isDirty() {
         //dirty if there exists at least one diff associated with the current version
         final UUID currentVersion = mCurrentVersion.getId();
-        Fun.Tuple2<UUID, UUID> key = mDiffs.ceilingKey(Fun.t2(currentVersion, (UUID)null));
-        if(key != null) {
+        Fun.Tuple2<UUID, UUID> key = mDiffs.ceilingKey(Fun.t2(currentVersion, (UUID) null));
+        if (key != null) {
             return key.a.equals(currentVersion);
         } else {
             return false;
@@ -143,7 +143,7 @@ public class VersionManager {
     }
 
     public Iterable<Change> getChanges(UUID commit) {
-        return ((NavigableMap)mDiffs).subMap(
+        return ((NavigableMap) mDiffs).subMap(
                 Fun.t2(commit, null),
                 Fun.t2(commit, Fun.HI()))
                 .values();
@@ -151,7 +151,7 @@ public class VersionManager {
 
     public void addChanges(UUID commit, Iterable<Change> changes) {
         logger.info("adding diff for " + commit);
-        for(Change c : changes) {
+        for (Change c : changes) {
             Fun.Tuple2<UUID, UUID> key = Fun.t2(commit, c.getObjId());
             mDiffs.put(key, c);
         }
@@ -162,11 +162,13 @@ public class VersionManager {
     }
 
     public void moveTo(final UUID dest) throws IOException {
-        mMicroDB.enqueWriteCommand(new MicroDB.WriteCommand() {
+
+        mMicroDB.enqueueOperation(new MicroDB.Operation(MicroDB.OperationType.Write) {
+
             @Override
-            public void write() throws IOException {
+            void doIt() throws IOException {
                 logger.info("begining move to dest");
-                if(isDirty()) {
+                if (isDirty()) {
                     logger.error("cannot move to " + dest + ". Dirty HEAD");
                     return;
                 }
@@ -176,28 +178,28 @@ public class VersionManager {
                 ArrayList<Commit> commits = new ArrayList<Commit>();
                 UUID currentCommit = dest;
                 Commit commit;
-                while((commit = mCommits.get(currentCommit)) != null) {
-                    if(commit.getId().equals(head)) {
+                while ((commit = mCommits.get(currentCommit)) != null) {
+                    if (commit.getId().equals(head)) {
                         break;
                     } else {
                         commits.add(commit);
                         currentCommit = commit.getParent();
                     }
                 }
-                if(commit == null || !commit.getId().equals(head)) {
+                if (commit == null || !commit.getId().equals(head)) {
                     logger.error("no commit path to " + dest + " found");
                     return;
                 }
 
-                for(int i=commits.size()-1;i>=0;i--) {
+                for (int i = commits.size() - 1; i >= 0; i--) {
                     commit = commits.get(i);
                     logger.info("applying commit " + commit);
-                    for(Change c : getChanges(commit.getId())) {
+                    for (Change c : getChanges(commit.getId())) {
                         c.apply(mMapDBDriver);
                     }
                 }
 
-                assert(commit.getId().equals(dest));
+                assert (commit.getId().equals(dest));
                 mCurrentVersion = commit;
                 setHEAD(commit.getId());
 
@@ -227,7 +229,7 @@ public class VersionManager {
 
             @Override
             public int fixedSize() {
-                return 2*16;
+                return 2 * 16;
             }
         }
 
@@ -244,12 +246,12 @@ public class VersionManager {
         @Override
         public int compareTo(DiffKey o) {
             int retval = patchId.compareTo(o.patchId);
-            if(retval == 0) {
-                if(objKey != null && o.objKey != null) {
+            if (retval == 0) {
+                if (objKey != null && o.objKey != null) {
                     retval = objKey.compareTo(o.objKey);
-                } else if(objKey == null && o.objKey == null){
+                } else if (objKey == null && o.objKey == null) {
                     retval = 0;
-                } else if(objKey == null) {
+                } else if (objKey == null) {
                     retval = -1;
                 } else {
                     return 1;
