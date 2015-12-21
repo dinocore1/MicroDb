@@ -411,12 +411,12 @@ public class MicroDB {
     }
 
     public <K extends Comparable<?>, T extends DBObject> ObjectIterator<K, T> queryIndex(String indexName, Class<T> classType) throws IOException {
-        KeyIterator<K> keyIt = mDriver.queryIndex(indexName);
+        Cursor<K> keyIt = mDriver.queryIndex(indexName);
         return new ObjectIterator<K, T>(keyIt, this, classType);
     }
 
     public <T extends DBObject> ObjectIterator<String, T> queryObjects(Class<T> classType) throws IOException {
-        KeyIterator<String> keyIt = mDriver.queryIndex("type");
+        Cursor<String> keyIt = mDriver.queryIndex("type");
         keyIt.seekTo(classType.getSimpleName());
         return new ObjRangeIterator<T>(keyIt, this, classType);
     }

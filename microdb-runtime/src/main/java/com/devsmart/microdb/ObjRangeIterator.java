@@ -5,9 +5,9 @@ public class ObjRangeIterator<T extends DBObject> extends ObjectIterator<String,
 
     private T mNextValue;
 
-    public ObjRangeIterator(KeyIterator<String> keyIterator, MicroDB db, Class<T> classType) {
-        super(keyIterator, db, classType);
-        mKeyIterator.seekTo(classType.getSimpleName());
+    public ObjRangeIterator(Cursor<String> cursor, MicroDB db, Class<T> classType) {
+        super(cursor, db, classType);
+        mCursor.seekTo(classType.getSimpleName());
     }
 
     @Override

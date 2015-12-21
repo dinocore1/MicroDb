@@ -39,7 +39,7 @@ public class MapDBDriverTest {
         insert("dog", "mondo", dbDriver);
         insert("dog", "bolt", dbDriver);
 
-        KeyIterator<Comparable<?>> it = dbDriver.queryIndex("type");
+        Cursor<Comparable<?>> it = dbDriver.queryIndex("type");
         it.seekTo("dog");
         int dogCount = 0;
         while(it.hasNext()) {

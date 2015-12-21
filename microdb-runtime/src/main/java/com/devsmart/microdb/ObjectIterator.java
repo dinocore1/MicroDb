@@ -6,29 +6,29 @@ import java.util.UUID;
 
 public class ObjectIterator<K extends Comparable<?>, T extends DBObject> implements Iterator<T> {
 
-    final KeyIterator<K> mKeyIterator;
+    final Cursor<K> mCursor;
     final MicroDB mDb;
     final Class<T> mClassType;
 
-    public ObjectIterator(KeyIterator<K> keyIterator, MicroDB db, Class<T> classType) {
-        mKeyIterator = keyIterator;
+    public ObjectIterator(Cursor<K> cursor, MicroDB db, Class<T> classType) {
+        mCursor = cursor;
         mDb = db;
         mClassType = classType;
     }
 
     public void seekTo(K key) {
-        mKeyIterator.seekTo(key);
+        mCursor.seekTo(key);
     }
 
     @Override
     public boolean hasNext() {
-        return mKeyIterator.hasNext();
+        return mCursor.hasNext();
     }
 
     @Override
     public T next() {
-        mKeyIterator.next();
-        UUID id = mKeyIterator.getPrimaryKey();
+        mCursor.next();
+        UUID id = mCursor.getPrimaryKey();
         return mDb.get(id, mClassType);
     }
 
