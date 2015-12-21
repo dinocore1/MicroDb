@@ -2,7 +2,10 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.ubjson.*;
+import com.google.common.base.Throwables;
 import org.mapdb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -129,118 +132,92 @@ public class MapDBDriver implements Driver {
         mObjects.remove(key);
     }
 
-    @Override
-    public <T extends Comparable<?>> Cursor<T> queryIndex(String indexName) throws IOException {
+    private static final UUID MAX_UUID = new UUID(Long.MAX_VALUE, Long.MAX_VALUE);
+    private static final UUID MIN_UUID = new UUID(Long.MIN_VALUE, Long.MIN_VALUE);
 
+    @Override
+    public <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException {
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
-        return new MapDBKeyIterator<T>(index);
+
+        if(max != null && min != null) {
+            Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
+            Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+            return new MapDBRowSet<T>(this,
+                    index.subSet(tmin, false, tmax, false));
+
+        } else if(min != null && max == null) {
+            Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
+            return new MapDBRowSet<T>(this,
+                    index.tailSet(tmin));
+
+        } else if(min == null && max != null) {
+            Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+            return new MapDBRowSet<T>(this,
+                    index.headSet(tmax));
+        } else {
+            return new MapDBRowSet<T>(this, index);
+        }
     }
 
-    private static class MapDBKeyIterator<K extends Comparable<K>> implements Cursor<K> {
-
-        private static final UUID MAX_UUID = new UUID(Long.MAX_VALUE, Long.MAX_VALUE);
-        private static final UUID MIN_UUID = new UUID(Long.MIN_VALUE, Long.MIN_VALUE);
+    private static class MapDBRow<T> implements Row {
 
         private final MapDBDriver mDriver;
-        private final NavigableSet<Fun.Tuple2<K, UUID>> mIndex;
-        private long mPosition = -1;
-        private Fun.Tuple2<K, UUID> mRow;
+        final Fun.Tuple2<T, UUID> mTuple;
+        UBValue mValue;
 
+        public MapDBRow(MapDBDriver driver, Fun.Tuple2<T, UUID> tuple) {
+            mDriver = driver;
+            mTuple = tuple;
+        }
 
-        MapDBKeyIterator(MapDBDriver driver, NavigableSet<Fun.Tuple2<K, UUID>> index) {
+        @Override
+        public UUID getPrimaryKey() {
+            return mTuple.b;
+        }
+
+        @Override
+        public Comparable<?> getSecondaryKey() {
+            return (Comparable<?>) mTuple.a;
+        }
+
+        @Override
+        public UBValue getValue() {
+            if(mValue == null) {
+                try {
+                    mValue = mDriver.get(getPrimaryKey());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return mValue;
+        }
+    }
+
+    private static class MapDBRowSet<T> implements Iterable<Row> {
+
+        private final MapDBDriver mDriver;
+        private final SortedSet<Fun.Tuple2<T, UUID>> mIndex;
+
+        public MapDBRowSet(MapDBDriver driver, SortedSet<Fun.Tuple2<T, UUID>> index) {
             mDriver = driver;
             mIndex = index;
         }
 
         @Override
-        public boolean isBeforeFirst() {
-            return mPosition == -1;
-        }
-
-        @Override
-        public boolean isAfterLast() {
-            return mPosition == -2;
-        }
-
-        @Override
-        public boolean isFirst() {
-            return mPosition == 0;
-        }
-
-        @Override
-        public boolean isLast() {
-            return mIndex.higher(mRow) == null;
-        }
-
-        @Override
-        public boolean moveToFirst() {
-            mRow = mIndex.first();
-            mPosition = 0;
-            return mRow != null;
-        }
-
-        @Override
-        public boolean moveToLast() {
-            mRow = mIndex.last();
-            mPosition = mIndex.size() - 1;
-            return mRow != null;
-        }
-
-        @Override
-        public boolean moveToNext() {
-            if(isBeforeFirst()) {
-                return moveToFirst();
-            } else if(isAfterLast(){
-                return false;
-            } else {
-                mRow = mIndex.higher(mRow);
-                boolean retval = mRow != null;
-                if(retval) {
-                    mPosition++;
-                } else {
-                    mPosition = -2;
+        public Iterator<Row> iterator() {
+            final Iterator<Fun.Tuple2<T, UUID>> it = mIndex.iterator();
+            return new Iterator<Row>() {
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext();
                 }
-                return retval;
-            }
-        }
 
-        @Override
-        public boolean moveToPrevious() {
-            if(isAfterLast()){
-                return moveToLast();
-            } else if(isBeforeFirst()) {
-                return false;
-            } else {
-                mRow = mIndex.lower(mRow);
-                boolean retval = mRow != null;
-                if(retval) {
-                    mPosition--;
-                } else {
-                    mPosition = -1;
+                @Override
+                public Row next() {
+                    return new MapDBRow<T>(mDriver, it.next());
                 }
-                return retval;
-            }
+            };
         }
-
-        @Override
-        public UUID getPrimaryKey() {
-            return mRow.b;
-        }
-
-        @Override
-        public K getSecondaryKey() {
-            return mRow.a;
-        }
-
-        @Override
-        public UBValue getValue() {
-            try {
-                return mDriver.get(getPrimaryKey());
-            } catch (IOException e) {
-                logger.error("", e);
-            }
-        }
-
     }
 
     @Override

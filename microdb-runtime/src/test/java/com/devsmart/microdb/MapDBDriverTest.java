@@ -39,22 +39,20 @@ public class MapDBDriverTest {
         insert("dog", "mondo", dbDriver);
         insert("dog", "bolt", dbDriver);
 
-        Cursor<Comparable<?>> it = dbDriver.queryIndex("type");
-        it.seekTo("dog");
+        Iterable<Row> rows = dbDriver.queryIndex("type", "dog", true, "dog", true);
         int dogCount = 0;
-        while(it.hasNext()) {
-            if("dog".equals(it.next())){
-                dogCount++;
-            }
+        for(Row r : rows){
+            assertEquals("dog", r.getSecondaryKey());
+            dogCount++;
         }
         assertEquals(3, dogCount);
 
-        it.seekTo("cat");
+        rows = dbDriver.queryIndex("type", "cat", true, "cat", true);
         int catCount = 0;
-        while(it.hasNext()) {
-            if("cat".equals(it.next())){
-                catCount++;
-            }
+        for(Row r : rows) {
+            assertEquals("cat", r.getSecondaryKey());
+            catCount++;
+
         }
         assertEquals(3, catCount);
 

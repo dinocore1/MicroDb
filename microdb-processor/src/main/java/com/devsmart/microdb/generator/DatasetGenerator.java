@@ -241,16 +241,20 @@ public class DatasetGenerator {
         public MethodSpec genQueryIndex() {
             final String name = String.format("query%sBy%s", mClassElement.getSimpleName(), mFieldElement);
 
-            ParameterizedTypeName objItType = ParameterizedTypeName.get(ClassName.get(ObjectIterator.class),
-                    TypeName.get(String.class),
+            ParameterizedTypeName objItType = ParameterizedTypeName.get(ClassName.get(Iterable.class),
                     TypeName.get(mClassElement.asType()));
 
             return MethodSpec.methodBuilder(name)
                     .addModifiers(Modifier.PUBLIC)
                     .addException(IOException.class)
                     .returns(objItType)
+                    .addParameter(TypeName.get(mFieldElement.asType()), "min")
+                    .addParameter(boolean.class, "minInclusive")
+                    .addParameter(TypeName.get(mFieldElement.asType()), "max")
+                    .addParameter(boolean.class, "maxInclusive")
                     .addCode(CodeBlock.builder()
-                            .addStatement("return mDb.queryIndex($S, $T.class)", indexName(), mClassElement.asType())
+                            .addStatement("return mDb.queryIndex($S, $T.class, min, minInclusive, max, maxInclusive)",
+                                    indexName(), mClassElement.asType())
                             .build())
                     .build();
         }

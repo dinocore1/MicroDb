@@ -52,7 +52,7 @@ public interface Driver {
 
     long incrementLongField(String fieldName);
 
-    <T extends Comparable<?>> Cursor<T> queryIndex(String indexName) throws IOException;
+    <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException;
     <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;
     void deleteIndex(String indexName);
 

@@ -5,7 +5,6 @@ import com.devsmart.microdb.Driver;
 import com.devsmart.microdb.Emitter;
 import com.devsmart.microdb.MapFunction;
 import com.devsmart.microdb.MicroDB;
-import com.devsmart.microdb.ObjectIterator;
 import com.devsmart.microdb.SimpleDBModel_pxy;
 import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBValue;
@@ -48,8 +47,8 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
 
     }
 
-    public ObjectIterator<String, SimpleDBModel> querySimpleDBModelBymyString() throws IOException {
-        return mDb.queryIndex("SimpleDBModel.myString", SimpleDBModel.class);
+    public Iterable<SimpleDBModel> querySimpleDBModelBymyString(String min, boolean minInclusive, String max, boolean maxInclusive) throws IOException {
+        return mDb.queryIndex("SimpleDBModel.myString", SimpleDBModel.class, min, minInclusive, max, maxInclusive);
     }
 
 }

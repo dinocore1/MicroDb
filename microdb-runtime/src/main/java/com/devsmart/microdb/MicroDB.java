@@ -4,6 +4,8 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -410,14 +412,23 @@ public class MicroDB {
         mDriver.addChangeListener(listener);
     }
 
-    public <K extends Comparable<?>, T extends DBObject> ObjectIterator<K, T> queryIndex(String indexName, Class<T> classType) throws IOException {
-        Cursor<K> keyIt = mDriver.queryIndex(indexName);
-        return new ObjectIterator<K, T>(keyIt, this, classType);
+    public <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException {
+        return mDriver.queryIndex(indexName, min, minInclusive, max, maxInclusive);
     }
 
-    public <T extends DBObject> ObjectIterator<String, T> queryObjects(Class<T> classType) throws IOException {
-        Cursor<String> keyIt = mDriver.queryIndex("type");
-        keyIt.seekTo(classType.getSimpleName());
-        return new ObjRangeIterator<T>(keyIt, this, classType);
+    public <T extends DBObject, K> Iterable<T> queryIndex(String indexName, final Class<T> classType, Comparable<K> min, boolean minInclusive, Comparable<K> max, boolean maxInclusive) throws IOException {
+        final Iterable<Row> rowSet = queryIndex(indexName, min, minInclusive, max, maxInclusive);
+        return Iterables.transform(rowSet, new Function<Row, T>() {
+            @Override
+            public T apply(Row input) {
+                return get(input.getPrimaryKey(), classType);
+            }
+        });
     }
+
+    public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException {
+        final String className = classType.getSimpleName();
+        return queryIndex("type", classType, className, true, className, true);
+    }
+
 }
