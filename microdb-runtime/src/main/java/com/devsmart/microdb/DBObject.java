@@ -25,6 +25,12 @@ public class DBObject {
         }
     }
 
+    protected void init(UUID id, MicroDB microDB) {
+        mId = id;
+        mDB = microDB;
+        mDirty = false;
+    }
+
     protected void init(UUID id, UBObject data, MicroDB db) {
         mId = id;
         mDB = db;
@@ -65,5 +71,4 @@ public class DBObject {
     protected void setDirty() {
         mDirty = true;
     }
-	
 }

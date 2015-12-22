@@ -92,24 +92,27 @@ public class MapDBDriver implements Driver {
     }
 
     @Override
-    public UUID insert(UBValue value) throws IOException {
+    public UUID genId() {
+        UUID key = UUID.randomUUID();
+        while(mObjects.containsKey(key)) {
+            key = UUID.randomUUID();
+        }
+        return key;
+    }
+
+    @Override
+    public void insert(UUID id, UBValue value) throws IOException {
 
         for(ChangeListener l : mChangeListeners) {
             l.onBeforeInsert(this, value);
         }
 
-        UUID key = UUID.randomUUID();
-        while(mObjects.containsKey(key)) {
-            key = UUID.randomUUID();
-        }
-
-        mObjects.put(key, value);
+        mObjects.put(id, value);
 
         for(ChangeListener l : mChangeListeners) {
-            l.onAfterInsert(this, key, value);
+            l.onAfterInsert(this, id, value);
         }
 
-        return key;
     }
 
     @Override
@@ -215,6 +218,11 @@ public class MapDBDriver implements Driver {
                 @Override
                 public Row next() {
                     return new MapDBRow<T>(mDriver, it.next());
+                }
+
+                @Override
+                public void remove() {
+                    it.remove();
                 }
             };
         }

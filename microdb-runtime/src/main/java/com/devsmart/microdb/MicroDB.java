@@ -161,6 +161,19 @@ public class MicroDB {
         };
     }
 
+    private Operation createInsertOperation(final DBObject obj) {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException {
+                final UUID id = obj.getId();
+                UBObject data = UBValueFactory.createObject();
+                obj.writeUBObject(data);
+                mDriver.insert(id, data);
+                obj.mDirty = false;
+            }
+        };
+    }
+
     private Operation createWriteObject(final DBObject obj) {
         return new Operation(OperationType.Write) {
             @Override
@@ -304,14 +317,9 @@ public class MicroDB {
             }
 
             T retval = classType.newInstance();
-
-            UBObject data = UBValueFactory.createObject();
-            retval.writeUBObject(data);
-            UUID key = mDriver.insert(data);
-
-            data.put("id", UBValueFactory.createString(key.toString()));
-            retval.init(key, data, this);
-
+            final UUID key = mDriver.genId();
+            retval.init(key, this);
+            mWriteQueue.enqueue(createInsertOperation(retval));
             mLiveObjects.put(key, new SoftReference<DBObject>(retval));
 
             return retval;

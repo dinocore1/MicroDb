@@ -25,7 +25,9 @@ public class VersionManagerTest {
     }
 
     private static UUID insert(String type, String name, MapDBDriver driver) throws IOException {
-        return driver.insert(createObj(type, name));
+        final UUID id = driver.genId();
+        driver.insert(id, createObj(type, name));
+        return id;
     }
 
     @Test

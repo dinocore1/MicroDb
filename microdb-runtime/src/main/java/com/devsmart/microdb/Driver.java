@@ -27,11 +27,13 @@ public interface Driver {
     /**
      * inserts a new value into the the database. A new
      * unique key will be automatically generated and returned.
+     * @param id the new object key. This value should have originated from a call to {@code genId()}
      * @param value
-     * @return the unique key for {@code value}
      * @throws IOException
      */
-    UUID insert(UBValue value) throws IOException;
+    void insert(UUID id, UBValue value) throws IOException;
+
+    UUID genId();
 
     /**
      * replace value with key {@code id} with new value {@code value}.

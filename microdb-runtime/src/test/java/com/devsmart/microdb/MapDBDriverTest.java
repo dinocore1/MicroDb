@@ -19,7 +19,9 @@ public class MapDBDriverTest {
         obj.put("type", UBValueFactory.createString(type));
         obj.put("name", UBValueFactory.createString(name));
 
-        return driver.insert(obj);
+        final UUID id = driver.genId();
+        driver.insert(id, obj);
+        return id;
     }
 
 
