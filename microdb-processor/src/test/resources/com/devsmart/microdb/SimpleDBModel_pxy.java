@@ -5,8 +5,6 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-import java.util.UUID;
-
 import pkg.project.MyDatum;
 import pkg.project.SimpleDBModel;
 
@@ -16,8 +14,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     public static final UBString TYPE = UBValueFactory.createString("SimpleDBModel");
 
     @Override
-    public void writeUBObject(UBObject data) {
-        super.writeUBObject(data);
+    public void writeToUBObject(UBObject data) {
+        super.writeToUBObject(data);
         data.put("type", TYPE);
         data.put("myString", UBValueFactory.createStringOrNull(getMyString()));
         data.put("myBool", UBValueFactory.createBool(getMyBool()));
@@ -32,7 +30,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 data.put("internal", UBValueFactory.createNull());
             } else {
                 UBObject obj = UBValueFactory.createObject();
-                inst.writeUBObject(obj);
+                inst.writeToUBObject(obj);
                 data.put("internal", obj);
             }
         }
@@ -54,8 +52,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     }
 
     @Override
-    public void init(UUID id, UBObject obj, MicroDB db) {
-        super.init(id, obj, db);
+    public void readFromUBObject(UBObject obj) {
+        super.readFromUBObject(obj);
         if (obj.containsKey("myString")) {
             super.setMyString(obj.get("myString").asString());
         }
@@ -80,11 +78,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 super.setInternal(null);
             } else {
                 SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                tmp.init(null, value.asObject(), db);
+                tmp.init(null, getDB());
+                tmp.readFromUBObject(value.asObject());
                 super.setInternal(tmp);
             }
         }
-        link = new Link<SimpleDBModel>(obj.get("link"), db, SimpleDBModel_pxy.class);
+        link = new Link<SimpleDBModel>(obj.get("link"), getDB(), SimpleDBModel_pxy.class);
         if (obj.containsKey("myFloatArray")) {
             super.setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
         }
@@ -97,7 +96,8 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
             for (int i = 0; i < size; i++) {
                 SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                tmp.init(null, input.get(i).asObject(), db);
+                tmp.init(null, getDB());
+                tmp.readFromUBObject(input.get(i).asObject());
                 output[i] = tmp;
             }
             super.setAddresses(output);

@@ -10,7 +10,7 @@ public class Utils {
         UBObject[] output = new UBObject[input.length];
         for(int i=0;i<input.length;i++) {
             output[i] = UBValueFactory.createObject();
-            input[i].writeUBObject(output[i]);
+            input[i].writeToUBObject(output[i]);
         }
         return UBValueFactory.createArray(output);
     }

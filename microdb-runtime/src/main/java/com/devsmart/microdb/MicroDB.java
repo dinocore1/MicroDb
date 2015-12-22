@@ -167,7 +167,7 @@ public class MicroDB {
             void doIt() throws IOException {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
-                obj.writeUBObject(data);
+                obj.writeToUBObject(data);
                 mDriver.insert(id, data);
                 obj.mDirty = false;
             }
@@ -180,7 +180,7 @@ public class MicroDB {
             void doIt() throws IOException {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
-                obj.writeUBObject(data);
+                obj.writeToUBObject(data);
                 mDriver.update(id, data);
                 obj.mDirty = false;
             }
@@ -365,7 +365,8 @@ public class MicroDB {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
                     T newObj = classType.newInstance();
-                    newObj.init(id, data.asObject(), this);
+                    newObj.init(id, this);
+                    newObj.readFromUBObject(data.asObject());
                     retval = newObj;
                     mLiveObjects.put(id, new SoftReference<DBObject>(retval));
                 }

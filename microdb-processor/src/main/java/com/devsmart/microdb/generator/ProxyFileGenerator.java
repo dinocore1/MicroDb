@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
-import java.util.UUID;
 
 public class ProxyFileGenerator {
 
@@ -574,7 +572,7 @@ public class ProxyFileGenerator {
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
             TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
-            builder.addStatement("$L = new $T(obj.get($S), db, $T.class)", mField, mField.asType(), mField, createDBObjName( mEnv.getTypeUtils().asElement(genericType) ));
+            builder.addStatement("$L = new $T(obj.get($S), getDB(), $T.class)", mField, mField.asType(), mField, createDBObjName( mEnv.getTypeUtils().asElement(genericType) ));
         }
 
         @Override
@@ -610,7 +608,7 @@ public class ProxyFileGenerator {
                     .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
                     .nextControlFlow("else")
                     .addStatement("$T obj = $T.createObject()", UBObject.class, UBValueFactory.class)
-                    .addStatement("inst.writeUBObject(obj)")
+                    .addStatement("inst.writeToUBObject(obj)")
                     .addStatement("data.put($S, obj)", mField)
                     .endControlFlow()
 
@@ -631,7 +629,8 @@ public class ProxyFileGenerator {
                             .addStatement("super.$L(null)", createSetterName(mField))
                             .nextControlFlow("else")
                             .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                            .addStatement("tmp.init(null, value.asObject(), db)")
+                            .addStatement("tmp.init(null, getDB())")
+                            .addStatement("tmp.readFromUBObject(value.asObject())")
                             .addStatement("super.$L(tmp)", createSetterName(mField))
                             .endControlFlow()
                             .endControlFlow()
@@ -686,7 +685,8 @@ public class ProxyFileGenerator {
                     .addStatement("$T output = new $T[size]", proxyArrayClassName, proxyClassName)
                     .beginControlFlow("for(int i=0;i<size;i++)")
                     .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                    .addStatement("tmp.init(null, input.get(i).asObject(), db)")
+                    .addStatement("tmp.init(null, getDB())")
+                    .addStatement("tmp.readFromUBObject(input.get(i).asObject())")
                     .addStatement("output[i] = tmp")
                     .endControlFlow()
                     .addStatement("super.$L(output)", createSetterName(mField))
@@ -916,7 +916,7 @@ public class ProxyFileGenerator {
 
             classBuilder.addMethod(generateToUBValueMethod(fields));
 
-            classBuilder.addMethod(generateInitMethod(fields));
+            classBuilder.addMethod(generateFromUBValueMethod(fields));
 
             for(FieldMethodCodeGen fieldGen : fields) {
                 fieldGen.specializedMethods(classBuilder);
@@ -939,13 +939,13 @@ public class ProxyFileGenerator {
     }
 
     private MethodSpec generateToUBValueMethod(final List<FieldMethodCodeGen> fieldGens) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("writeUBObject")
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("writeToUBObject")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
                 .addParameter(UBObject.class, "data")
                 .returns(TypeName.VOID);
 
-        builder.addStatement("super.writeUBObject(data)");
+        builder.addStatement("super.writeToUBObject(data)");
         builder.addStatement("data.put($S, TYPE)", "type");
         for(FieldMethodCodeGen field : fieldGens) {
             field.serializeCode(builder);
@@ -954,16 +954,14 @@ public class ProxyFileGenerator {
         return builder.build();
     }
 
-    private MethodSpec generateInitMethod(final List<FieldMethodCodeGen> fieldGens) {
-        MethodSpec.Builder builder = MethodSpec.methodBuilder("init")
+    private MethodSpec generateFromUBValueMethod(final List<FieldMethodCodeGen> fieldGens) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("readFromUBObject")
                 .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Override.class)
-                .addParameter(UUID.class, "id")
                 .addParameter(UBObject.class, "obj")
-                .addParameter(MicroDB.class, "db")
                 .returns(TypeName.VOID);
 
-        builder.addStatement("super.init(id, obj, db)");
+        builder.addStatement("super.readFromUBObject(obj)");
 
         for(FieldMethodCodeGen fieldGen : fieldGens) {
             fieldGen.deserializeCode(builder);

@@ -28,19 +28,13 @@ public class DBObject {
     protected void init(UUID id, MicroDB microDB) {
         mId = id;
         mDB = microDB;
-        mDirty = false;
+        mDirty = true;
     }
 
-    protected void init(UUID id, UBObject data, MicroDB db) {
-        mId = id;
-        mDB = db;
-        mDirty = false;
+    public void writeToUBObject(UBObject data) {
     }
 
-    public void writeUBObject(UBObject data) {
-        if(mId != null) {
-            data.put("id", UBValueFactory.createString(mId.toString()));
-        }
+    public void readFromUBObject(UBObject data) {
     }
 
     public UUID getId() {
