@@ -22,6 +22,12 @@ public class Link<T extends DBObject> {
         mClassType = classType;
     }
 
+    public Link(UUID id, MicroDB db, Class<? extends T> classType) {
+        mId = id;
+        mDB = db;
+        mClassType = classType;
+    }
+
     public UBValue getId() {
         if(mId == null) {
             return UBValueFactory.createNull();

@@ -440,4 +440,9 @@ public class MicroDB {
         return queryIndex("type", classType, className, true, className, true);
     }
 
+    public <T extends DBObject> Link<T> createLink(T obj) {
+        checkValid(obj);
+        return new Link<T>(obj.getId(), this, (Class<T>)obj.getClass());
+    }
+
 }
