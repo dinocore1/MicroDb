@@ -19,7 +19,9 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
         mDb = db;
     }
 
+    @Override
     public void install(MicroDB db) throws IOException {
+        super.install(db);
 
         db.addIndex("SimpleDBModel.myString", new MapFunction<String>() {
             @Override

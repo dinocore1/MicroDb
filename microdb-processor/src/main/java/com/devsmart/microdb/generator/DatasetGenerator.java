@@ -147,10 +147,13 @@ public class DatasetGenerator {
     private void generateInstallMethod(TypeSpec.Builder classBuilder) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("install")
                 .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
                 .addParameter(MicroDB.class, "db")
                 .returns(TypeName.VOID)
                 .addException(IOException.class)
                 ;
+
+        builder.addStatement("super.install(db)");
 
         for(GenCode indexGen : mCodeGen) {
             if(indexGen instanceof IndexGenCode) {

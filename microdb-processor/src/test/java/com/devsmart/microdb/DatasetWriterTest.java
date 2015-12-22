@@ -24,7 +24,6 @@ public class DatasetWriterTest {
 
     }
 
-    /*
     @Test
     public void expectedSourceCompiles() {
         ASSERT.about(javaSource())
@@ -32,7 +31,6 @@ public class DatasetWriterTest {
                 .compilesWithoutError();
     }
 
-        */
 
     @Test
     public void compareProcessedModel() {
