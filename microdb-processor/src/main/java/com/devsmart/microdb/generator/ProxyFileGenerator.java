@@ -580,7 +580,11 @@ public class ProxyFileGenerator {
 
         @Override
         public void serializeCode(MethodSpec.Builder builder) {
-            builder.addStatement("data.put($S, $L.getId())", mField, mField);
+            builder.beginControlFlow("if($L == null)", mField)
+                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
+                    .nextControlFlow("else")
+                    .addStatement("data.put($S, $L.getId())", mField, mField)
+                    .endControlFlow();
 
         }
 

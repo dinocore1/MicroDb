@@ -34,7 +34,11 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 data.put("internal", obj);
             }
         }
-        data.put("link", link.getId());
+        if(link == null) {
+            data.put("link", UBValueFactory.createNull());
+        } else {
+            data.put("link", link.getId());
+        }
         data.put("myFloatArray", UBValueFactory.createArrayOrNull(getMyFloatArray()));
         data.put("myDoubleArray", UBValueFactory.createArrayOrNull(getMyDoubleArray()));
         data.put("addresses", Utils.createArrayOrNull(getAddresses()));
