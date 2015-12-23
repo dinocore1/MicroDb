@@ -5,6 +5,7 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.base.Function;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +70,9 @@ public class MicroDB {
                     logger.warn("", e);
                 }
             }
+            if(mException != null) {
+                Throwables.propagate(mException);
+            }
         }
 
         abstract void doIt() throws IOException;
@@ -78,6 +82,7 @@ public class MicroDB {
             try {
                 doIt();
             } catch (Exception e) {
+                logger.error("uncaught exception while performing write operation", e);
                 mException = e;
             }
         }

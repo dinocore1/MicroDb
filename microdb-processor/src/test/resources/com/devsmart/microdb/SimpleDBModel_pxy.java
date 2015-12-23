@@ -37,7 +37,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         data.put("link", link.getId());
         data.put("myFloatArray", UBValueFactory.createArrayOrNull(getMyFloatArray()));
         data.put("myDoubleArray", UBValueFactory.createArrayOrNull(getMyDoubleArray()));
-        data.put("addresses", Utils.toUBArray(getAddresses()));
+        data.put("addresses", Utils.createArrayOrNull(getAddresses()));
         data.put("genericValue", UBValueFactory.createValueOrNull(getGenericValue()));
 
         {
@@ -85,22 +85,37 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         link = new Link<SimpleDBModel>(obj.get("link"), getDB(), SimpleDBModel_pxy.class);
         if (obj.containsKey("myFloatArray")) {
-            super.setMyFloatArray(obj.get("myFloatArray").asFloat32Array());
+            UBValue value = obj.get("myFloatArray");
+            if(value.isNull()) {
+                super.setMyFloatArray(null);
+            } else {
+                super.setMyFloatArray(value.asFloat32Array());
+            }
         }
         if (obj.containsKey("myDoubleArray")) {
-            super.setMyDoubleArray(obj.get("myDoubleArray").asFloat64Array());
+            UBValue value = obj.get("myDoubleArray");
+            if(value.isNull()) {
+                super.setMyDoubleArray(null);
+            } else {
+                super.setMyDoubleArray(value.asFloat64Array());
+            }
         }
         if (obj.containsKey("addresses")) {
-            UBArray input = obj.get("addresses").asArray();
-            final int size = input.size();
-            SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
-            for (int i = 0; i < size; i++) {
-                SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                tmp.init(null, getDB());
-                tmp.readFromUBObject(input.get(i).asObject());
-                output[i] = tmp;
+            UBValue value = obj.get("addresses");
+            if(value.isNull()) {
+                super.setAddresses(null);
+            } else {
+                UBArray input = value.asArray();
+                final int size = input.size();
+                SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
+                for (int i = 0; i < size; i++) {
+                    SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
+                    tmp.init(null, getDB());
+                    tmp.readFromUBObject(input.get(i).asObject());
+                    output[i] = tmp;
+                }
+                super.setAddresses(output);
             }
-            super.setAddresses(output);
         }
         if (obj.containsKey("genericValue")) {
             super.setGenericValue((UBValue)obj.get("genericValue"));

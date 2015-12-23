@@ -6,7 +6,10 @@ import com.devsmart.ubjson.*;
 public class Utils {
 
 
-    public static UBArray toUBArray(DBObject[] input) {
+    public static UBValue createArrayOrNull(DBObject[] input) {
+        if(input == null) {
+            return UBValueFactory.createNull();
+        }
         UBObject[] output = new UBObject[input.length];
         for(int i=0;i<input.length;i++) {
             output[i] = UBValueFactory.createObject();
