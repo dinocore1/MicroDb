@@ -288,11 +288,11 @@ public class MapDBDriver implements Driver {
 
     @Override
     public void commitTransaction() throws IOException {
-
+        mMapDB.commit();
     }
 
     @Override
     public void rollbackTransaction() throws IOException {
-
+        mMapDB.rollback();
     }
 }
