@@ -39,7 +39,6 @@ public class DBBuilder {
 
     public MicroDB build(File path) throws IOException {
         DB db = DBMaker.newFileDB(path)
-                .transactionDisable()
                 .make();
 
         MapDBDriver driver = new MapDBDriver(db);

@@ -173,7 +173,10 @@ public class MicroDB {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
+
+                mDriver.beginTransaction();
                 mDriver.insert(id, data);
+                mDriver.commitTransaction();
                 obj.mDirty = false;
             }
         };
@@ -186,7 +189,9 @@ public class MicroDB {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
+                mDriver.beginTransaction();
                 mDriver.update(id, data);
+                mDriver.commitTransaction();
                 obj.mDirty = false;
             }
         };
@@ -196,7 +201,9 @@ public class MicroDB {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
+                mDriver.beginTransaction();
                 mDriver.update(mId, mData);
+                mDriver.commitTransaction();
             }
         };
     }
@@ -207,7 +214,9 @@ public class MicroDB {
             void doIt() throws IOException {
                 final UUID id = obj.getId();
                 obj.mDirty = false;
+                mDriver.beginTransaction();
                 mDriver.delete(id);
+                mDriver.commitTransaction();
                 synchronized (MicroDB.this) {
                     mDeletedObjects.remove(id);
                 }
