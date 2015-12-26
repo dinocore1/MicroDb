@@ -173,10 +173,7 @@ public class MicroDB {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
-
-                mDriver.beginTransaction();
                 mDriver.insert(id, data);
-                mDriver.commitTransaction();
                 obj.mDirty = false;
             }
         };
@@ -189,9 +186,7 @@ public class MicroDB {
                 final UUID id = obj.getId();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
-                mDriver.beginTransaction();
                 mDriver.update(id, data);
-                mDriver.commitTransaction();
                 obj.mDirty = false;
             }
         };
@@ -201,9 +196,7 @@ public class MicroDB {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                mDriver.beginTransaction();
                 mDriver.update(mId, mData);
-                mDriver.commitTransaction();
             }
         };
     }
@@ -214,12 +207,19 @@ public class MicroDB {
             void doIt() throws IOException {
                 final UUID id = obj.getId();
                 obj.mDirty = false;
-                mDriver.beginTransaction();
                 mDriver.delete(id);
-                mDriver.commitTransaction();
                 synchronized (MicroDB.this) {
                     mDeletedObjects.remove(id);
                 }
+            }
+        };
+    }
+
+    private Operation createCommitOperation() {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException {
+                mDriver.commitTransaction();
             }
         };
     }
@@ -399,9 +399,11 @@ public class MicroDB {
      *
      * @param obj the data to be saved
      */
-    public void save(DBObject obj) {
+    public Operation save(DBObject obj) {
         checkValid(obj);
-        mWriteQueue.enqueue(createWriteObject(obj));
+        Operation op = createWriteObject(obj);
+        mWriteQueue.enqueue(op);
+        return op;
     }
 
     private void checkValid(DBObject obj) {
@@ -410,21 +412,34 @@ public class MicroDB {
         }
     }
 
-    public synchronized void delete(DBObject obj) {
+    public synchronized Operation delete(DBObject obj) {
         checkValid(obj);
         mDeletedObjects.add(obj.getId());
-        mWriteQueue.enqueue(createDeleteOperation(obj));
+        Operation op = createDeleteOperation(obj);
+        mWriteQueue.enqueue(op);
         mLiveObjects.remove(obj.getId());
+        return op;
+    }
+
+    public Operation commit() {
+        Operation op = createCommitOperation();
+        mWriteQueue.enqueue(op);
+        return op;
+    }
+
+    public void waitForCompletion(Operation op) {
+        mWriteQueue.kick();
+        op.waitForCompletion();
     }
 
     /**
      * This method blocks until all queued write operation are completed.
      */
     public void sync() {
-        Operation op = createNoOp();
+        //Operation op = createNoOp();
+        Operation op = createCommitOperation();
         mWriteQueue.enqueue(op);
-        mWriteQueue.kick();
-        op.waitForCompletion();
+        waitForCompletion(op);
     }
 
     public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
