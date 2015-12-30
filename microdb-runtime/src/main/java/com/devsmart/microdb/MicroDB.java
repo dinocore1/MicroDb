@@ -317,20 +317,15 @@ public class MicroDB {
     }
 
     /**
-     * create a new object of type {@code classType}.
+     * creates and inserts into the database a new object of type {@code classType}.
      *
      * @param classType
      * @param <T>
      * @return newly created object
      */
-    public synchronized <T extends DBObject> T create(Class<T> classType) {
+    public synchronized <T extends DBObject> T insert(Class<T> classType) {
         try {
-            if (!classType.getSimpleName().endsWith("_pxy")) {
-                String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
-                classType = (Class<T>) Class.forName(proxyClassName);
-            }
-
-            T retval = classType.newInstance();
+            T retval = create(classType);
             final UUID key = mDriver.genId();
             retval.init(key, this);
             mWriteQueue.enqueue(createInsertOperation(retval));
@@ -340,6 +335,27 @@ public class MicroDB {
 
         } catch (Exception e) {
             throw new RuntimeException("", e);
+        }
+    }
+
+    /**
+     * Constuct a new proxy instance of {@code classType}
+     * @param classType
+     * @param <T>
+     * @return
+     */
+    public static <T extends DBObject> T create(Class<T> classType) {
+        try {
+            if (!classType.getSimpleName().endsWith("_pxy")) {
+                String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
+                classType = (Class<T>) Class.forName(proxyClassName);
+            }
+
+            T retval = classType.newInstance();
+            return retval;
+        } catch (Exception e) {
+            Throwables.propagate(e);
+            return null;
         }
     }
 
@@ -408,7 +424,7 @@ public class MicroDB {
 
     private void checkValid(DBObject obj) {
         if (obj == null || obj.getDB() != this || obj.getId() == null) {
-            throw new RuntimeException("DBObject is invalid. DBObjects must be create with MicroDB.create() methods");
+            throw new RuntimeException("DBObject is invalid. DBObjects must be created with MicroDB.insert() method");
         }
     }
 
