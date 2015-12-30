@@ -122,7 +122,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             }
         }
         if (obj.containsKey("genericValue")) {
-            super.setGenericValue((UBValue)obj.get("genericValue"));
+            UBValue value = obj.get("genericValue");
+            if(value.isNull()){
+                super.setGenericValue(null);
+            } else {
+                super.setGenericValue((UBValue) value);
+            }
         }
         if (obj.containsKey("myDatum")) {
             MyDatum datum;

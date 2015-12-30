@@ -112,8 +112,13 @@ public class ProxyFileGenerator {
         public void deserializeCode(MethodSpec.Builder builder) {
 
             builder.beginControlFlow("if(obj.containsKey($S))", mField);
-            builder.addStatement("super.$L(($T)obj.get($S))",
-                    createSetterName(mField), mField, mField);
+            builder.addStatement("$T value = obj.get($S)", UBValue.class, mField);
+            builder.beginControlFlow("if(value.isNull())");
+            builder.addStatement("super.$L(null)", createSetterName(mField));
+            builder.nextControlFlow("else");
+            builder.addStatement("super.$L(($T) value)",
+                    createSetterName(mField), mField);
+            builder.endControlFlow();
             builder.endControlFlow();
 
         }
