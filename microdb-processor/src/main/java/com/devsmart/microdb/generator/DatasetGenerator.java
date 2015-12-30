@@ -43,6 +43,10 @@ public class DatasetGenerator {
         mEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, message, e);
     }
 
+    private void warn(String message) {
+        mEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, message);
+    }
+
     private void note(String message) {
         mEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
@@ -266,6 +270,55 @@ public class DatasetGenerator {
 
     }
 
+    private class LongIndex extends IndexGenCode {
+
+        public LongIndex(TypeElement classElement, VariableElement field) {
+            super(classElement, field);
+        }
+
+        @Override
+        public void genInstallIndex(MethodSpec.Builder builder) {
+            CodeBlock block = CodeBlock.builder()
+                    .add("db.addIndex($S, new $T<Long>() {\n", indexName(), MapFunction.class)
+                    .indent()
+                    .add("@$T\npublic void map($T value, $T<Long> emitter) {\n", Override.class, UBValue.class, Emitter.class)
+                    .indent()
+                    .beginControlFlow("if($T.isValidObject(value, $T.TYPE))", Utils.class, createProxyClassname())
+                    .addStatement("$T v = value.asObject().get($S).asLong()", long.class, mFieldElement)
+                    .addStatement("emitter.emit(v)")
+                    .endControlFlow()
+                    .unindent()
+                    .add("}\n")
+                    .unindent()
+                    .addStatement("})")
+                    .build();
+
+            builder.addCode(block);
+        }
+
+        @Override
+        public MethodSpec genQueryIndex() {
+            final String name = String.format("query%sBy%s", mClassElement.getSimpleName(), mFieldElement);
+
+            ParameterizedTypeName objItType = ParameterizedTypeName.get(ClassName.get(Iterable.class),
+                    TypeName.get(mClassElement.asType()));
+
+            return MethodSpec.methodBuilder(name)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addException(IOException.class)
+                    .returns(objItType)
+                    .addParameter(TypeName.get(mFieldElement.asType()), "min")
+                    .addParameter(boolean.class, "minInclusive")
+                    .addParameter(TypeName.get(mFieldElement.asType()), "max")
+                    .addParameter(boolean.class, "maxInclusive")
+                    .addCode(CodeBlock.builder()
+                            .addStatement("return mDb.queryIndex($S, $T.class, min, minInclusive, max, maxInclusive)",
+                                    indexName(), mClassElement.asType())
+                            .build())
+                    .build();
+        }
+    }
+
     private class LongAutoIncrement extends IncrementGenCode {
 
         public LongAutoIncrement(TypeElement classElement, VariableElement field) {
@@ -307,11 +360,15 @@ public class DatasetGenerator {
                     && !member.getModifiers().contains(Modifier.TRANSIENT)
                     && (am = getAnnotationMirror(member, Index.class)) != null) {
 
-                note("found Index annotation: " + member);
+                note("found Index field: " + member);
 
                 VariableElement field = (VariableElement)member;
                 if(isStringType(field)) {
                     mCodeGen.add(new StringIndex(classElement, field));
+                } else if(isLongType(field)) {
+                    mCodeGen.add(new LongIndex(classElement, field));
+                } else {
+                    warn("unsupported Index field type: " + type);
                 }
 
             }
@@ -322,9 +379,13 @@ public class DatasetGenerator {
                     && !member.getModifiers().contains(Modifier.TRANSIENT)
                     && (am = getAnnotationMirror(member, AutoIncrement.class)) != null) {
 
+                note("found AutoIncrement field: " + member);
+
                 VariableElement field = (VariableElement) member;
                 if(isLongType(field)) {
                     mCodeGen.add(new LongAutoIncrement(classElement, field));
+                } else {
+                    warn("unsupported AutoIncrement field type: " + type);
                 }
 
             }

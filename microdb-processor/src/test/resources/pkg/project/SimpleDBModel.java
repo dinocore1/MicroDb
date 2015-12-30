@@ -73,6 +73,17 @@ public class SimpleDBModel extends DBObject {
         this.myLong = myLong;
     }
 
+    @Index
+    private long indexLong;
+
+    public long getIndexLong() {
+        return indexLong;
+    }
+
+    public void setIndexLong(long indexLong) {
+        this.indexLong = indexLong;
+    }
+
     private SimpleDBModel internal;
     public SimpleDBModel getInternal() {
         return internal;

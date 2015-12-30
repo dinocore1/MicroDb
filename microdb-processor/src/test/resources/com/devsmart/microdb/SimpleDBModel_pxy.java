@@ -23,6 +23,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         data.put("myShort", UBValueFactory.createInt(getMyShort()));
         data.put("myInt", UBValueFactory.createInt(getMyInt()));
         data.put("myLong", UBValueFactory.createInt(getMyLong()));
+        data.put("indexLong", UBValueFactory.createInt(getIndexLong()));
 
         {
             SimpleDBModel inst = getInternal();
@@ -75,6 +76,9 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
         if (obj.containsKey("myLong")) {
             super.setMyLong(obj.get("myLong").asLong());
+        }
+        if (obj.containsKey("indexLong")) {
+            super.setIndexLong(obj.get("indexLong").asLong());
         }
         if (obj.containsKey("internal")) {
             UBValue value = obj.get("internal");
@@ -176,6 +180,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void setMyLong(long value) {
         super.setMyLong(value);
+        mDirty = true;
+    }
+
+    @Override
+    public void setIndexLong(long value) {
+        super.setIndexLong(value);
         mDirty = true;
     }
 

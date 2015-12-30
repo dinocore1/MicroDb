@@ -47,10 +47,24 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
 
         });
 
+        db.addIndex("SimpleDBModel.indexLong", new MapFunction<Long>() {
+            @Override
+            public void map(UBValue value, Emitter<Long> emitter) {
+                if(Utils.isValidObject(value, SimpleDBModel_pxy.TYPE)) {
+                    long v = value.asObject().get("indexLong").asLong();
+                    emitter.emit(v);
+                }
+            }
+        });
+
     }
 
     public Iterable<SimpleDBModel> querySimpleDBModelBymyString(String min, boolean minInclusive, String max, boolean maxInclusive) throws IOException {
         return mDb.queryIndex("SimpleDBModel.myString", SimpleDBModel.class, min, minInclusive, max, maxInclusive);
+    }
+
+    public Iterable<SimpleDBModel> querySimpleDBModelByindexLong(long min, boolean minInclusive, long max, boolean maxInclusive) throws IOException {
+        return mDb.queryIndex("SimpleDBModel.indexLong", SimpleDBModel.class, min, minInclusive, max, maxInclusive);
     }
 
 }
