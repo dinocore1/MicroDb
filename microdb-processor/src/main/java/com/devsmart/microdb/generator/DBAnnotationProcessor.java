@@ -66,7 +66,7 @@ public class DBAnnotationProcessor extends AbstractProcessor {
                 error("DBObj annotation can only be applied to classes", classElement);
             }
 
-            note("Processing class: " + classElement.getSimpleName());
+            note("Processing DBObj class: " + classElement.getSimpleName());
 
             ProxyFileGenerator generator = new ProxyFileGenerator(processingEnv, (TypeElement)classElement);
             if(generator.validate()) {
@@ -85,7 +85,7 @@ public class DBAnnotationProcessor extends AbstractProcessor {
                 error("classes with DataSet annotation must implement com.devsmart.microdb.Dataset");
             }
 
-            note("Processing class: " + classElement.getSimpleName());
+            note("Processing Dataset class: " + classElement.getSimpleName());
 
             DatasetGenerator generator = new DatasetGenerator(processingEnv, (TypeElement)classElement);
             if(generator.validate()) {

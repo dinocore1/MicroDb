@@ -115,6 +115,7 @@ public class DatasetGenerator {
             AnnotationMirror am = getAnnotationMirror(mClassElement, DataSet.class);
             Attribute.Array array = (Attribute.Array) getAnnotationValue(am, "objects");
             for(Attribute attribute : array.getValue()) {
+                note("visiting object: " + attribute);
                 DeclaredType type = (DeclaredType) attribute.getValue();
                 visitObjectTypes(classBuilder, type);
             }
@@ -306,6 +307,7 @@ public class DatasetGenerator {
                     && !member.getModifiers().contains(Modifier.TRANSIENT)
                     && (am = getAnnotationMirror(member, Index.class)) != null) {
 
+                note("found Index annotation: " + member);
 
                 VariableElement field = (VariableElement)member;
                 if(isStringType(field)) {
