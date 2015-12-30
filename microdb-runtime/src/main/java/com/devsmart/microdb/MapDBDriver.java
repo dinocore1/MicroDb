@@ -61,8 +61,12 @@ public class MapDBDriver implements Driver {
                 .comparator(BTreeMap.COMPARABLE_COMPARATOR)
                 .makeOrGet();
 
-        Atomic.Var<? extends UBValue> metadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
-        mMetadata = (Atomic.Var<UBObject>)metadata;
+        if(mMapDB.exists("metadata")){
+            mMetadata = mMapDB.getAtomicVar("metadata");
+        } else {
+            Atomic.Var<? extends UBValue> metadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
+            mMetadata = (Atomic.Var<UBObject>) metadata;
+        }
     }
 
     @Override
