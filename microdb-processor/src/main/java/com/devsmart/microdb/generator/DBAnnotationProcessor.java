@@ -22,7 +22,7 @@ public class DBAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
-        return SourceVersion.RELEASE_6;
+        return SourceVersion.latest();
     }
 
     @Override
