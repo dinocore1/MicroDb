@@ -63,7 +63,7 @@ public class MicroDBSimpleDataSet extends SimpleDataSet {
         return mDb.queryIndex("SimpleDBModel.myString", SimpleDBModel.class, min, minInclusive, max, maxInclusive);
     }
 
-    public Iterable<SimpleDBModel> querySimpleDBModelByindexLong(long min, boolean minInclusive, long max, boolean maxInclusive) throws IOException {
+    public Iterable<SimpleDBModel> querySimpleDBModelByindexLong(Long min, boolean minInclusive, Long max, boolean maxInclusive) throws IOException {
         return mDb.queryIndex("SimpleDBModel.indexLong", SimpleDBModel.class, min, minInclusive, max, maxInclusive);
     }
 

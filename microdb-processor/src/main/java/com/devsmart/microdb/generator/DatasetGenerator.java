@@ -307,9 +307,9 @@ public class DatasetGenerator {
                     .addModifiers(Modifier.PUBLIC)
                     .addException(IOException.class)
                     .returns(objItType)
-                    .addParameter(TypeName.get(mFieldElement.asType()), "min")
+                    .addParameter(Long.class, "min")
                     .addParameter(boolean.class, "minInclusive")
-                    .addParameter(TypeName.get(mFieldElement.asType()), "max")
+                    .addParameter(Long.class, "max")
                     .addParameter(boolean.class, "maxInclusive")
                     .addCode(CodeBlock.builder()
                             .addStatement("return mDb.queryIndex($S, $T.class, min, minInclusive, max, maxInclusive)",
