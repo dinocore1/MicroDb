@@ -20,17 +20,6 @@ compileJava {
   sourceCompatibility = 1.6
 }
 
-jar {
-  from {
-    configurations.compile.collect {
-      it.isDirectory() ? it : zipTree(it)
-    }
-    configurations.runtime.collect {
-      it.isDirectory() ? it : zipTree(it)
-    }
-  }
-}
-
 task javadocJar(type: Jar, dependsOn: javadoc) {
   classifier = 'javadoc'
   from 'build/docs/javadoc'
