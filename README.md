@@ -2,10 +2,9 @@
 
 MicroDB is an embedded NoSQL Database. MicroDB emphasizes speed, low complexity, and synchronization.
 Data is stored as [UBJSON](http://ubjson.org/) objects and indices are created using a simple map-reduce framework.
-MicroDB is built on top of [LevelDB](http://leveldb.org/) - a fast database engine built by some guys at google.
+MicroDB is built on top of [MapDB](http://mapdb.org/) - a fast database engine pure java with no dependencies.
 
-MicroDB has bindings libraries for Java and support for Android. Data objects are modeled using POJOs and all
-serialization code is automatically generated.
+Data objects are modeled using POJOs and all serialization code is automatically generated.
 
 ### Model Data objects as Plain Old Java Objects ###
 
@@ -14,7 +13,6 @@ Data objects are modeled as POJOs. Fields can be of any primitive type, primitiv
  of embedding into the object itself.
 
 ```
-
 @DBObj
 public class Person extends DBObject {
 
@@ -58,7 +56,7 @@ mDatabase = DBBuilder.builder(new File("path/to/dbfile")
 
 ...
 
-Person newPersion = mDatabase.create(Person.class);
+Person newPersion = mDatabase.insert(Person.class);
 newPersion.setFirstName("Santa");
 
 System.out.println("Created new person object. Database id is: " + newPersion.getId());
@@ -68,10 +66,9 @@ System.out.println("Created new person object. Database id is: " + newPersion.ge
 ### Queries ###
 
 ```
-ObjIterator<Person> it = mDatabase.getAll(Person.class);
-while(it2.valid()) {
-  Person p = it.get();
-  it.next();
+while(Person p : mDatabase.getAllOfType(Person.class)) {
+  //do something with p - its a POJO!
+  ...
 }
 ```
 
