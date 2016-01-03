@@ -18,6 +18,7 @@ public class Person extends DBObject {
 
   private String firstName;
   private String lastName;
+  @Index
   private int age;
 
   public Link<Address> address;
@@ -72,3 +73,11 @@ while(Person p : mDatabase.getAllOfType(Person.class)) {
 }
 ```
 
+You can also query object by any `@Index` annotation:
+
+```
+while(Person p : mDatabase.queryIndex("age", Person.class, 30, true, 45, true)) {
+  //do something with p - its a POJO!
+  ...
+}
+```
