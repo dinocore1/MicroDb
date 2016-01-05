@@ -196,6 +196,17 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     }
 
     @Override
+    public SimpleDBModel getLink() {
+        return link.get();
+    }
+
+    @Override
+    public void setLink(SimpleDBModel value) {
+        link.set(value);
+        mDirty = true;
+    }
+
+    @Override
     public void setMyFloatArray(float[] value) {
         super.setMyFloatArray(value);
         mDirty = true;
