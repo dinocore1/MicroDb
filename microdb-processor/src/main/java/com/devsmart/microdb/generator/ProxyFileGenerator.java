@@ -11,10 +11,7 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.*;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
@@ -26,20 +23,58 @@ public class ProxyFileGenerator {
 
     public static final String MICRODB_PACKAGE = "com.devsmart.microdb";
 
-    private interface FieldMethodCodeGen {
+    private abstract class FieldMethodCodeGen {
 
-        void serializeCode(MethodSpec.Builder builder);
-        void deserializeCode(MethodSpec.Builder builder);
-        void specializedMethods(TypeSpec.Builder builder);
+        final VariableElement mField;
+
+        public FieldMethodCodeGen(VariableElement field) {
+            mField = field;
+        }
+
+        abstract void serializeCode(MethodSpec.Builder builder);
+        abstract void deserializeCode(MethodSpec.Builder builder);
+        void specializedMethods(TypeSpec.Builder builder) {
+            if(!hasGetterMethod(mClassElement, mField)) {
+                builder.addMethod(generateGetterMethod(mField));
+            }
+
+            boolean hasSetter = hasSetterMethod(mClassElement, mField);
+            builder.addMethod(generateSetterMethod(mField, hasSetter));
+        }
+
+        MethodSpec generateGetterMethod(VariableElement field) {
+            final String getterName = createGetterName(field);
+            return MethodSpec.methodBuilder(getterName)
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(TypeName.get(field.asType()))
+                    .addStatement("return $L", field)
+                    .build();
+        }
+
+        MethodSpec generateSetterMethod(VariableElement field, boolean override) {
+            final String setterName = createSetterName(field);
+            MethodSpec.Builder builder = MethodSpec.methodBuilder(setterName)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addParameter(TypeName.get(field.asType()), "value");
+
+            if(override) {
+                builder.addAnnotation(Override.class);
+                builder.addStatement("super.$L(value)", setterName);
+            } else {
+                builder.addStatement("$L = value", field);
+            }
+
+            return builder.addStatement("mDirty = true")
+                    .build();
+
+        }
 
     }
 
-    private class DatumField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class DatumField extends FieldMethodCodeGen {
 
         public DatumField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -78,27 +113,12 @@ public class ProxyFileGenerator {
                     .build());
 
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-        }
     }
 
-    private class GenericUBValueField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class GenericUBValueField extends FieldMethodCodeGen {
 
         public GenericUBValueField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -123,26 +143,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-        }
     }
 
-    private class StringDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class StringDBOBjectField extends FieldMethodCodeGen {
 
         public StringDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -160,27 +166,12 @@ public class ProxyFileGenerator {
             builder.endControlFlow();
 
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class BoolDBObjectField implements FieldMethodCodeGen {
-        private final VariableElement mField;
+    private class BoolDBObjectField extends FieldMethodCodeGen {
 
         public BoolDBObjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -198,26 +189,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class ByteDBObjectField implements FieldMethodCodeGen {
-        private final VariableElement mField;
+    private class ByteDBObjectField extends FieldMethodCodeGen {
 
         public ByteDBObjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -236,26 +213,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class ShortDBObjectField implements FieldMethodCodeGen {
-        private final VariableElement mField;
+    private class ShortDBObjectField extends FieldMethodCodeGen {
 
         public ShortDBObjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -274,27 +237,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class IntDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class IntDBOBjectField extends FieldMethodCodeGen {
 
         public IntDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -312,28 +260,12 @@ public class ProxyFileGenerator {
             builder.endControlFlow();
 
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class IntArrayDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class IntArrayDBOBjectField extends FieldMethodCodeGen {
 
         public IntArrayDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -357,27 +289,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class LongDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class LongDBOBjectField extends FieldMethodCodeGen {
 
         public LongDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -396,27 +313,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class FloatDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class FloatDBOBjectField extends FieldMethodCodeGen {
 
         public FloatDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -435,27 +337,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class FloatArrayDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class FloatArrayDBOBjectField extends FieldMethodCodeGen {
 
         public FloatArrayDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -479,27 +366,12 @@ public class ProxyFileGenerator {
 
         }
 
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class DoubleDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class DoubleDBOBjectField extends FieldMethodCodeGen {
 
         public DoubleDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -516,28 +388,12 @@ public class ProxyFileGenerator {
                     createSetterName(mField), mField.getSimpleName());
             builder.endControlFlow();
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class DoubleArrayDBOBjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class DoubleArrayDBOBjectField extends FieldMethodCodeGen {
 
         public DoubleArrayDBOBjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -560,27 +416,12 @@ public class ProxyFileGenerator {
             builder.endControlFlow();
 
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class LinkFieldGen implements FieldMethodCodeGen {
-        private final VariableElement mField;
+    private class LinkFieldGen extends FieldMethodCodeGen {
 
         public LinkFieldGen(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -612,12 +453,10 @@ public class ProxyFileGenerator {
         return ClassName.get(MICRODB_PACKAGE, simpleName+"_pxy");
     }
 
-    private class EmbeddedDBObjectField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class EmbeddedDBObjectField extends FieldMethodCodeGen {
 
         public EmbeddedDBObjectField(VariableElement field) {
-            mField = field;
+            super(field);
         }
 
         @Override
@@ -662,28 +501,12 @@ public class ProxyFileGenerator {
             );
 
         }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
-
-        }
     }
 
-    private class EmbeddedDBObjectArrayField implements FieldMethodCodeGen {
-
-        private final VariableElement mField;
+    private class EmbeddedDBObjectArrayField extends FieldMethodCodeGen {
 
         public EmbeddedDBObjectArrayField(VariableElement field) {
-            mField = field;
+           super(field);
         }
 
         @Override
@@ -722,19 +545,6 @@ public class ProxyFileGenerator {
                     .endControlFlow()
                     .build());
 
-        }
-
-        @Override
-        public void specializedMethods(TypeSpec.Builder builder) {
-            final String setterName = createSetterName(mField);
-            builder.addMethod(MethodSpec.methodBuilder(setterName)
-                            .addAnnotation(Override.class)
-                            .addModifiers(Modifier.PUBLIC)
-                            .addParameter(TypeName.get(mField.asType()), "value")
-                            .addStatement("super.$L(value)", setterName)
-                            .addStatement("mDirty = true")
-                            .build()
-            );
         }
     }
 
@@ -965,6 +775,63 @@ public class ProxyFileGenerator {
         } catch (IOException e) {
             error("error generating proxy class: " + e.getMessage());
         }
+    }
+
+    private boolean hasGetterMethod(TypeElement classElement, VariableElement field) {
+        final String getterName = createGetterName(field);
+
+        for (Element member : classElement.getEnclosedElements()) {
+            if(member.getKind() == ElementKind.METHOD
+                    && member.getModifiers().contains(Modifier.PUBLIC)
+                    && !member.getModifiers().contains(Modifier.STATIC)){
+
+
+                ExecutableElement methodElement = (ExecutableElement)member;
+                if(!getterName.equals(methodElement.getSimpleName().toString())){
+                    continue;
+                }
+                TypeMirror returnType = methodElement.getReturnType();
+                if(!mEnv.getTypeUtils().isAssignable(returnType, field.asType())){
+                    continue;
+                }
+
+                List<? extends VariableElement> params = methodElement.getParameters();
+                if(params.size() == 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private boolean hasSetterMethod(TypeElement classElement, VariableElement field) {
+        final String setterName = createSetterName(field);
+
+        for (Element member : classElement.getEnclosedElements()) {
+            if(member.getKind() == ElementKind.METHOD
+                    && member.getModifiers().contains(Modifier.PUBLIC)
+                    && !member.getModifiers().contains(Modifier.STATIC)){
+
+                ExecutableElement methodElement = (ExecutableElement)member;
+                if(!setterName.equals(methodElement.getSimpleName().toString())){
+                    continue;
+                }
+
+                TypeMirror returnType = methodElement.getReturnType();
+                if(returnType.getKind() != TypeKind.VOID){
+                    continue;
+                }
+
+                List<? extends VariableElement> params = methodElement.getParameters();
+                if(params.size() == 1 &&
+                        mEnv.getTypeUtils().isAssignable(params.get(0).asType(), field.asType())) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private MethodSpec generateToUBValueMethod(final List<FieldMethodCodeGen> fieldGens) {

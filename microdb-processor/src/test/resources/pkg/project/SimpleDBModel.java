@@ -143,5 +143,6 @@ public class SimpleDBModel extends DBObject {
         this.myDatum = myDatum;
     }
 
+    private int autoGen;
 
 }

@@ -224,4 +224,13 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         super.setMyDatum(value);
         mDirty = true;
     }
+
+    public int getAutoGen() {
+        return autoGen;
+    }
+
+    public void setAutoGen(int value) {
+        autoGen = value;
+        mDirty = true;
+    }
 }
