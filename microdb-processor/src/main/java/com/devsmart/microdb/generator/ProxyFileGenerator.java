@@ -591,8 +591,8 @@ public class ProxyFileGenerator {
             return false;
         }
 
-        if (! mClassElement.getSuperclass().toString().equals(DBObject.class.getCanonicalName())) {
-            error("MicroDB DBObj must be derived from " + DBObject.class.getSimpleName(), mClassElement);
+        if(!mEnv.getTypeUtils().isAssignable(mClassElement.asType(), toTypeMirror(DBObject.class))) {
+            error("MicroDB DBObj must be assignable to " + DBObject.class.getSimpleName(), mClassElement);
             return false;
         }
 
