@@ -434,6 +434,34 @@ public class ProxyFileGenerator {
 
     }
 
+    private class LinkListFieldGen extends FieldMethodCodeGen {
+
+        public LinkListFieldGen(VariableElement field) {
+            super(field);
+        }
+
+        @Override
+        public void serializeCode(MethodSpec.Builder builder) {
+            builder.beginControlFlow("if($L == null)", mField)
+                    .addStatement("data.put($S, $T.createNull())", mField, UBValueFactory.class)
+                    .nextControlFlow("else")
+                    .addStatement("data.put($S, $L.getIdArray())", mField, mField)
+                    .endControlFlow();
+
+        }
+
+        @Override
+        public void deserializeCode(MethodSpec.Builder builder) {
+            TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
+            builder.addStatement("$L = new $T(obj.get($S), this, $T.class)", mField, mField.asType(), mField, createDBObjName(mEnv.getTypeUtils().asElement(genericType)));
+        }
+
+        @Override
+        public void specializedMethods(TypeSpec.Builder builder) {
+        }
+
+    }
+
     private ClassName createDBObjName(Element field) {
         TypeMirror fieldType = field.asType();
         Element typeElement = mEnv.getTypeUtils().asElement(fieldType);
@@ -593,6 +621,11 @@ public class ProxyFileGenerator {
         return mEnv.getTypeUtils().isAssignable(field.asType(), linkType);
     }
 
+    private boolean isLinkListType(VariableElement field) {
+        DeclaredType linkType = mEnv.getTypeUtils().getDeclaredType(toTypeElement(LinkList.class), mEnv.getTypeUtils().getWildcardType(toTypeMirror(DBObject.class), null));
+        return mEnv.getTypeUtils().isAssignable(field.asType(), linkType);
+    }
+
     private boolean isDatumType(VariableElement field) {
         return mEnv.getTypeUtils().isAssignable(field.asType(), toTypeMirror(Datum.class));
     }
@@ -689,6 +722,12 @@ public class ProxyFileGenerator {
                                 error("Link fields must be public");
                             } else {
                                 fields.add(new LinkFieldGen(field));
+                            }
+                        } else if(isLinkListType(field)) {
+                            if(!field.getModifiers().contains(Modifier.PUBLIC)) {
+                                error("LinkList fields must be public");
+                            } else {
+                                fields.add(new LinkListFieldGen(field));
                             }
                         } else {
                             if(!field.getModifiers().contains(Modifier.PRIVATE)) {

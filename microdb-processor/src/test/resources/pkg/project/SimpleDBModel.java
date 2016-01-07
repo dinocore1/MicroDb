@@ -3,6 +3,7 @@ package pkg.project;
 
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.Link;
+import com.devsmart.microdb.LinkList;
 import com.devsmart.microdb.annotations.AutoIncrement;
 import com.devsmart.microdb.annotations.DBObj;
 import com.devsmart.microdb.annotations.Index;
@@ -95,6 +96,8 @@ public class SimpleDBModel extends DBObject {
 
     //Links must be public
     public Link<SimpleDBModel> link;
+
+    public LinkList<SimpleDBModel> listOfLinks;
 
     private float[] myFloatArray;
     public float[] getMyFloatArray() {

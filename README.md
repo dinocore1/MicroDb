@@ -44,7 +44,7 @@ A valid DBObject must follow these rules:
 * must extend DBObject
 * must be annotated with `@DBObj`
 * fields must be private and have corresponding getters and setters
-* fields of type `Link<T>` must be public
+* fields of type `Link<T>` or `LinkList<T>` must be public
 * fields with transient are not persisted
 
 

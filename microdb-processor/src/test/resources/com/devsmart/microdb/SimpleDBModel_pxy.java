@@ -40,6 +40,11 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         } else {
             data.put("link", link.getId());
         }
+        if(listOfLinks == null) {
+            data.put("listOfLinks", UBValueFactory.createNull());
+        } else {
+            data.put("listOfLinks", listOfLinks.getIdArray());
+        }
         data.put("myFloatArray", UBValueFactory.createArrayOrNull(getMyFloatArray()));
         data.put("myDoubleArray", UBValueFactory.createArrayOrNull(getMyDoubleArray()));
         data.put("addresses", Utils.createArrayOrNull(getAddresses()));
@@ -92,6 +97,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
             }
         }
         link = new Link<SimpleDBModel>(obj.get("link"), this, SimpleDBModel_pxy.class);
+        listOfLinks = new LinkList<SimpleDBModel>(obj.get("listOfLinks"), this, SimpleDBModel_pxy.class);
         if (obj.containsKey("myFloatArray")) {
             UBValue value = obj.get("myFloatArray");
             if(value.isNull()) {
