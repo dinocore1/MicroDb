@@ -425,38 +425,13 @@ public class ProxyFileGenerator {
         @Override
         public void deserializeCode(MethodSpec.Builder builder) {
             TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
-            builder.addStatement("$L = new $T(obj.get($S), getDB(), $T.class)", mField, mField.asType(), mField, createDBObjName(mEnv.getTypeUtils().asElement(genericType)));
+            builder.addStatement("$L = new $T(obj.get($S), this, $T.class)", mField, mField.asType(), mField, createDBObjName(mEnv.getTypeUtils().asElement(genericType)));
         }
 
         @Override
         public void specializedMethods(TypeSpec.Builder builder) {
-            builder.addMethod(generateGetterMethod());
-            builder.addMethod(generateSetterMethod());
-
         }
 
-        MethodSpec generateGetterMethod() {
-            final TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
-            final String getterName = createGetterName(mField);
-            return MethodSpec.methodBuilder(getterName)
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(TypeName.get(genericType))
-                    .addStatement("return $L.get()", mField)
-                    .build();
-        }
-
-        MethodSpec generateSetterMethod() {
-            final TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
-            final String setterName = createSetterName(mField);
-            return MethodSpec.methodBuilder(setterName)
-                    .addModifiers(Modifier.PUBLIC)
-                    .addParameter(TypeName.get(genericType), "value")
-                    .addAnnotation(Override.class)
-                    .addStatement("$L.set(value)", mField)
-                    .addStatement("mDirty = true")
-                    .build();
-        }
     }
 
     private ClassName createDBObjName(Element field) {
@@ -710,8 +685,8 @@ public class ProxyFileGenerator {
                     } else {
 
                         if(isLinkType(field)){
-                            if(!field.getModifiers().contains(Modifier.PROTECTED)) {
-                                error("Link fields must be protected");
+                            if(!field.getModifiers().contains(Modifier.PUBLIC)) {
+                                error("Link fields must be public");
                             } else {
                                 fields.add(new LinkFieldGen(field));
                             }

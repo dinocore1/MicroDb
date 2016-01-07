@@ -93,17 +93,8 @@ public class SimpleDBModel extends DBObject {
         internal = value;
     }
 
-    //Links must have protected modifier
-    protected Link<SimpleDBModel> link;
-
-    public void setLink(SimpleDBModel model) {
-        //no need to implement
-    }
-
-    public SimpleDBModel getLink() {
-        //no need to implement
-        return null;
-    }
+    //Links must be public
+    public Link<SimpleDBModel> link;
 
     private float[] myFloatArray;
     public float[] getMyFloatArray() {

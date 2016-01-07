@@ -9,22 +9,22 @@ import java.util.UUID;
 public class Link<T extends DBObject> {
 
     private UUID mId;
-    private MicroDB mDB;
+    final private DBObject mDBObj;
     private Class<? extends T> mClassType;
 
-    public Link(UBValue id, MicroDB db, Class<? extends T> classType) {
+    Link(UBValue id, DBObject obj, Class<? extends T> classType) {
         if(id != null && id.isString()) {
             mId = UUID.fromString(id.asString());
         } else {
             mId = null;
         }
-        mDB = db;
+        mDBObj = obj;
         mClassType = classType;
     }
 
-    public Link(UUID id, MicroDB db, Class<? extends T> classType) {
+    Link(UUID id, DBObject obj, Class<? extends T> classType) {
         mId = id;
-        mDB = db;
+        mDBObj = obj;
         mClassType = classType;
     }
 
@@ -40,7 +40,7 @@ public class Link<T extends DBObject> {
         if(mId == null) {
             return null;
         } else {
-            return mDB.get(mId, mClassType);
+            return mDBObj.getDB().get(mId, mClassType);
         }
     }
 
@@ -50,6 +50,7 @@ public class Link<T extends DBObject> {
         } else {
             mId = value.getId();
         }
+        mDBObj.setDirty();
     }
 
 }

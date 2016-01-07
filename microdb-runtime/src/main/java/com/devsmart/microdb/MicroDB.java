@@ -487,7 +487,7 @@ public class MicroDB {
 
     public <T extends DBObject> Link<T> createLink(T obj) {
         checkValid(obj);
-        return new Link<T>(obj.getId(), this, (Class<T>)obj.getClass());
+        return new Link<T>(obj.getId(), obj, (Class<T>)obj.getClass());
     }
 
 }

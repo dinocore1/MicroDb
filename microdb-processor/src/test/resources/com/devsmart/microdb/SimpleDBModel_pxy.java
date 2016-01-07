@@ -91,7 +91,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 super.setInternal(tmp);
             }
         }
-        link = new Link<SimpleDBModel>(obj.get("link"), getDB(), SimpleDBModel_pxy.class);
+        link = new Link<SimpleDBModel>(obj.get("link"), this, SimpleDBModel_pxy.class);
         if (obj.containsKey("myFloatArray")) {
             UBValue value = obj.get("myFloatArray");
             if(value.isNull()) {
@@ -192,17 +192,6 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     @Override
     public void setInternal(SimpleDBModel value) {
         super.setInternal(value);
-        mDirty = true;
-    }
-
-    @Override
-    public SimpleDBModel getLink() {
-        return link.get();
-    }
-
-    @Override
-    public void setLink(SimpleDBModel value) {
-        link.set(value);
         mDirty = true;
     }
 
