@@ -57,6 +57,10 @@ public class ProxyFileGenerator {
                     .build();
         }
 
+        void initCode(MethodSpec.Builder builder) {
+
+        }
+
     }
 
     private class DatumField extends FieldMethodCodeGen {
@@ -432,6 +436,13 @@ public class ProxyFileGenerator {
         public void specializedMethods(TypeSpec.Builder builder) {
         }
 
+        @Override
+        void initCode(MethodSpec.Builder builder) {
+            TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
+            builder.addStatement("$L = new $T(this, $T.class)",
+                    mField, mField.asType(), createDBObjName(mEnv.getTypeUtils().asElement(genericType)));
+        }
+
     }
 
     private class LinkListFieldGen extends FieldMethodCodeGen {
@@ -508,7 +519,7 @@ public class ProxyFileGenerator {
                             .addStatement("super.$L(null)", createSetterName(mField))
                             .nextControlFlow("else")
                             .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                            .addStatement("tmp.init(null, getDB())")
+                            .addStatement("tmp.init(getDB())")
                             .addStatement("tmp.readFromUBObject(value.asObject())")
                             .addStatement("super.$L(tmp)", createSetterName(mField))
                             .endControlFlow()
@@ -552,7 +563,7 @@ public class ProxyFileGenerator {
                     .addStatement("$T output = new $T[size]", proxyArrayClassName, proxyClassName)
                     .beginControlFlow("for(int i=0;i<size;i++)")
                     .addStatement("$T tmp = new $T()", proxyClassName, proxyClassName)
-                    .addStatement("tmp.init(null, getDB())")
+                    .addStatement("tmp.init(getDB())")
                     .addStatement("tmp.readFromUBObject(input.get(i).asObject())")
                     .addStatement("output[i] = tmp")
                     .endControlFlow()
@@ -784,6 +795,8 @@ public class ProxyFileGenerator {
 
             classBuilder.addMethod(generateFromUBValueMethod(fields));
 
+            classBuilder.addMethod(generateInitMethod(fields));
+
             for(FieldMethodCodeGen fieldGen : fields) {
                 fieldGen.specializedMethods(classBuilder);
             }
@@ -888,6 +901,22 @@ public class ProxyFileGenerator {
 
         for(FieldMethodCodeGen fieldGen : fieldGens) {
             fieldGen.deserializeCode(builder);
+        }
+
+        return builder.build();
+    }
+
+    private MethodSpec generateInitMethod(final List<FieldMethodCodeGen> fieldGens) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("init")
+                .addModifiers(Modifier.PROTECTED)
+                .addAnnotation(Override.class)
+                .addParameter(MicroDB.class, "microDB")
+                .returns(TypeName.VOID);
+
+        builder.addStatement("super.init(microDB)");
+
+        for(FieldMethodCodeGen fieldGen : fieldGens) {
+            fieldGen.initCode(builder);
         }
 
         return builder.build();

@@ -91,7 +91,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 super.setInternal(null);
             } else {
                 SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                tmp.init(null, getDB());
+                tmp.init(getDB());
                 tmp.readFromUBObject(value.asObject());
                 super.setInternal(tmp);
             }
@@ -124,7 +124,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
                 SimpleDBModel_pxy[] output = new SimpleDBModel_pxy[size];
                 for (int i = 0; i < size; i++) {
                     SimpleDBModel_pxy tmp = new SimpleDBModel_pxy();
-                    tmp.init(null, getDB());
+                    tmp.init(getDB());
                     tmp.readFromUBObject(input.get(i).asObject());
                     output[i] = tmp;
                 }
@@ -152,6 +152,12 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
         }
     }
 
+    @Override
+    protected void init(MicroDB microDB) {
+        super.init(microDB);
+        link = new Link<SimpleDBModel>(this, SimpleDBModel_pxy.class);
+
+    }
 
     @Override
     public void setMyString(String value) {

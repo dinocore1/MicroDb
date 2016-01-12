@@ -25,10 +25,12 @@ public class DBObject {
         }
     }
 
-    protected void init(UUID id, MicroDB microDB) {
-        mId = id;
+    protected void init(MicroDB microDB) {
         mDB = microDB;
-        mDirty = true;
+    }
+
+    protected void setId(UUID id) {
+        mId = id;
     }
 
     public void writeToUBObject(UBObject data) {

@@ -327,7 +327,8 @@ public class MicroDB {
         try {
             T retval = create(classType);
             final UUID key = mDriver.genId();
-            retval.init(key, this);
+            retval.setId(key);
+            retval.setDirty();
             mWriteQueue.enqueue(createInsertOperation(retval));
             mLiveObjects.put(key, new SoftReference<DBObject>(retval));
 
@@ -344,7 +345,7 @@ public class MicroDB {
      * @param <T>
      * @return
      */
-    public static <T extends DBObject> T create(Class<T> classType) {
+    public <T extends DBObject> T create(Class<T> classType) {
         try {
             if (!classType.getSimpleName().endsWith("_pxy")) {
                 String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
@@ -352,6 +353,7 @@ public class MicroDB {
             }
 
             T retval = classType.newInstance();
+            retval.init(this);
             return retval;
         } catch (Exception e) {
             Throwables.propagate(e);
@@ -395,7 +397,8 @@ public class MicroDB {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
                     T newObj = classType.newInstance();
-                    newObj.init(id, this);
+                    newObj.init(this);
+                    newObj.setId(id);
                     newObj.readFromUBObject(data.asObject());
                     retval = newObj;
                     mLiveObjects.put(id, new SoftReference<DBObject>(retval));
@@ -483,11 +486,6 @@ public class MicroDB {
     public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException {
         final String className = classType.getSimpleName();
         return queryIndex("type", classType, className, true, className, true);
-    }
-
-    public <T extends DBObject> Link<T> createLink(T obj) {
-        checkValid(obj);
-        return new Link<T>(obj.getId(), obj, (Class<T>)obj.getClass());
     }
 
 }

@@ -12,20 +12,23 @@ public class Link<T extends DBObject> {
     final private DBObject mDBObj;
     private Class<? extends T> mClassType;
 
+    Link(DBObject obj, Class<? extends T> classType) {
+        mDBObj = obj;
+        mClassType = classType;
+    }
+
     Link(UBValue id, DBObject obj, Class<? extends T> classType) {
+        this(obj, classType);
         if(id != null && id.isString()) {
             mId = UUID.fromString(id.asString());
         } else {
             mId = null;
         }
-        mDBObj = obj;
-        mClassType = classType;
     }
 
     Link(UUID id, DBObject obj, Class<? extends T> classType) {
+        this(obj, classType);
         mId = id;
-        mDBObj = obj;
-        mClassType = classType;
     }
 
     public UBValue getId() {
