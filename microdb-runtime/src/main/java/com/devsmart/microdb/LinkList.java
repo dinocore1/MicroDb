@@ -45,6 +45,33 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
         mDBObj.setDirty();
     }
 
+    /**
+     * Removes the element at the specified position in this list.
+     * Shifts any subsequent elements to the left (subtracts one from their
+     * indices).
+     *
+     * @param index the index of the element to be removed
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    public void remove(int index) {
+        mList.remove(index);
+    }
+
+    /**
+     * Removes the first occurrence of the specified element from this list,
+     * if it is present.  If the list does not contain the element, it is
+     * unchanged.
+     * @param obj
+     * @return <tt>true</tt> if this list contained the specified element
+     */
+    public boolean remove(T obj) {
+        if(!isValid(obj)) {
+            throw new RuntimeException("obj is not valid");
+        }
+
+        return mList.remove(obj.getId());
+    }
+
     public int size() {
         return mList.size();
     }
@@ -58,8 +85,15 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
         mDBObj.setDirty();
     }
 
-    public T get(int i) {
-        UUID id = mList.get(i);
+    /**
+     * Returns the element at the specified position in this list.
+     *
+     * @param  index index of the element to return
+     * @return the element at the specified position in this list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     */
+    public T get(int index) {
+        UUID id = mList.get(index);
         return mDBObj.getDB().get(id, mClassType);
     }
 
