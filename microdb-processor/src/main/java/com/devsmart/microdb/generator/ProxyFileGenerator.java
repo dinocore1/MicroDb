@@ -471,6 +471,13 @@ public class ProxyFileGenerator {
         public void specializedMethods(TypeSpec.Builder builder) {
         }
 
+        @Override
+        void initCode(MethodSpec.Builder builder) {
+            TypeMirror genericType = ((DeclaredType) mField.asType()).getTypeArguments().get(0);
+            builder.addStatement("$L = new $T(this, $T.class)",
+                    mField, mField.asType(), createDBObjName(mEnv.getTypeUtils().asElement(genericType)));
+        }
+
     }
 
     private ClassName createDBObjName(Element field) {

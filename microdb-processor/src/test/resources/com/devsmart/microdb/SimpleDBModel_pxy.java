@@ -156,6 +156,7 @@ public final class SimpleDBModel_pxy extends SimpleDBModel {
     protected void init(MicroDB microDB) {
         super.init(microDB);
         link = new Link<SimpleDBModel>(this, SimpleDBModel_pxy.class);
+        listOfLinks = new LinkList<SimpleDBModel>(this, SimpleDBModel_pxy.class);
 
     }
 

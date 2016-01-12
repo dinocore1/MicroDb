@@ -17,9 +17,13 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
     private final Class<? extends T> mClassType;
     private final ArrayList<UUID> mList = new ArrayList<UUID>();
 
-    LinkList(UBValue idArray, DBObject obj, Class<? extends T> classType) {
+    LinkList(DBObject obj, Class<? extends T> classType) {
         mDBObj = obj;
         mClassType = classType;
+    }
+
+    LinkList(UBValue idArray, DBObject obj, Class<? extends T> classType) {
+        this(obj, classType);
         if(idArray != null && idArray.isArray()) {
             UBArray strIdArray = idArray.asArray();
             for(int i=0;i<strIdArray.size();i++){
