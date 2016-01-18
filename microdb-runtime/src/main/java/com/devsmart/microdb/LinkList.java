@@ -55,7 +55,7 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
      * indices).
      *
      * @param index the index of the element to be removed
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     public void remove(int index) {
         mList.remove(index);
@@ -134,6 +134,11 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
         public T next() {
             UUID id = mIt.next();
             return mDBObj.getDB().get(id, mClassType);
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }
