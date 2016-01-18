@@ -94,7 +94,7 @@ public class LinkList<T extends DBObject> implements Iterable<T> {
      *
      * @param  index index of the element to return
      * @return the element at the specified position in this list
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     public T get(int index) {
         UUID id = mList.get(index);

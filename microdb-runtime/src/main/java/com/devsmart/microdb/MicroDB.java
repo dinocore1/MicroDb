@@ -340,10 +340,10 @@ public class MicroDB {
     }
 
     /**
-     * Constuct a new proxy instance of {@code classType}
+     * Constructs a new proxy instance of {@code classType}
      * @param classType
      * @param <T>
-     * @return
+     * @return a new object of type T
      */
     public <T extends DBObject> T create(Class<T> classType) {
         try {
