@@ -1,0 +1,93 @@
+package com.devsmart.microdb.ast;
+
+
+import java.util.ArrayList;
+
+public class Nodes {
+
+
+    public static abstract class Node {
+
+    }
+
+    public static class DBONode extends Node {
+        public final String name;
+        public final String extend;
+        public final ArrayList<FieldNode> fields = new ArrayList<FieldNode>();
+
+        public DBONode(String name, String extend) {
+            this.name = name;
+            this.extend = extend;
+        }
+    }
+
+    public static class FieldNode extends Node {
+
+    }
+
+    public static class DataNode extends Node {
+        public static final int BOOL = 0;
+        public static final int INT = 1;
+        public static final int FLOAT = 2;
+        public static final int STRING = 3;
+
+        public final int type;
+
+        private DataNode(int type) {
+            this.type = type;
+        }
+
+    }
+
+    public static DataNode createBool() {
+        return new DataNode(DataNode.BOOL);
+    }
+
+    public static DataNode createString() {
+        return new DataNode(DataNode.STRING);
+    }
+
+    public static class NumberType extends DataNode {
+
+        public final int size;
+
+        private NumberType(int type, int size) {
+            super(type);
+            this.size = size;
+        }
+
+        public static NumberType createInt8() {
+            return new NumberType(INT, 8);
+        }
+
+        public static NumberType createInt16() {
+            return new NumberType(INT, 16);
+        }
+
+        public static NumberType createInt32() {
+            return new NumberType(INT, 32);
+        }
+
+        public static NumberType createInt64() {
+            return new NumberType(INT, 64);
+        }
+
+        public static NumberType createFloat32() {
+            return new NumberType(FLOAT, 32);
+        }
+
+        public static NumberType createFloat64() {
+            return new NumberType(FLOAT, 64);
+        }
+    }
+
+    public static class ObjType extends DataNode {
+        public final String classType;
+
+        public ObjType(String str) {
+            super(DataNode.STRING);
+            this.classType = str;
+        }
+    }
+}
+

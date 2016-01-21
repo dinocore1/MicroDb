@@ -34,8 +34,9 @@ public class TestParse {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MicroDBParser parser = new MicroDBParser(tokens);
 
-
         MicroDBParser.FileContext f = parser.file();
+        NodeVisitor visitor = new NodeVisitor();
+        visitor.visit(f);
 
 
 
