@@ -25,29 +25,31 @@ public class Nodes {
 
     }
 
-    public static class DataNode extends Node {
+    public static class TypeNode extends Node {
         public static final int BOOL = 0;
         public static final int INT = 1;
         public static final int FLOAT = 2;
         public static final int STRING = 3;
 
         public final int type;
+        public ArrayList<String> annotations = new ArrayList<String>();
+        public boolean isArray;
 
-        private DataNode(int type) {
+        private TypeNode(int type) {
             this.type = type;
         }
 
     }
 
-    public static DataNode createBool() {
-        return new DataNode(DataNode.BOOL);
+    public static TypeNode createBool() {
+        return new TypeNode(TypeNode.BOOL);
     }
 
-    public static DataNode createString() {
-        return new DataNode(DataNode.STRING);
+    public static TypeNode createString() {
+        return new TypeNode(TypeNode.STRING);
     }
 
-    public static class NumberType extends DataNode {
+    public static class NumberType extends TypeNode {
 
         public final int size;
 
@@ -81,11 +83,11 @@ public class Nodes {
         }
     }
 
-    public static class ObjType extends DataNode {
+    public static class ObjType extends TypeNode {
         public final String classType;
 
         public ObjType(String str) {
-            super(DataNode.STRING);
+            super(TypeNode.STRING);
             this.classType = str;
         }
     }

@@ -14,12 +14,11 @@ dbo : DBO name=ID LPAREN field+ RPAREN
     ;
 
 field
-    : type ID SEMI
+    : type name=ID SEMI
     ;
 
 type
-    : annotation primitiveType
-    | annotation primitiveType ARRAYTYPE
+    : (ANNO anno+=ID)* primitiveType ARRAYTYPE?
     ;
 
 primitiveType
@@ -31,13 +30,9 @@ primitiveType
     | t=FLOAT
     | t=DOUBLE
     | t=STRING
-    | ID
+    | t=ID
     ;
 
-annotation
-    : ANNO ID
-    |
-    ;
 
 DBO : 'dbo' ;
 ARRAYTYPE : '[]' ;
