@@ -6,3 +6,4 @@ build/
 local.properties
 .idea/
 .gradle/
+microdb-generator/src/generated-sources/

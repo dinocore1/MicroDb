@@ -1,0 +1,7 @@
+
+dbo SimpleDBModel {
+  float64 myDouble;
+
+  @Link
+  SimpleDBModel[] myObj;
+}
