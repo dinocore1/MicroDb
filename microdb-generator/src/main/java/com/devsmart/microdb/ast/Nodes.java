@@ -94,6 +94,10 @@ public class Nodes {
         public static NumberType createFloat64() {
             return new NumberType(FLOAT, 64);
         }
+
+        public static NumberType createChar() {
+            return new NumberType(INT, 16);
+        }
     }
 
     public static class ObjType extends TypeNode {

@@ -60,6 +60,9 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
             case MicroDBLexer.BYTE:
                 return Nodes.NumberType.createInt8();
 
+            case MicroDBLexer.CHAR:
+                return Nodes.NumberType.createChar();
+
             case MicroDBLexer.SHORT:
                 return Nodes.NumberType.createInt16();
 

@@ -4,9 +4,12 @@ dbo MyDBObj {
 
     bool myBool;
     byte myByte;
+    char myChar;
     short myShort;
     int myInt;
     long myLong;
+    float myFloat;
+    double myDouble;
     string myString;
 }
 

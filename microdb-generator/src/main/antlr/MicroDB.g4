@@ -30,6 +30,7 @@ type
 primitiveType
     : t=BYTE
     | t=BOOL
+    | t=CHAR
     | t=SHORT
     | t=INT
     | t=LONG
@@ -48,6 +49,7 @@ SEMI : ';' ;
 ANNO : '@' ;
 BYTE : 'byte' ;
 BOOL : 'bool' ;
+CHAR : 'char' ;
 SHORT : 'short' ;
 INT : 'int' ;
 LONG : 'long';

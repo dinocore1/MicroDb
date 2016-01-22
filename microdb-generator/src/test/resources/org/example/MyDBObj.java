@@ -14,11 +14,17 @@ public class MyDBObj extends DBObject {
 
     private byte myByte;
 
+    private char myChar;
+
     private short myShort;
 
     private int myInt;
 
     private long myLong;
+
+    private float myFloat;
+
+    private double myDouble;
 
     private String myString;
 
@@ -27,9 +33,12 @@ public class MyDBObj extends DBObject {
         super.writeToUBObject(obj);
         obj.put("myBool", UBValueFactory.createBool(myBool));
         obj.put("myByte", UBValueFactory.createInt(myByte));
+        obj.put("myChar", UBValueFactory.createInt(myChar));
         obj.put("myShort", UBValueFactory.createInt(myShort));
         obj.put("myInt", UBValueFactory.createInt(myInt));
         obj.put("myLong", UBValueFactory.createInt(myLong));
+        obj.put("myFloat", UBValueFactory.createFloat32(myFloat));
+        obj.put("myDouble", UBValueFactory.createFloat64(myDouble));
         obj.put("myString", UBValueFactory.createString(myString));
     }
 
@@ -45,6 +54,10 @@ public class MyDBObj extends DBObject {
         if (value != null) {
             this.myByte = value.asByte();
         }
+        value = obj.get("myChar");
+        if (value != null) {
+            this.myChar = value.asChar();
+        }
         value = obj.get("myShort");
         if (value != null) {
             this.myShort = value.asShort();
@@ -56,6 +69,14 @@ public class MyDBObj extends DBObject {
         value = obj.get("myLong");
         if (value != null) {
             this.myLong = value.asLong();
+        }
+        value = obj.get("myFloat");
+        if (value != null) {
+            this.myFloat = value.asFloat32();
+        }
+        value = obj.get("myDouble");
+        if (value != null) {
+            this.myDouble = value.asFloat64();
         }
         value = obj.get("myString");
         if (value != null) {
@@ -78,6 +99,15 @@ public class MyDBObj extends DBObject {
 
     public void setMyByte(byte value) {
         this.myByte = value;
+        setDirty();
+    }
+
+    public char getMyChar() {
+        return myChar;
+    }
+
+    public void setMyChar(char value) {
+        this.myChar = value;
         setDirty();
     }
 
@@ -105,6 +135,24 @@ public class MyDBObj extends DBObject {
 
     public void setMyLong(long value) {
         this.myLong = value;
+        setDirty();
+    }
+
+    public float getMyFloat() {
+        return myFloat;
+    }
+
+    public void setMyFloat(float value) {
+        this.myFloat = value;
+        setDirty();
+    }
+
+    public double getMyDouble() {
+        return myLong;
+    }
+
+    public void setMyDouble(double value) {
+        this.myDouble = value;
         setDirty();
     }
 
