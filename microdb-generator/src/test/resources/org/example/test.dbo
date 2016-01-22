@@ -9,3 +9,7 @@ dbo MyDBObj {
     long myLong;
     string myString;
 }
+
+dbo ExtendObj extends MyDBObj {
+    int myExtendInt;
+}

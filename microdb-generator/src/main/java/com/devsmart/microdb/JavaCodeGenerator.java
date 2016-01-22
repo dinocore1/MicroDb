@@ -26,7 +26,8 @@ public class JavaCodeGenerator {
     }
 
     public JavaFile createJavaFile() {
-        TypeSpec.Builder classBuilder = TypeSpec.classBuilder(mDBO.name);
+        TypeSpec.Builder classBuilder = TypeSpec.classBuilder(mDBO.name)
+                .addModifiers(Modifier.PUBLIC);
         if(mDBO.extend != null) {
             classBuilder.superclass(ClassName.get(mFileCtx.packageName, mDBO.extend));
         } else {

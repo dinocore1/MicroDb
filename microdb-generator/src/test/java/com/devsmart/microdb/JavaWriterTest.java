@@ -18,20 +18,10 @@ import static org.truth0.Truth.ASSERT;
 
 public class JavaWriterTest {
 
-    private JavaFileObject expectedSource = JavaFileObjects.forResource("org/example/MyDBObj.java");
+    private JavaFileObject myDBObjJavaSource = JavaFileObjects.forResource("org/example/MyDBObj.java");
+    private JavaFileObject myExtendObjJavaSource = JavaFileObjects.forResource("org/example/ExtendObj.java");
 
-    @Test
-    public void expectedSourceCompiles() {
-        ASSERT.about(javaSource())
-                .that(expectedSource)
-                .compilesWithoutError();
-    }
-
-    @Test
-    public void generatedSourceMatchesExpected() throws Exception {
-
-
-        InputStream dboIn = Resources.getResource("org/example/test.dbo").openStream();
+    private static String generateJava(InputStream dboIn, int dboindex) throws IOException {
         ANTLRInputStream inputStream = new ANTLRInputStream(dboIn);
         MicroDBLexer lexer = new MicroDBLexer(inputStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -41,15 +31,52 @@ public class JavaWriterTest {
         Nodes.FileNode fileNode = (Nodes.FileNode) visitor.visitFile(parser.file());
 
 
-        JavaCodeGenerator generator = new JavaCodeGenerator(fileNode.dboList.get(0), fileNode);
+        JavaCodeGenerator generator = new JavaCodeGenerator(fileNode.dboList.get(dboindex), fileNode);
 
         StringBuffer sourceBuf = new StringBuffer();
         generator.createJavaFile().writeTo(sourceBuf);
 
-        JavaFileObject generatedSource = JavaFileObjects.forSourceString("org/example/MyDBObj.java", sourceBuf.toString());
+        return sourceBuf.toString();
+    }
+
+    @Test
+    public void expectedMyDBOBJSourceCompiles() {
+        ASSERT.about(javaSource())
+                .that(myDBObjJavaSource)
+                .compilesWithoutError();
+    }
+
+    @Test
+    public void expectedExtendObJSourceCompiles() {
+        ASSERT.about(javaSource())
+                .that(myExtendObjJavaSource)
+                .compilesWithoutError();
+    }
+
+    @Test
+    public void generatedMyDBObjSourceMatchesExpected() throws Exception {
+
+        InputStream dboIn = Resources.getResource("org/example/test.dbo").openStream();
+        String javaSource = generateJava(dboIn, 0);
+        dboIn.close();
+
+        JavaFileObject generatedSource = JavaFileObjects.forSourceString("org/example/MyDBObj.java", javaSource);
 
         ASSERT.about(javaSource())
                 .that(generatedSource)
-                .parsesAs(expectedSource);
+                .parsesAs(myDBObjJavaSource);
+    }
+
+    @Test
+    public void generatedExtendObjSourceMatchesExpected() throws Exception {
+        InputStream dboIn = Resources.getResource("org/example/test.dbo").openStream();
+        String javaSource = generateJava(dboIn, 1);
+        dboIn.close();
+
+        JavaFileObject generatedSource = JavaFileObjects.forSourceString("org/example/ExtendDBObj.java", javaSource);
+
+        ASSERT.about(javaSource())
+                .that(generatedSource)
+                .parsesAs(myExtendObjJavaSource);
     }
 }
