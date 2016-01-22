@@ -52,17 +52,22 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
     @Override
     public Nodes.Node visitPrimitiveType(MicroDBParser.PrimitiveTypeContext ctx) {
         switch (ctx.t.getType()) {
-            case MicroDBLexer.BYTE:
-                return Nodes.NumberType.createInt8();
+
 
             case MicroDBLexer.BOOL:
                 return Nodes.createBool();
+
+            case MicroDBLexer.BYTE:
+                return Nodes.NumberType.createInt8();
 
             case MicroDBLexer.SHORT:
                 return Nodes.NumberType.createInt16();
 
             case MicroDBLexer.INT:
-                return Nodes.NumberType.createFloat32();
+                return Nodes.NumberType.createInt32();
+
+            case MicroDBLexer.LONG:
+                return Nodes.NumberType.createInt64();
 
             case MicroDBLexer.FLOAT:
                 return Nodes.NumberType.createFloat32();

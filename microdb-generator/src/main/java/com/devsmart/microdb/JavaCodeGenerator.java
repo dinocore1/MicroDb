@@ -2,6 +2,8 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.microdb.ast.Nodes;
+import com.devsmart.ubjson.UBString;
+import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.base.Charsets;
 import com.squareup.javapoet.*;
 
@@ -9,6 +11,7 @@ import javax.lang.model.element.*;
 import javax.lang.model.type.*;
 
 import java.io.*;
+import java.util.ArrayList;
 
 public class JavaCodeGenerator {
 
@@ -30,6 +33,23 @@ public class JavaCodeGenerator {
             classBuilder.superclass(ClassName.get(MICRODB_PACKAGE, "DBObject"));
         }
 
+        classBuilder.addField(
+                FieldSpec.builder(UBString.class, "TYPE", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                        .initializer("$T.createString($S)", UBValueFactory.class, mDBO.name)
+                        .build());
+
+        ArrayList<FieldCodeGen> fieldCodeGane = new ArrayList<FieldCodeGen>();
+
+        for(Nodes.FieldNode field : mDBO.fields) {
+            fieldCodeGane.add(new PrimitiveFieldCodeGen(field));
+        }
+
+        for(FieldCodeGen codeGen : fieldCodeGane) {
+            classBuilder.addField(codeGen.genField());
+            classBuilder.addMethod(codeGen.genGetterMethod());
+            classBuilder.addMethod(codeGen.genSetterMethod());
+        }
+
         JavaFile proxySourceFile = JavaFile.builder(mFileCtx.packageName, classBuilder.build())
                 .skipJavaLangImports(true)
                 .build();
@@ -41,10 +61,37 @@ public class JavaCodeGenerator {
 
         switch(type.type) {
             case Nodes.TypeNode.BOOL:
-            return TypeName.BOOLEAN;
+                return TypeName.BOOLEAN;
 
             case Nodes.TypeNode.STRING:
-            return ClassName.get(String.class);
+                return ClassName.get(String.class);
+
+            case Nodes.TypeNode.INT: {
+                Nodes.NumberType numberType = (Nodes.NumberType) type;
+                switch(numberType.size) {
+                    case 8:
+                        return TypeName.BYTE;
+                    case 16:
+                        return TypeName.SHORT;
+                    case 32:
+                        return TypeName.INT;
+                    case 64:
+                        return TypeName.LONG;
+                }
+            }
+
+            case Nodes.TypeNode.FLOAT: {
+                Nodes.NumberType numberType = (Nodes.NumberType) type;
+                switch (numberType.size) {
+                    case 32:
+                        return TypeName.FLOAT;
+
+                    case 64:
+                        return TypeName.DOUBLE;
+                }
+            }
+
+
         }
 
         return null;
@@ -70,9 +117,13 @@ public class JavaCodeGenerator {
             return methodName;
         }
 
-        abstract void genField(OutputStreamWriter writer);
-        abstract void genReadFromUBObject(OutputStreamWriter writer);
-        abstract void genWriteToUBObject(OutputStreamWriter writer);
+        FieldSpec genField() {
+            FieldSpec retval = FieldSpec.builder(getTypeName(mField.type), mField.name, Modifier.PRIVATE)
+                    .build();
+            return retval;
+        }
+        abstract void genReadFromUBObject();
+        abstract void genWriteToUBObject();
         MethodSpec genGetterMethod() {
             final String getterName = createGetterName();
             return MethodSpec.methodBuilder(getterName)
@@ -91,6 +142,25 @@ public class JavaCodeGenerator {
                     .addStatement("setDirty()")
                     .build();
         }
+
+    }
+
+    class PrimitiveFieldCodeGen extends FieldCodeGen {
+
+        PrimitiveFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject() {
+
+        }
+
+        @Override
+        void genWriteToUBObject() {
+
+        }
+
 
     }
 

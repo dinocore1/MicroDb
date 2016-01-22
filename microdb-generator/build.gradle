@@ -34,7 +34,7 @@ dependencies {
     testCompile group: "junit", name: "junit", version: versions.junit
     compile files("${System.properties['java.home']}/../lib/tools.jar") // This is needed otherwise compile-testing won't be able to find it
     testCompile 'com.google.testing.compile:compile-testing:0.6'
-    testCompile project(':microdb-runtime')
+    compile project(':microdb-runtime')
 }
 
 task wrapper(type: Wrapper) {

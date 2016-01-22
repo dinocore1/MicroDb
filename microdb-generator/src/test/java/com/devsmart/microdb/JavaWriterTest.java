@@ -28,7 +28,7 @@ public class JavaWriterTest {
     }
 
     @Test
-    public void generatedSourceCompiles() throws Exception {
+    public void generatedSourceMatchesExpected() throws Exception {
 
 
         InputStream dboIn = Resources.getResource("org/example/test.dbo").openStream();
