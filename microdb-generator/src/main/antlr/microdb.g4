@@ -4,9 +4,15 @@ grammar MicroDB;
 
 }
 
+file : pack dbo+
+    ;
 
+pack
+    : PACKAGE packageName SEMI
+    ;
 
-file : dbo+
+packageName
+    : ID (DOT ID)*
     ;
 
 dbo : DBO name=ID LPAREN field+ RPAREN
@@ -48,5 +54,7 @@ LONG : 'long';
 FLOAT : 'float' ;
 DOUBLE : 'double' ;
 STRING : 'string' ;
+PACKAGE : 'package' ;
+DOT : '.' ;
 ID : [a-zA-Z0-9_]+ ;
 WS : [ \t\r\n]+ -> skip ;

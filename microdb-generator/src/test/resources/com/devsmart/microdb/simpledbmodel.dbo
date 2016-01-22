@@ -1,4 +1,6 @@
 
+package com.devsmart;
+
 dbo SimpleDBModel {
   float myDouble;
 

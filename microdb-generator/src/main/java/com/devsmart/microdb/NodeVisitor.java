@@ -10,7 +10,7 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
     public Nodes.Node visitDbo(MicroDBParser.DboContext ctx) {
 
         String name = ctx.name.getText();
-        String extend = ctx.extend != null ? ctx.extend.getText() : "DBObject";
+        String extend = ctx.extend != null ? ctx.extend.getText() : null;
 
         Nodes.DBONode retval = new Nodes.DBONode(name, extend);
         for(MicroDBParser.FieldContext field : ctx.field()) {
@@ -26,15 +26,17 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
         Nodes.TypeNode type = (Nodes.TypeNode) visit(ctx.type());
         String name = ctx.name.getText();
 
-        return null;
+        return new Nodes.FieldNode(type, name);
     }
 
     @Override
     public Nodes.Node visitFile(MicroDBParser.FileContext ctx) {
+        Nodes.FileNode retval = new Nodes.FileNode();
+        retval.packageName = ctx.pack().packageName().getText();
         for(MicroDBParser.DboContext dbo : ctx.dbo()){
-            visit(dbo);
+            retval.dboList.add((Nodes.DBONode) visit(dbo));
         }
-        return null;
+        return retval;
     }
 
     @Override
@@ -45,7 +47,6 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
         }
         retval.isArray = ctx.ARRAYTYPE() != null;
         return retval;
-
     }
 
     @Override

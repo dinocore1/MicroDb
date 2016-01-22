@@ -2,12 +2,18 @@ package com.devsmart.microdb.ast;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Nodes {
 
 
     public static abstract class Node {
 
+    }
+
+    public static class FileNode extends Node {
+        public List<DBONode> dboList = new ArrayList<DBONode>();
+        public String packageName;
     }
 
     public static class DBONode extends Node {
@@ -22,6 +28,13 @@ public class Nodes {
     }
 
     public static class FieldNode extends Node {
+        public final TypeNode type;
+        public final String name;
+
+        public FieldNode(TypeNode type, String name) {
+            this.type = type;
+            this.name = name;
+        }
 
     }
 
