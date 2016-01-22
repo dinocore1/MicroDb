@@ -2,5 +2,10 @@ package org.example;
 
 dbo MyDBObj {
 
+    bool myBool;
+    byte myByte;
+    short myShort;
     int myInt;
+    long myLong;
+    string myString;
 }
