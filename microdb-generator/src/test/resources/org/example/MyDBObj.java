@@ -11,4 +11,15 @@ class MyDBObj extends DBObject {
 
     public static final UBString TYPE = UBValueFactory.createString("SimpleDBModel");
 
+    private int myInt;
+
+    public int getMyInt() {
+        return myInt;
+    }
+
+    public void setMyInt(int value) {
+        this.myInt = value;
+        setDirty();
+    }
+
 }
