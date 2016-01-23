@@ -58,8 +58,10 @@ public class JavaCodeGenerator {
                 fieldCodeGane.add(new FloatFieldCodeGen(field));
             } else if(TypeName.DOUBLE == fieldType){
                 fieldCodeGane.add(new DoubleFieldCodeGen(field));
-            } else if(ClassName.get(String.class).equals(fieldType)) {
+            } else if(field.type.type == Nodes.TypeNode.STRING) {
                 fieldCodeGane.add(new StringFieldCodeGen(field));
+            } else if(field.type.type == Nodes.TypeNode.DBO) {
+                fieldCodeGane.add(new DBOFieldCodeGen(field));
             }
 
         }
@@ -88,6 +90,7 @@ public class JavaCodeGenerator {
                 .addParameter(UBObject.class, "obj");
 
         builder.addStatement("super.writeToUBObject(obj)");
+        builder.addStatement("final $T db = getDB()", MicroDB.class);
 
         for(FieldCodeGen fieldCodeGen : fieldCodeGane) {
             fieldCodeGen.genWriteToUBObject(builder);
@@ -104,6 +107,7 @@ public class JavaCodeGenerator {
                 .addParameter(UBObject.class, "obj");
 
         builder.addStatement("super.readFromUBObject(obj)");
+        builder.addStatement("final $T db = getDB()", MicroDB.class);
         builder.addStatement("$T value = null", UBValue.class);
 
         for(FieldCodeGen fieldCodeGen : fieldCodeGens) {
@@ -144,11 +148,13 @@ public class JavaCodeGenerator {
                 switch (numberType.size) {
                     case 32:
                         return TypeName.FLOAT;
-
                     case 64:
                         return TypeName.DOUBLE;
                 }
             }
+
+            case Nodes.TypeNode.DBO:
+                return ((Nodes.ObjType)type).getClassName();
 
 
         }
@@ -416,6 +422,38 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createString($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
+    class DBOFieldCodeGen extends FieldCodeGen {
+
+        private final ClassName mClassName;
+
+        DBOFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+            mClassName = ((Nodes.ObjType)field.type).getClassName();
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = new $T()", mField.name, mClassName);
+            methodBuilder.addStatement("this.$L = db != null ? db.readObject(value, this.$L) : $T.readDBObj(value, this.$L)",
+                    mField.name, mField.name, Utils.class, mField.name);
+            methodBuilder.nextControlFlow("else");
+            methodBuilder.addStatement("this.$L = null", mField.name);
+            methodBuilder.endControlFlow();
+
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("obj.put($S, db != null ? db.writeObject($L) : $T.writeDBObj($L))",
+                    mField.name, mField.name, Utils.class, mField.name);
 
         }
     }

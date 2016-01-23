@@ -1,5 +1,6 @@
 package org.example;
 
+import com.devsmart.microdb.MicroDB;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
@@ -13,19 +14,20 @@ public class ExtendObj extends MyDBObj {
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
+        final MicroDB db = getDB();
         obj.put("myExtendInt", UBValueFactory.createInt(myExtendInt));
     }
 
     @Override
     public void readFromUBObject(UBObject obj) {
         super.readFromUBObject(obj);
+        final MicroDB db = getDB();
         UBValue value = null;
         value = obj.get("myExtendInt");
-        if(value != null) {
+        if (value != null) {
             this.myExtendInt = value.asInt();
         }
     }
-
 
     public int getMyExtendInt() {
         return myExtendInt;
@@ -35,5 +37,4 @@ public class ExtendObj extends MyDBObj {
         this.myExtendInt = value;
         setDirty();
     }
-
 }

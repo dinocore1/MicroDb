@@ -1,10 +1,22 @@
 package com.devsmart.microdb;
 
 import com.devsmart.microdb.ast.Nodes;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 
 
-public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
+public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
+
+    private final CompilerContext mContext;
+
+    public SemPass1(CompilerContext ctx) {
+        mContext = ctx;
+    }
+
+    private Nodes.Node putMap(ParserRuleContext ctx, Nodes.Node node) {
+        mContext.nodeMap.put(ctx, node);
+        return node;
+    }
 
     @Override
     public Nodes.Node visitDbo(MicroDBParser.DboContext ctx) {
@@ -32,7 +44,7 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
     @Override
     public Nodes.Node visitFile(MicroDBParser.FileContext ctx) {
         Nodes.FileNode retval = new Nodes.FileNode();
-        retval.packageName = ctx.pack().packageName().getText();
+        retval.packageName = ctx.header().packageName().getText();
         for(MicroDBParser.DboContext dbo : ctx.dbo()){
             retval.dboList.add((Nodes.DBONode) visit(dbo));
         }
@@ -41,7 +53,7 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
 
     @Override
     public Nodes.Node visitType(MicroDBParser.TypeContext ctx) {
-        Nodes.TypeNode retval = (Nodes.TypeNode) visit(ctx.primitiveType());
+        Nodes.TypeNode retval = (Nodes.TypeNode) visit(ctx.type1());
         for(Token anno : ctx.anno){
             retval.annotations.add(anno.getText());
         }
@@ -52,7 +64,6 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
     @Override
     public Nodes.Node visitPrimitiveType(MicroDBParser.PrimitiveTypeContext ctx) {
         switch (ctx.t.getType()) {
-
 
             case MicroDBLexer.BOOL:
                 return Nodes.createBool();
@@ -80,11 +91,12 @@ public class NodeVisitor extends MicroDBBaseVisitor<Nodes.Node> {
 
             case MicroDBLexer.STRING:
                 return Nodes.createString();
-
-            case MicroDBLexer.ID:
-                return new Nodes.ObjType(ctx.t.getText());
         }
         return null;
     }
 
+    @Override
+    public Nodes.Node visitObjType(MicroDBParser.ObjTypeContext ctx) {
+        return putMap(ctx, new Nodes.ObjType(ctx.getText()));
+    }
 }

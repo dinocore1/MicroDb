@@ -509,6 +509,7 @@ public class MicroDB {
                     return get(input.getPrimaryKey(), shell);
                 } catch (Exception e) {
                     Throwables.propagate(e);
+                    return null;
                 }
             }
         });

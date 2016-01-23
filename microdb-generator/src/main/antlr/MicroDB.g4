@@ -4,10 +4,10 @@ grammar MicroDB;
 
 }
 
-file : pack dbo+
+file : header dbo+
     ;
 
-pack
+header
     : PACKAGE packageName SEMI
     ;
 
@@ -24,20 +24,20 @@ field
     ;
 
 type
-    : (ANNO anno+=ID)* primitiveType ARRAYTYPE?
+    : (ANNO anno+=ID)* type1 ARRAYTYPE?
     ;
 
-primitiveType
-    : t=BYTE
-    | t=BOOL
-    | t=CHAR
-    | t=SHORT
-    | t=INT
-    | t=LONG
-    | t=FLOAT
-    | t=DOUBLE
-    | t=STRING
-    | t=ID
+type1
+    : t=BYTE        #primitiveType
+    | t=BOOL        #primitiveType
+    | t=CHAR        #primitiveType
+    | t=SHORT       #primitiveType
+    | t=INT         #primitiveType
+    | t=LONG        #primitiveType
+    | t=FLOAT       #primitiveType
+    | t=DOUBLE      #primitiveType
+    | t=STRING      #primitiveType
+    | packageName   #objType
     ;
 
 

@@ -92,7 +92,7 @@ public class MyDBObj extends DBObject {
         value = obj.get("myDBO");
         if (value != null) {
             this.myDBO = new MyDBObj();
-            this.myDBO = db != null ? db.readObject(value, this.myDBO) : Utils.readDBObj(value, this.myDBO));
+            this.myDBO = db != null ? db.readObject(value, this.myDBO) : Utils.readDBObj(value, this.myDBO);
         } else {
             this.myDBO = null;
         }

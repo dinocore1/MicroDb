@@ -1,6 +1,8 @@
 package com.devsmart.microdb.ast;
 
 
+import com.squareup.javapoet.ClassName;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +46,7 @@ public class Nodes {
         public static final int INT = 2;
         public static final int FLOAT = 3;
         public static final int STRING = 4;
+        public static final int DBO = 5;
 
         public final int type;
         public ArrayList<String> annotations = new ArrayList<String>();
@@ -102,12 +105,20 @@ public class Nodes {
     }
 
     public static class ObjType extends TypeNode {
-        public final String classType;
+        public String mClassName;
+        public String mPackageName;
+        public String mSimpleName;
 
-        public ObjType(String str) {
-            super(TypeNode.STRING);
-            this.classType = str;
+
+        public ObjType(String className) {
+            super(TypeNode.DBO);
+            this.mClassName = className;
         }
+
+        public ClassName getClassName() {
+            return ClassName.get(mPackageName, mSimpleName);
+        }
+
     }
 }
 

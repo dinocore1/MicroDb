@@ -22,16 +22,23 @@ public class JavaWriterTest {
     private JavaFileObject myExtendObjJavaSource = JavaFileObjects.forResource("org/example/ExtendObj.java");
 
     private static String generateJava(InputStream dboIn, int dboindex) throws IOException {
+        CompilerContext compilerContext = new CompilerContext();
+
         ANTLRInputStream inputStream = new ANTLRInputStream(dboIn);
         MicroDBLexer lexer = new MicroDBLexer(inputStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MicroDBParser parser = new MicroDBParser(tokens);
 
-        NodeVisitor visitor = new NodeVisitor();
-        Nodes.FileNode fileNode = (Nodes.FileNode) visitor.visitFile(parser.file());
+        MicroDBParser.FileContext root = parser.file();
+
+        SemPass1 semPass1 = new SemPass1(compilerContext);
+        Nodes.FileNode file = (Nodes.FileNode) semPass1.visitFile(root);
+        SemPass2 semPass2 = new SemPass2(compilerContext);
+        semPass2.visit(root);
 
 
-        JavaCodeGenerator generator = new JavaCodeGenerator(fileNode.dboList.get(dboindex), fileNode);
+
+        JavaCodeGenerator generator = new JavaCodeGenerator(file.dboList.get(dboindex), file);
 
         StringBuffer sourceBuf = new StringBuffer();
         generator.createJavaFile().writeTo(sourceBuf);
