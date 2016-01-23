@@ -9,10 +9,7 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,11 +44,13 @@ public class Generator {
         for(Nodes.DBONode dbo : fileNode.dboList) {
             JavaCodeGenerator generator = new JavaCodeGenerator(dbo, fileNode);
             JavaFile outputJavaCode = generator.createJavaFile();
-            final String output = fileNode.packageName.replaceAll("\\.", File.pathSeparator);
+            final String output = fileNode.packageName.replaceAll("\\.", File.separator);
             File outputDir = new File(mOutputDir, output);
             outputDir.mkdirs();
             File outputFile = new File(outputDir, dbo.name + ".java");
-            outputJavaCode.writeTo(outputFile);
+            FileWriter fout = new FileWriter(outputFile);
+            outputJavaCode.writeTo(fout);
+            fout.close();
         }
         fin.close();
     }
