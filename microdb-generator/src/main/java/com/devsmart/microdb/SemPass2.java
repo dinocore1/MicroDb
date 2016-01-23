@@ -26,7 +26,7 @@ public class SemPass2 extends MicroDBBaseVisitor<Void> {
         final int doti = objNode.mClassName.lastIndexOf('.');
         if(doti > 0) {
             objNode.mPackageName = objNode.mClassName.substring(0, doti);
-            objNode.mSimpleName = objNode.mClassName.substring(doti);
+            objNode.mSimpleName = objNode.mClassName.substring(doti+1);
         } else {
             objNode.mPackageName = mCurrentPackage;
             objNode.mSimpleName = objNode.mClassName;

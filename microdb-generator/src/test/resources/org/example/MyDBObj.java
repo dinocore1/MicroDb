@@ -32,6 +32,8 @@ public class MyDBObj extends DBObject {
 
     private MyDBObj myDBO;
 
+    private ExtendObj myExtendo;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -46,6 +48,7 @@ public class MyDBObj extends DBObject {
         obj.put("myDouble", UBValueFactory.createFloat64(myDouble));
         obj.put("myString", UBValueFactory.createStringOrNull(myString));
         obj.put("myDBO", db != null ? db.writeObject(myDBO) : Utils.writeDBObj(myDBO));
+        obj.put("myExtendo", db != null ? db.writeObject(myExtendo) : Utils.writeDBObj(myExtendo));
     }
 
     @Override
@@ -99,6 +102,13 @@ public class MyDBObj extends DBObject {
             this.myDBO = db != null ? db.readObject(value, this.myDBO) : Utils.readDBObj(value, this.myDBO);
         } else {
             this.myDBO = null;
+        }
+        value = obj.get("myExtendo");
+        if (value != null) {
+            this.myExtendo = new ExtendObj();
+            this.myExtendo = db != null ? db.readObject(value, this.myExtendo) : Utils.readDBObj(value, this.myExtendo);
+        } else {
+            this.myExtendo = null;
         }
     }
 
@@ -189,6 +199,15 @@ public class MyDBObj extends DBObject {
 
     public void setMyDBO(MyDBObj value) {
         this.myDBO = value;
+        setDirty();
+    }
+
+    public ExtendObj getMyExtendo() {
+        return myExtendo;
+    }
+
+    public void setMyExtendo(ExtendObj value) {
+        this.myExtendo = value;
         setDirty();
     }
 

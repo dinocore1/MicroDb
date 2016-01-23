@@ -12,6 +12,7 @@ dbo MyDBObj {
     double myDouble;
     string myString;
     MyDBObj myDBO;
+    ExtendObj myExtendo;
 }
 
 dbo ExtendObj extends MyDBObj {
