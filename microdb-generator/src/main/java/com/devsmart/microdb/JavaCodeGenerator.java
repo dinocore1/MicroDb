@@ -412,7 +412,11 @@ public class JavaCodeGenerator {
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
             methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value.isString())");
             methodBuilder.addStatement("this.$L = value.asString()", mField.name);
+            methodBuilder.nextControlFlow("else");
+            methodBuilder.addStatement("this.$L = null", mField.name);
+            methodBuilder.endControlFlow();
             methodBuilder.endControlFlow();
 
 
@@ -421,7 +425,7 @@ public class JavaCodeGenerator {
         @Override
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
-                    .addStatement("obj.put($S, $T.createString($L))", mField.name, UBValueFactory.class, mField.name);
+                    .addStatement("obj.put($S, $T.createStringOrNull($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
     }

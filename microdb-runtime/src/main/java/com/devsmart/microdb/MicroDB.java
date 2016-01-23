@@ -347,11 +347,6 @@ public class MicroDB {
      */
     public <T extends DBObject> T create(Class<T> classType) {
         try {
-            if (!classType.getSimpleName().endsWith("_pxy")) {
-                String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
-                classType = (Class<T>) Class.forName(proxyClassName);
-            }
-
             T retval = classType.newInstance();
             retval.init(this);
             return retval;

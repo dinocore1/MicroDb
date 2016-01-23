@@ -34,9 +34,16 @@ public class DBObject {
     }
 
     public void writeToUBObject(UBObject data) {
+        if(mId != null) {
+            data.put("id", UBValueFactory.createString(mId.toString()));
+        }
     }
 
     public void readFromUBObject(UBObject data) {
+        UBValue value = data.get("id");
+        if(value != null && value.isString()) {
+            mId = UUID.fromString(value.asString());
+        }
     }
 
     public UUID getId() {

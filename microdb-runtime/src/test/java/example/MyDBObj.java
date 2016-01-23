@@ -1,4 +1,4 @@
-package org.example;
+package example;
 
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.MicroDB;
