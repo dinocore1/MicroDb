@@ -11,6 +11,7 @@ dbo MyDBObj {
     float myFloat;
     double myDouble;
     string myString;
+    MyDBObj myDBO;
 }
 
 dbo ExtendObj extends MyDBObj {

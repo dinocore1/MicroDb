@@ -1,6 +1,7 @@
 package org.example;
 
 import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
@@ -28,6 +29,8 @@ public class MyDBObj extends DBObject {
 
     private String myString;
 
+    private MyDBObj myDBO;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -40,6 +43,7 @@ public class MyDBObj extends DBObject {
         obj.put("myFloat", UBValueFactory.createFloat32(myFloat));
         obj.put("myDouble", UBValueFactory.createFloat64(myDouble));
         obj.put("myString", UBValueFactory.createString(myString));
+        obj.put("myDBO", Utils.writeDBObj(myDBO));
     }
 
     @Override
@@ -81,6 +85,10 @@ public class MyDBObj extends DBObject {
         value = obj.get("myString");
         if (value != null) {
             this.myString = value.asString();
+        }
+        value = obj.get("myDBO");
+        if (value != null) {
+            this.myDBO = Utils.readDBObj(value, new MyDBObj());
         }
     }
 
@@ -162,6 +170,15 @@ public class MyDBObj extends DBObject {
 
     public void setMyString(String value) {
         this.myString = value;
+        setDirty();
+    }
+
+    public MyDBObj getMyDBO() {
+        return myDBO;
+    }
+
+    public void setMyDBO(MyDBObj value) {
+        this.myDBO = value;
         setDirty();
     }
 
