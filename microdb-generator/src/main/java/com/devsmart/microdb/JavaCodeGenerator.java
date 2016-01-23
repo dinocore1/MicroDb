@@ -54,6 +54,10 @@ public class JavaCodeGenerator {
                 fieldCodeGane.add(new IntFieldCodeGen(field));
             } else if(TypeName.LONG == fieldType) {
                 fieldCodeGane.add(new LongFieldCodeGen(field));
+            } else if(TypeName.FLOAT == fieldType){
+                fieldCodeGane.add(new FloatFieldCodeGen(field));
+            } else if(TypeName.DOUBLE == fieldType){
+                fieldCodeGane.add(new DoubleFieldCodeGen(field));
             } else if(ClassName.get(String.class).equals(fieldType)) {
                 fieldCodeGane.add(new StringFieldCodeGen(field));
             }
@@ -114,6 +118,9 @@ public class JavaCodeGenerator {
         switch(type.type) {
             case Nodes.TypeNode.BOOL:
                 return TypeName.BOOLEAN;
+
+            case Nodes.TypeNode.CHAR:
+                return TypeName.CHAR;
 
             case Nodes.TypeNode.STRING:
                 return ClassName.get(String.class);

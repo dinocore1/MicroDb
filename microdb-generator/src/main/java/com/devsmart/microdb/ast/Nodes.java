@@ -40,9 +40,10 @@ public class Nodes {
 
     public static class TypeNode extends Node {
         public static final int BOOL = 0;
-        public static final int INT = 1;
-        public static final int FLOAT = 2;
-        public static final int STRING = 3;
+        public static final int CHAR = 1;
+        public static final int INT = 2;
+        public static final int FLOAT = 3;
+        public static final int STRING = 4;
 
         public final int type;
         public ArrayList<String> annotations = new ArrayList<String>();
@@ -56,6 +57,10 @@ public class Nodes {
 
     public static TypeNode createBool() {
         return new TypeNode(TypeNode.BOOL);
+    }
+
+    public static TypeNode createChar() {
+        return new TypeNode(TypeNode.CHAR);
     }
 
     public static TypeNode createString() {
@@ -93,10 +98,6 @@ public class Nodes {
 
         public static NumberType createFloat64() {
             return new NumberType(FLOAT, 64);
-        }
-
-        public static NumberType createChar() {
-            return new NumberType(INT, 16);
         }
     }
 

@@ -148,7 +148,7 @@ public class MyDBObj extends DBObject {
     }
 
     public double getMyDouble() {
-        return myLong;
+        return myDouble;
     }
 
     public void setMyDouble(double value) {
