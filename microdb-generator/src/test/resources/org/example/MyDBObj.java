@@ -1,6 +1,7 @@
 package org.example;
 
 import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
@@ -34,6 +35,7 @@ public class MyDBObj extends DBObject {
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
+        final MicroDB db = getDB();
         obj.put("myBool", UBValueFactory.createBool(myBool));
         obj.put("myByte", UBValueFactory.createInt(myByte));
         obj.put("myChar", UBValueFactory.createInt(myChar));
@@ -43,12 +45,13 @@ public class MyDBObj extends DBObject {
         obj.put("myFloat", UBValueFactory.createFloat32(myFloat));
         obj.put("myDouble", UBValueFactory.createFloat64(myDouble));
         obj.put("myString", UBValueFactory.createString(myString));
-        obj.put("myDBO", Utils.writeDBObj(myDBO));
+        obj.put("myDBO", db != null ? db.writeObject(myDBO) : Utils.writeDBObj(myDBO));
     }
 
     @Override
     public void readFromUBObject(UBObject obj) {
         super.readFromUBObject(obj);
+        final MicroDB db = getDB();
         UBValue value = null;
         value = obj.get("myBool");
         if (value != null) {
@@ -88,7 +91,10 @@ public class MyDBObj extends DBObject {
         }
         value = obj.get("myDBO");
         if (value != null) {
-            this.myDBO = Utils.readDBObj(value, new MyDBObj());
+            this.myDBO = new MyDBObj();
+            this.myDBO = db != null ? db.readObject(value, this.myDBO) : Utils.readDBObj(value, this.myDBO));
+        } else {
+            this.myDBO = null;
         }
     }
 

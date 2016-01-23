@@ -365,11 +365,11 @@ public class MicroDB {
      * fetch and load database object with primary key {@code id}.
      *
      * @param id
-     * @param classType they type of database object with {@code id}
+     * @param shell new object of type
      * @param <T>
      * @return dbobject
      */
-    public synchronized <T extends DBObject> T get(UUID id, Class<T> classType) {
+    public synchronized <T extends DBObject> T get(UUID id, T shell) {
         if (mDeletedObjects.contains(id)) {
             return null;
         }
@@ -383,11 +383,6 @@ public class MicroDB {
                 retval = (T) cached;
             } else {
 
-                if (!classType.getSimpleName().endsWith("_pxy")) {
-                    String proxyClassName = String.format("%s.%s_pxy", DBObject.class.getPackage().getName(), classType.getSimpleName());
-                    classType = (Class<T>) Class.forName(proxyClassName);
-                }
-
                 UBValue data = mDriver.get(id);
                 if (data == null) {
                     return null;
@@ -396,11 +391,11 @@ public class MicroDB {
                     if (!data.isObject()) {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
-                    T newObj = classType.newInstance();
-                    newObj.init(this);
-                    newObj.setId(id);
-                    newObj.readFromUBObject(data.asObject());
-                    retval = newObj;
+
+                    shell.init(this);
+                    shell.setId(id);
+                    shell.readFromUBObject(data.asObject());
+                    retval = shell;
                     mLiveObjects.put(id, new SoftReference<DBObject>(retval));
                 }
             }
@@ -428,6 +423,37 @@ public class MicroDB {
     private void checkValid(DBObject obj) {
         if (obj == null || obj.getDB() != this || obj.getId() == null) {
             throw new RuntimeException("DBObject is invalid. DBObjects must be created with MicroDB.insert() method");
+        }
+    }
+
+    public UBValue writeObject(DBObject obj) {
+        if(obj == null) {
+            return UBValueFactory.createNull();
+        }
+
+        if(obj.getDB() != this || obj.getId() == null) {
+            UBObject data = UBValueFactory.createObject();
+            obj.writeToUBObject(data);
+            return data;
+        } else {
+            //write id
+            return UBValueFactory.createString(obj.getId().toString());
+        }
+    }
+
+    public <T extends DBObject> T readObject(UBValue data, T shell) {
+        if(data == null || data.isNull() || shell == null) {
+            return null;
+        }
+
+        if(data.isString()) {
+            final UUID id = UUID.fromString(data.asString());
+            return get(id, shell);
+        } else if(data.isObject()) {
+            shell.readFromUBObject(data.asObject());
+            return shell;
+        } else {
+            return null;
         }
     }
 
@@ -478,7 +504,12 @@ public class MicroDB {
         return Iterables.transform(rowSet, new Function<Row, T>() {
             @Override
             public T apply(Row input) {
-                return get(input.getPrimaryKey(), classType);
+                try {
+                    T shell = classType.newInstance();
+                    return get(input.getPrimaryKey(), shell);
+                } catch (Exception e) {
+                    Throwables.propagate(e);
+                }
             }
         });
     }
