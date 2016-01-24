@@ -13,6 +13,6 @@ public class PluginTest {
         project.getPluginManager().apply("java");
         project.getPluginManager().apply("com.devsmart.microdb");
 
-        assertNotNull(project.getTasks().findByName("generateMicrodbSources"));
+        assertNotNull(project.getTasks().findByName("generateMicroDBSources"));
     }
 }

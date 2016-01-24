@@ -1,14 +1,18 @@
-apply plugin: 'java'
+buildscript {
 
-task generateSources {
-    def outputDir = file("$buildDir/generated-src")
-    outputs.dir outputDir
-    doFirst {
-        outputDir.exists() || outputDir.mkdirs()
-        new File(outputDir, "Generated.java").write("public class Generated {}")
+    repositories {
+        flatDir {
+            dirs "${projectDir}/../microdb-gradleplugin/build/libs"
+        }
+    }
+
+
+    dependencies {
+        classpath 'com.devsmart:microdb-gradleplugin:0.2.0-SNAPSHOT'
     }
 }
 
-compileJava.dependsOn generateSources
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'com.devsmart.microdb'
 
-sourceSets.main.java.srcDirs += "$buildDir/generated-src/java"

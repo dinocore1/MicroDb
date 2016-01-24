@@ -4,9 +4,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
 
-class CompileTask extends DefaultTask {
+class MicroDBCompileTask extends DefaultTask {
 
 
     @InputDirectory
@@ -17,7 +18,7 @@ class CompileTask extends DefaultTask {
 
 
     @TaskAction
-    def compileDBOSources() {
+    def compileDBOSources(IncrementalTaskInputs inputs) {
 
         inputs.outOfDate { change ->
             println "out of date: ${change.file.name}"
