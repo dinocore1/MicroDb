@@ -1,2 +1,4 @@
 include ':microdb-runtime'
 include ':microdb-generator'
+include ':microdb-gradleplugin'
+include ':testproject'

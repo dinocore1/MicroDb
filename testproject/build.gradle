@@ -1,0 +1,14 @@
+apply plugin: 'java'
+
+task generateSources {
+    def outputDir = file("$buildDir/generated-src")
+    outputs.dir outputDir
+    doFirst {
+        outputDir.exists() || outputDir.mkdirs()
+        new File(outputDir, "Generated.java").write("public class Generated {}")
+    }
+}
+
+compileJava.dependsOn generateSources
+
+sourceSets.main.java.srcDirs += "$buildDir/generated-src/java"
