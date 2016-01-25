@@ -34,6 +34,10 @@ public class MyDBObj extends DBObject {
 
     private ExtendObj myExtendo;
 
+    private boolean[] myBoolArray;
+
+    private byte[] myByteArray;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -49,6 +53,8 @@ public class MyDBObj extends DBObject {
         obj.put("myString", UBValueFactory.createStringOrNull(myString));
         obj.put("myDBO", db != null ? db.writeObject(myDBO) : Utils.writeDBObj(myDBO));
         obj.put("myExtendo", db != null ? db.writeObject(myExtendo) : Utils.writeDBObj(myExtendo));
+        obj.put("myBoolArray", UBValueFactory.createArrayOrNull(myBoolArray));
+        obj.put("myByteArray", UBValueFactory.createArrayOrNull(myByteArray));
     }
 
     @Override
@@ -109,6 +115,14 @@ public class MyDBObj extends DBObject {
             this.myExtendo = db != null ? db.readObject(value, this.myExtendo) : Utils.readDBObj(value, this.myExtendo);
         } else {
             this.myExtendo = null;
+        }
+        value = obj.get("myBoolArray");
+        if (value != null) {
+            this.myBoolArray = value.asBoolArray();
+        }
+        value = obj.get("myByteArray");
+        if (value != null) {
+            this.myByteArray = value.asByteArray();
         }
     }
 
@@ -208,6 +222,24 @@ public class MyDBObj extends DBObject {
 
     public void setMyExtendo(ExtendObj value) {
         this.myExtendo = value;
+        setDirty();
+    }
+
+    public boolean[] getMyBoolArray() {
+        return myBoolArray;
+    }
+
+    public void setMyBoolArray(boolean[] value) {
+        this.myBoolArray = value;
+        setDirty();
+    }
+
+    public byte[] getMyByteArray() {
+        return myByteArray;
+    }
+
+    public void setMyByteArray(byte[] value) {
+        this.myByteArray = value;
         setDirty();
     }
 

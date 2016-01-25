@@ -13,6 +13,8 @@ dbo MyDBObj {
     string myString;
     MyDBObj myDBO;
     ExtendObj myExtendo;
+    bool[] myBoolArray;
+    byte[] myByteArray;
 }
 
 dbo ExtendObj extends MyDBObj {

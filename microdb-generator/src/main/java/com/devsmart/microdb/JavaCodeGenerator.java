@@ -41,27 +41,37 @@ public class JavaCodeGenerator {
         ArrayList<FieldCodeGen> fieldCodeGane = new ArrayList<FieldCodeGen>();
 
         for(Nodes.FieldNode field : mDBO.fields) {
-            TypeName fieldType = getTypeName(field.type);
-            if(TypeName.BOOLEAN == fieldType) {
-                fieldCodeGane.add(new BoolFieldCodeGen(field));
-            } else if(TypeName.BYTE == fieldType){
-                fieldCodeGane.add(new ByteFieldCodeGen(field));
-            } else if(TypeName.SHORT == fieldType){
-                fieldCodeGane.add(new ShortFieldCodeGen(field));
-            } else if(TypeName.CHAR == fieldType){
-                fieldCodeGane.add(new CharFieldCodeGen(field));
-            } else if(TypeName.INT == fieldType) {
-                fieldCodeGane.add(new IntFieldCodeGen(field));
-            } else if(TypeName.LONG == fieldType) {
-                fieldCodeGane.add(new LongFieldCodeGen(field));
-            } else if(TypeName.FLOAT == fieldType){
-                fieldCodeGane.add(new FloatFieldCodeGen(field));
-            } else if(TypeName.DOUBLE == fieldType){
-                fieldCodeGane.add(new DoubleFieldCodeGen(field));
-            } else if(field.type.type == Nodes.TypeNode.STRING) {
-                fieldCodeGane.add(new StringFieldCodeGen(field));
-            } else if(field.type.type == Nodes.TypeNode.DBO) {
-                fieldCodeGane.add(new DBOFieldCodeGen(field));
+
+            if(field.type.isArray) {
+                ArrayTypeName fieldType = (ArrayTypeName)getTypeName(field.type);
+                if(field.type.type == Nodes.TypeNode.BOOL) {
+                    fieldCodeGane.add(new BoolArrayFieldCodeGen(field));
+                } else if(TypeName.BYTE == fieldType.componentType) {
+                    fieldCodeGane.add(new ByteArrayFieldCodeGen(field));
+                }
+            } else {
+                TypeName fieldType = getTypeName(field.type);
+                if (TypeName.BOOLEAN == fieldType) {
+                    fieldCodeGane.add(new BoolFieldCodeGen(field));
+                } else if (TypeName.BYTE == fieldType) {
+                    fieldCodeGane.add(new ByteFieldCodeGen(field));
+                } else if (TypeName.SHORT == fieldType) {
+                    fieldCodeGane.add(new ShortFieldCodeGen(field));
+                } else if (TypeName.CHAR == fieldType) {
+                    fieldCodeGane.add(new CharFieldCodeGen(field));
+                } else if (TypeName.INT == fieldType) {
+                    fieldCodeGane.add(new IntFieldCodeGen(field));
+                } else if (TypeName.LONG == fieldType) {
+                    fieldCodeGane.add(new LongFieldCodeGen(field));
+                } else if (TypeName.FLOAT == fieldType) {
+                    fieldCodeGane.add(new FloatFieldCodeGen(field));
+                } else if (TypeName.DOUBLE == fieldType) {
+                    fieldCodeGane.add(new DoubleFieldCodeGen(field));
+                } else if (field.type.type == Nodes.TypeNode.STRING) {
+                    fieldCodeGane.add(new StringFieldCodeGen(field));
+                } else if (field.type.type == Nodes.TypeNode.DBO) {
+                    fieldCodeGane.add(new DBOFieldCodeGen(field));
+                }
             }
 
         }
@@ -119,48 +129,63 @@ public class JavaCodeGenerator {
 
     static TypeName getTypeName(Nodes.TypeNode type) {
 
+        TypeName retval = null;
+
         switch(type.type) {
             case Nodes.TypeNode.BOOL:
-                return TypeName.BOOLEAN;
+                retval = TypeName.BOOLEAN;
+                break;
 
             case Nodes.TypeNode.CHAR:
-                return TypeName.CHAR;
+                retval = TypeName.CHAR;
+                break;
 
             case Nodes.TypeNode.STRING:
-                return ClassName.get(String.class);
+                retval = ClassName.get(String.class);
+                break;
 
             case Nodes.TypeNode.INT: {
                 Nodes.NumberType numberType = (Nodes.NumberType) type;
                 switch(numberType.size) {
                     case 8:
-                        return TypeName.BYTE;
+                        retval = TypeName.BYTE;
+                        break;
                     case 16:
-                        return TypeName.SHORT;
+                        retval = TypeName.SHORT;
+                        break;
                     case 32:
-                        return TypeName.INT;
+                        retval = TypeName.INT;
+                        break;
                     case 64:
-                        return TypeName.LONG;
+                        retval = TypeName.LONG;
+                        break;
                 }
-            }
+            } break;
 
             case Nodes.TypeNode.FLOAT: {
                 Nodes.NumberType numberType = (Nodes.NumberType) type;
                 switch (numberType.size) {
                     case 32:
-                        return TypeName.FLOAT;
+                        retval = TypeName.FLOAT;
+                        break;
                     case 64:
-                        return TypeName.DOUBLE;
+                        retval = TypeName.DOUBLE;
+                        break;
                 }
-            }
+            } break;
 
             case Nodes.TypeNode.DBO:
-                return ((Nodes.ObjType)type).getClassName();
+                retval = ((Nodes.ObjType)type).getClassName();
+                break;
 
 
         }
 
-        return null;
+        if(type.isArray) {
+            retval = ArrayTypeName.of(retval);
+        }
 
+        return retval;
     }
 
     private abstract class FieldCodeGen {
@@ -234,6 +259,30 @@ public class JavaCodeGenerator {
         }
     }
 
+    class BoolArrayFieldCodeGen extends FieldCodeGen {
+
+        BoolArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asBoolArray()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
     class ByteFieldCodeGen extends FieldCodeGen {
 
         ByteFieldCodeGen(Nodes.FieldNode field) {
@@ -254,6 +303,30 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createInt($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
+    class ByteArrayFieldCodeGen extends FieldCodeGen {
+
+        ByteArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asByteArray()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
     }
