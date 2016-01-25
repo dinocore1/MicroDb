@@ -38,6 +38,10 @@ class DBOCompilerPlugin implements Plugin<Project> {
             source += project.sourceSets.generated.java
         }
 
+        project.tasks.clean.doFirst {
+            delete genSrcOutputDir
+        }
+
     }
 
     def applyToAndroidProject(Project project) {
@@ -65,6 +69,10 @@ class DBOCompilerPlugin implements Plugin<Project> {
             androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs += genSrcOutputDir
 
             variant.variantData.javaCompileTask.dependsOn(genTask)
+
+            project.tasks.clean.doFirst {
+                delete genSrcOutputDir
+            }
 
         }
 
