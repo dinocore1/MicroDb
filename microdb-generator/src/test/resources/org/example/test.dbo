@@ -15,6 +15,9 @@ dbo MyDBObj {
     ExtendObj myExtendo;
     bool[] myBoolArray;
     byte[] myByteArray;
+    short[] myShortArray;
+    int[] myIntArray;
+    long[] myLongArray;
 }
 
 dbo ExtendObj extends MyDBObj {

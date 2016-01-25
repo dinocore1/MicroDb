@@ -48,6 +48,12 @@ public class JavaCodeGenerator {
                     fieldCodeGane.add(new BoolArrayFieldCodeGen(field));
                 } else if(TypeName.BYTE == fieldType.componentType) {
                     fieldCodeGane.add(new ByteArrayFieldCodeGen(field));
+                } else if(TypeName.SHORT == fieldType.componentType) {
+                    fieldCodeGane.add(new ShortArrayFieldCodeGen(field));
+                } else if(TypeName.INT == fieldType.componentType) {
+                    fieldCodeGane.add(new IntArrayFieldCodeGen(field));
+                } else if(TypeName.LONG == fieldType.componentType) {
+                    fieldCodeGane.add(new LongArrayFieldCodeGen(field));
                 }
             } else {
                 TypeName fieldType = getTypeName(field.type);
@@ -355,6 +361,30 @@ public class JavaCodeGenerator {
         }
     }
 
+    class ShortArrayFieldCodeGen extends FieldCodeGen {
+
+        ShortArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asShortArray()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
     class CharFieldCodeGen extends FieldCodeGen {
 
         CharFieldCodeGen(Nodes.FieldNode field) {
@@ -403,6 +433,30 @@ public class JavaCodeGenerator {
         }
     }
 
+    class IntArrayFieldCodeGen extends FieldCodeGen {
+
+        IntArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asInt32Array()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
     class LongFieldCodeGen extends FieldCodeGen {
 
         LongFieldCodeGen(Nodes.FieldNode field) {
@@ -423,6 +477,30 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createInt($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
+    class LongArrayFieldCodeGen extends FieldCodeGen {
+
+        LongArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asInt64Array()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
     }

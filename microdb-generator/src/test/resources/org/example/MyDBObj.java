@@ -38,6 +38,12 @@ public class MyDBObj extends DBObject {
 
     private byte[] myByteArray;
 
+    private short[] myShortArray;
+
+    private int[] myIntArray;
+
+    private long[] myLongArray;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -55,6 +61,9 @@ public class MyDBObj extends DBObject {
         obj.put("myExtendo", db != null ? db.writeObject(myExtendo) : Utils.writeDBObj(myExtendo));
         obj.put("myBoolArray", UBValueFactory.createArrayOrNull(myBoolArray));
         obj.put("myByteArray", UBValueFactory.createArrayOrNull(myByteArray));
+        obj.put("myShortArray", UBValueFactory.createArrayOrNull(myShortArray));
+        obj.put("myIntArray", UBValueFactory.createArrayOrNull(myIntArray));
+        obj.put("myLongArray", UBValueFactory.createArrayOrNull(myLongArray));
     }
 
     @Override
@@ -123,6 +132,18 @@ public class MyDBObj extends DBObject {
         value = obj.get("myByteArray");
         if (value != null) {
             this.myByteArray = value.asByteArray();
+        }
+        value = obj.get("myShortArray");
+        if (value != null) {
+            this.myShortArray = value.asShortArray();
+        }
+        value = obj.get("myIntArray");
+        if (value != null) {
+            this.myIntArray = value.asInt32Array();
+        }
+        value = obj.get("myLongArray");
+        if (value != null) {
+            this.myLongArray = value.asInt64Array();
         }
     }
 
@@ -240,6 +261,33 @@ public class MyDBObj extends DBObject {
 
     public void setMyByteArray(byte[] value) {
         this.myByteArray = value;
+        setDirty();
+    }
+
+    public short[] getMyShortArray() {
+        return myShortArray;
+    }
+
+    public void setMyShortArray(short[] value) {
+        this.myShortArray = value;
+        setDirty();
+    }
+
+    public int[] getMyIntArray() {
+        return myIntArray;
+    }
+
+    public void setMyIntArray(int[] value) {
+        this.myIntArray = value;
+        setDirty();
+    }
+
+    public long[] getMyLongArray() {
+        return myLongArray;
+    }
+
+    public void setMyLongArray(long[] value) {
+        this.myLongArray = value;
         setDirty();
     }
 
