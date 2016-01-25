@@ -44,6 +44,10 @@ public class MyDBObj extends DBObject {
 
     private long[] myLongArray;
 
+    private float[] myFloatArray;
+
+    private double[] myDoubleArray;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -64,6 +68,8 @@ public class MyDBObj extends DBObject {
         obj.put("myShortArray", UBValueFactory.createArrayOrNull(myShortArray));
         obj.put("myIntArray", UBValueFactory.createArrayOrNull(myIntArray));
         obj.put("myLongArray", UBValueFactory.createArrayOrNull(myLongArray));
+        obj.put("myFloatArray", UBValueFactory.createArrayOrNull(myFloatArray));
+        obj.put("myDoubleArray", UBValueFactory.createArrayOrNull(myDoubleArray));
     }
 
     @Override
@@ -144,6 +150,14 @@ public class MyDBObj extends DBObject {
         value = obj.get("myLongArray");
         if (value != null) {
             this.myLongArray = value.asInt64Array();
+        }
+        value = obj.get("myFloatArray");
+        if (value != null) {
+            this.myFloatArray = value.asFloat32Array();
+        }
+        value = obj.get("myDoubleArray");
+        if (value != null) {
+            this.myDoubleArray = value.asFloat64Array();
         }
     }
 
@@ -288,6 +302,24 @@ public class MyDBObj extends DBObject {
 
     public void setMyLongArray(long[] value) {
         this.myLongArray = value;
+        setDirty();
+    }
+
+    public float[] getMyFloatArray() {
+        return myFloatArray;
+    }
+
+    public void setMyFloatArray(float[] value) {
+        this.myFloatArray = value;
+        setDirty();
+    }
+
+    public double[] getMyDoubleArray() {
+        return myDoubleArray;
+    }
+
+    public void setMyDoubleArray(double[] value) {
+        this.myDoubleArray = value;
         setDirty();
     }
 

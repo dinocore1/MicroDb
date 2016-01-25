@@ -18,6 +18,8 @@ dbo MyDBObj {
     short[] myShortArray;
     int[] myIntArray;
     long[] myLongArray;
+    float[] myFloatArray;
+    double[] myDoubleArray;
 }
 
 dbo ExtendObj extends MyDBObj {

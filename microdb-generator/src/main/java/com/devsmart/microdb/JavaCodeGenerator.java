@@ -54,6 +54,10 @@ public class JavaCodeGenerator {
                     fieldCodeGane.add(new IntArrayFieldCodeGen(field));
                 } else if(TypeName.LONG == fieldType.componentType) {
                     fieldCodeGane.add(new LongArrayFieldCodeGen(field));
+                } else if(TypeName.FLOAT == fieldType.componentType) {
+                    fieldCodeGane.add(new FloatArrayFieldCodeGen(field));
+                } else if(TypeName.DOUBLE == fieldType.componentType) {
+                    fieldCodeGane.add(new DoubleArrayFieldCodeGen(field));
                 }
             } else {
                 TypeName fieldType = getTypeName(field.type);
@@ -529,6 +533,30 @@ public class JavaCodeGenerator {
         }
     }
 
+    class FloatArrayFieldCodeGen extends FieldCodeGen {
+
+        FloatArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asFloat32Array()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
     class DoubleFieldCodeGen extends FieldCodeGen {
 
         DoubleFieldCodeGen(Nodes.FieldNode field) {
@@ -549,6 +577,30 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createFloat64($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
+    class DoubleArrayFieldCodeGen extends FieldCodeGen {
+
+        DoubleArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asFloat64Array()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
     }
