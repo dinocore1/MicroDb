@@ -21,7 +21,7 @@ class DBOCompilerPlugin implements Plugin<Project> {
     }
 
     def applyToJavaProject(Project project) {
-        File genSrcOutputDir = new File(project.buildDir, "generated-sources/java");
+        File genSrcOutputDir = new File(project.projectDir, "generated-sources/java");
         def genTask = project.tasks.create('generateMicroDBSources', MicroDBCompileTask.class, {
             inputDir = new File(project.projectDir, "src/main/java")
             outputDir = genSrcOutputDir
@@ -54,7 +54,7 @@ class DBOCompilerPlugin implements Plugin<Project> {
         variants.all { variant ->
             println "applying to: ${variant.name}"
 
-            File genSrcOutputDir = new File(project.buildDir, "generated-sources/${variant.name}/java");
+            File genSrcOutputDir = new File(project.projectDir, "generated-sources/${variant.name}/java");
 
             def genTask = project.tasks.create("generateMicroDB${variant.name}Sources", MicroDBCompileTask.class, {
                 inputDir = androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs[0]
