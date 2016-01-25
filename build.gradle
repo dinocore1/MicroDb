@@ -1,6 +1,6 @@
 allprojects {
 
-  group = 'com.devsmart'
+  group = 'com.dev-smart'
   version = '0.3.0-SNAPSHOT'
   description = 'A embedded NoSQL Database'
 
