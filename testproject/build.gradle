@@ -16,7 +16,7 @@ buildscript {
 
 
     dependencies {
-        classpath 'com.devsmart:microdb-gradleplugin:0.2.0-SNAPSHOT'
+        classpath 'com.dev-smart:microdb-gradleplugin:0.3.0-SNAPSHOT'
     }
 }
 
@@ -24,5 +24,5 @@ apply plugin: 'java'
 apply plugin: 'com.devsmart.microdb'
 
 dependencies {
-    compile 'com.devsmart:microdb-runtime:0.2.0-SNAPSHOT'
+    compile 'com.dev-smart:microdb-runtime:0.3.0-SNAPSHOT'
 }
