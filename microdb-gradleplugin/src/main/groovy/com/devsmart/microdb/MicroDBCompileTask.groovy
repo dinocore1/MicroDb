@@ -10,6 +10,7 @@ import com.devsmart.microdb.Generator;
 
 class MicroDBCompileTask extends DefaultTask {
 
+    def List<File> classpath = new ArrayList<File>()
 
     @InputDirectory
     def File inputDir
@@ -26,7 +27,7 @@ class MicroDBCompileTask extends DefaultTask {
                 println "MicroDB: generating DBO for: ${change.file}"
                 Generator gen = new Generator()
                 gen.mOutputDir = outputDir
-                gen.mClassPath += [inputDir, outputDir]
+                gen.mClassPath += [inputDir, outputDir] + classpath
 
                 gen.compileFile(change.file)
             }
