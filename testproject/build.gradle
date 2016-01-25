@@ -1,9 +1,17 @@
 buildscript {
 
     repositories {
+        jcenter()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+        mavenLocal();
+
+        /*
         flatDir {
             dirs "${projectDir}/../microdb-gradleplugin/build/libs"
         }
+        */
     }
 
 
@@ -13,6 +21,8 @@ buildscript {
 }
 
 apply plugin: 'java'
-apply plugin: 'groovy'
 apply plugin: 'com.devsmart.microdb'
 
+dependencies {
+    compile 'com.devsmart:microdb-runtime:0.2.0-SNAPSHOT'
+}

@@ -1,11 +1,12 @@
 description = "ANTLR4 project template"
 apply plugin: 'java'
+apply plugin: 'maven'
 apply from: file('gradle/idea.gradle')
 
 ext.versions = [
         slf4j: "1.7.2",
         logback: "1.0.9",
-        junit: "4.10"
+        junit: "4.12"
 ]
 
 ext.antlr = [

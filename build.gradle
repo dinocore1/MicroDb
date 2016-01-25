@@ -1,11 +1,12 @@
 allprojects {
 
-  group = 'com.dev-smart'
+  group = 'com.devsmart'
   version = '0.2.0-SNAPSHOT'
   description = 'A embedded NoSQL Database'
 
   repositories {
     jcenter()
+    mavenLocal()
     maven {
       url 'https://oss.sonatype.org/content/repositories/snapshots/'
     }

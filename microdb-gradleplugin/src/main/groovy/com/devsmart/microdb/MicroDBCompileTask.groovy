@@ -5,6 +5,7 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
+import com.devsmart.microdb.Generator;
 
 
 class MicroDBCompileTask extends DefaultTask {
@@ -21,7 +22,14 @@ class MicroDBCompileTask extends DefaultTask {
     def compileDBOSources(IncrementalTaskInputs inputs) {
 
         inputs.outOfDate { change ->
-            println "out of date: ${change.file.name}"
+            if(change.file.absolutePath.endsWith(".dbo")) {
+                println "MicroDB: generating DBO for: ${change.file}"
+                Generator gen = new Generator()
+                gen.mOutputDir = outputDir
+                gen.mClassPath += [inputDir, outputDir]
+
+                gen.compileFile(change.file)
+            }
 
         }
 
