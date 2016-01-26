@@ -3,11 +3,15 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.UUID;
 
 public class DBObject {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DBObject.class);
 
     private UUID mId;
     private MicroDB mDB;
@@ -51,13 +55,11 @@ public class DBObject {
     }
 
     public void save() throws IOException {
-        if (mDB == null) {
-            throw new RuntimeException("DBObject does not reference a database");
+        if (mDB != null && mId != null){
+            mDB.save(this);
+        } else {
+            LOGGER.warn("save object but DBObject does not reference a database: {}", this);
         }
-        if (mId == null) {
-            throw new RuntimeException("DBObject does not have an ID");
-        }
-        mDB.save(this);
     }
 
     public MicroDB getDB() {
@@ -65,13 +67,14 @@ public class DBObject {
     }
 
     public void delete() throws IOException {
-        if (mDB == null) {
-            throw new RuntimeException("DBObject does not reference a database");
+        if (mDB != null && mId != null) {
+            mDB.delete(this);
+        } else {
+            LOGGER.warn("delete object but DBObject does not reference a database: {}", this);
         }
-        mDB.delete(this);
     }
 
-    protected void setDirty() {
+    public void setDirty() {
         mDirty = true;
     }
 }
