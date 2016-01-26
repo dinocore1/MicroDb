@@ -1,3 +1,4 @@
+apply plugin: 'java'
 apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'signing'
@@ -5,11 +6,8 @@ apply plugin: 'signing'
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    testCompile 'com.android.tools.build:gradle:1.2.3'
-}
-
-dependencies {
     compile project (':microdb-generator')
+    testCompile 'com.android.tools.build:gradle:1.2.3'
 }
 
 compileJava {
