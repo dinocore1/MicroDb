@@ -3,16 +3,16 @@ package com.devsmart.microdb;
 
 import com.devsmart.microdb.ast.Nodes;
 import com.squareup.javapoet.JavaFile;
+import org.antlr.v4.runtime.ANTLRFileStream;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.LinkedHashSet;
 
 public class Generator {
@@ -26,14 +26,13 @@ public class Generator {
 
     }
 
-    public void compileFile(File file) throws IOException {
+    public boolean compileInputStream(ANTLRInputStream inputStream) throws IOException {
         CompilerContext compilerContext = new CompilerContext();
 
-        FileInputStream fin = new FileInputStream(file);
-        ANTLRInputStream inputStream = new ANTLRInputStream(fin);
         MicroDBLexer lexer = new MicroDBLexer(inputStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         MicroDBParser parser = new MicroDBParser(tokens);
+        parser.addErrorListener(compilerContext.parserErrorHandler);
 
         MicroDBParser.FileContext root = parser.file();
 
@@ -41,6 +40,11 @@ public class Generator {
         Nodes.FileNode fileNode = (Nodes.FileNode) semPass1.visitFile(root);
         SemPass2 semPass2 = new SemPass2(compilerContext);
         semPass2.visit(root);
+
+        if(compilerContext.hasErrors()) {
+            compilerContext.reportMessages(System.err);
+            return false;
+        }
 
 
         for(Nodes.DBONode dbo : fileNode.dboList) {
@@ -54,7 +58,16 @@ public class Generator {
             outputJavaCode.writeTo(fout);
             fout.close();
         }
-        fin.close();
+
+        return true;
+    }
+
+    public boolean compileFile(File file) throws IOException {
+        FileInputStream fin = new FileInputStream(file);
+        ANTLRInputStream inputStream = new ANTLRInputStream(fin);
+        inputStream.name = file.getAbsolutePath();
+        return compileInputStream(inputStream);
+
     }
 
     public void compileDir(File root) throws IOException {

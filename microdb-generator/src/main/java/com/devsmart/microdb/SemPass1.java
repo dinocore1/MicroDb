@@ -13,6 +13,10 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
         mContext = ctx;
     }
 
+    private void error(String msg, Token location) {
+        mContext.error(msg, location);
+    }
+
     private Nodes.Node putMap(ParserRuleContext ctx, Nodes.Node node) {
         mContext.nodeMap.put(ctx, node);
         return node;
@@ -37,6 +41,9 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
         Nodes.TypeNode type = (Nodes.TypeNode) visit(ctx.type());
         String name = ctx.name.getText();
+        if("id".equals(name)) {
+            error("field with name 'id' is reserved", ctx.name);
+        }
 
         return new Nodes.FieldNode(type, name);
     }
