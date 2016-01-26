@@ -3,6 +3,7 @@ package com.devsmart;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.Utils;
+import com.devsmart.ubjson.UBArray;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
@@ -13,14 +14,14 @@ public class SimpleDBModel extends DBObject {
 
   private float myDouble;
 
-  private SimpleDBModel myObj;
+  private SimpleDBModel[] myObj;
 
   @Override
   public void writeToUBObject(UBObject obj) {
     super.writeToUBObject(obj);
     final MicroDB db = getDB();
     obj.put("myDouble", UBValueFactory.createFloat32(myDouble));
-    obj.put("myObj", db != null ? db.writeObject(myObj) : Utils.writeDBObj(myObj));
+    obj.put("myObj", Utils.createArrayOrNull(db, myObj));
   }
 
   @Override
@@ -33,9 +34,13 @@ public class SimpleDBModel extends DBObject {
       this.myDouble = value.asFloat32();
     }
     value = obj.get("myObj");
-    if (value != null) {
-      this.myObj = new SimpleDBModel();
-      this.myObj = db != null ? db.readObject(value, this.myObj) : Utils.readDBObj(value, this.myObj);
+    if (value != null && value.isArray()) {
+      UBArray array = value.asArray();
+      final int size = array.size();
+      this.myObj = new SimpleDBModel[size];
+      for (int i=0;i<size;i++) {
+        this.myObj[i] = Utils.readDBObj(db, array.get(i), new SimpleDBModel());
+      }
     } else {
       this.myObj = null;
     }
@@ -50,11 +55,11 @@ public class SimpleDBModel extends DBObject {
     setDirty();
   }
 
-  public SimpleDBModel getMyObj() {
+  public SimpleDBModel[] getMyObj() {
     return myObj;
   }
 
-  public void setMyObj(SimpleDBModel value) {
+  public void setMyObj(SimpleDBModel[] value) {
     this.myObj = value;
     setDirty();
   }

@@ -3,6 +3,7 @@ package org.example;
 import com.devsmart.microdb.DBObject;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.Utils;
+import com.devsmart.ubjson.UBArray;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
@@ -33,6 +34,22 @@ public class MyDBObj extends DBObject {
 
   private ExtendObj myExtendo;
 
+  private boolean[] myBoolArray;
+
+  private byte[] myByteArray;
+
+  private short[] myShortArray;
+
+  private int[] myIntArray;
+
+  private long[] myLongArray;
+
+  private float[] myFloatArray;
+
+  private double[] myDoubleArray;
+
+  private ExtendObj[] myExtendoArray;
+
   @Override
   public void writeToUBObject(UBObject obj) {
     super.writeToUBObject(obj);
@@ -46,8 +63,16 @@ public class MyDBObj extends DBObject {
     obj.put("myFloat", UBValueFactory.createFloat32(myFloat));
     obj.put("myDouble", UBValueFactory.createFloat64(myDouble));
     obj.put("myString", UBValueFactory.createStringOrNull(myString));
-    obj.put("myDBO", db != null ? db.writeObject(myDBO) : Utils.writeDBObj(myDBO));
-    obj.put("myExtendo", db != null ? db.writeObject(myExtendo) : Utils.writeDBObj(myExtendo));
+    obj.put("myDBO", Utils.writeDBObj(db, myDBO));
+    obj.put("myExtendo", Utils.writeDBObj(db, myExtendo));
+    obj.put("myBoolArray", UBValueFactory.createArrayOrNull(myBoolArray));
+    obj.put("myByteArray", UBValueFactory.createArrayOrNull(myByteArray));
+    obj.put("myShortArray", UBValueFactory.createArrayOrNull(myShortArray));
+    obj.put("myIntArray", UBValueFactory.createArrayOrNull(myIntArray));
+    obj.put("myLongArray", UBValueFactory.createArrayOrNull(myLongArray));
+    obj.put("myFloatArray", UBValueFactory.createArrayOrNull(myFloatArray));
+    obj.put("myDoubleArray", UBValueFactory.createArrayOrNull(myDoubleArray));
+    obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
   }
 
   @Override
@@ -97,17 +122,54 @@ public class MyDBObj extends DBObject {
     }
     value = obj.get("myDBO");
     if (value != null) {
-      this.myDBO = new MyDBObj();
-      this.myDBO = db != null ? db.readObject(value, this.myDBO) : Utils.readDBObj(value, this.myDBO);
+      this.myDBO = Utils.readDBObj(db, value, new MyDBObj());
     } else {
       this.myDBO = null;
     }
     value = obj.get("myExtendo");
     if (value != null) {
-      this.myExtendo = new ExtendObj();
-      this.myExtendo = db != null ? db.readObject(value, this.myExtendo) : Utils.readDBObj(value, this.myExtendo);
+      this.myExtendo = Utils.readDBObj(db, value, new ExtendObj());
     } else {
       this.myExtendo = null;
+    }
+    value = obj.get("myBoolArray");
+    if (value != null) {
+      this.myBoolArray = value.asBoolArray();
+    }
+    value = obj.get("myByteArray");
+    if (value != null) {
+      this.myByteArray = value.asByteArray();
+    }
+    value = obj.get("myShortArray");
+    if (value != null) {
+      this.myShortArray = value.asShortArray();
+    }
+    value = obj.get("myIntArray");
+    if (value != null) {
+      this.myIntArray = value.asInt32Array();
+    }
+    value = obj.get("myLongArray");
+    if (value != null) {
+      this.myLongArray = value.asInt64Array();
+    }
+    value = obj.get("myFloatArray");
+    if (value != null) {
+      this.myFloatArray = value.asFloat32Array();
+    }
+    value = obj.get("myDoubleArray");
+    if (value != null) {
+      this.myDoubleArray = value.asFloat64Array();
+    }
+    value = obj.get("myExtendoArray");
+    if (value != null && value.isArray()) {
+      UBArray array = value.asArray();
+      final int size = array.size();
+      this.myExtendoArray = new ExtendObj[size];
+      for (int i=0;i<size;i++) {
+        this.myExtendoArray[i] = Utils.readDBObj(db, array.get(i), new ExtendObj());
+      }
+    } else {
+      this.myExtendoArray = null;
     }
   }
 
@@ -207,6 +269,78 @@ public class MyDBObj extends DBObject {
 
   public void setMyExtendo(ExtendObj value) {
     this.myExtendo = value;
+    setDirty();
+  }
+
+  public boolean[] getMyBoolArray() {
+    return myBoolArray;
+  }
+
+  public void setMyBoolArray(boolean[] value) {
+    this.myBoolArray = value;
+    setDirty();
+  }
+
+  public byte[] getMyByteArray() {
+    return myByteArray;
+  }
+
+  public void setMyByteArray(byte[] value) {
+    this.myByteArray = value;
+    setDirty();
+  }
+
+  public short[] getMyShortArray() {
+    return myShortArray;
+  }
+
+  public void setMyShortArray(short[] value) {
+    this.myShortArray = value;
+    setDirty();
+  }
+
+  public int[] getMyIntArray() {
+    return myIntArray;
+  }
+
+  public void setMyIntArray(int[] value) {
+    this.myIntArray = value;
+    setDirty();
+  }
+
+  public long[] getMyLongArray() {
+    return myLongArray;
+  }
+
+  public void setMyLongArray(long[] value) {
+    this.myLongArray = value;
+    setDirty();
+  }
+
+  public float[] getMyFloatArray() {
+    return myFloatArray;
+  }
+
+  public void setMyFloatArray(float[] value) {
+    this.myFloatArray = value;
+    setDirty();
+  }
+
+  public double[] getMyDoubleArray() {
+    return myDoubleArray;
+  }
+
+  public void setMyDoubleArray(double[] value) {
+    this.myDoubleArray = value;
+    setDirty();
+  }
+
+  public ExtendObj[] getMyExtendoArray() {
+    return myExtendoArray;
+  }
+
+  public void setMyExtendoArray(ExtendObj[] value) {
+    this.myExtendoArray = value;
     setDirty();
   }
 }

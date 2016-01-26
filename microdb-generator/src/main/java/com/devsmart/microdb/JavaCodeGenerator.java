@@ -2,10 +2,7 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.microdb.ast.Nodes;
-import com.devsmart.ubjson.UBObject;
-import com.devsmart.ubjson.UBString;
-import com.devsmart.ubjson.UBValue;
-import com.devsmart.ubjson.UBValueFactory;
+import com.devsmart.ubjson.*;
 import com.squareup.javapoet.*;
 
 import javax.lang.model.element.*;
@@ -58,6 +55,8 @@ public class JavaCodeGenerator {
                     fieldCodeGane.add(new FloatArrayFieldCodeGen(field));
                 } else if(TypeName.DOUBLE == fieldType.componentType) {
                     fieldCodeGane.add(new DoubleArrayFieldCodeGen(field));
+                } else if(field.type.type == Nodes.TypeNode.DBO) {
+                    fieldCodeGane.add(new DBOArrayFieldCodeGen(field));
                 }
             } else {
                 TypeName fieldType = getTypeName(field.type);
@@ -646,21 +645,49 @@ public class JavaCodeGenerator {
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
             methodBuilder.beginControlFlow("if (value != null)");
-            methodBuilder.addStatement("this.$L = new $T()", mField.name, mClassName);
-            methodBuilder.addStatement("this.$L = db != null ? db.readObject(value, this.$L) : $T.readDBObj(value, this.$L)",
-                    mField.name, mField.name, Utils.class, mField.name);
+            methodBuilder.addStatement("this.$L = $T.readDBObj(db, value, new $T())",
+                    mField.name, Utils.class, mClassName);
             methodBuilder.nextControlFlow("else");
             methodBuilder.addStatement("this.$L = null", mField.name);
             methodBuilder.endControlFlow();
-
-
-
         }
 
         @Override
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
-            methodBuilder.addStatement("obj.put($S, db != null ? db.writeObject($L) : $T.writeDBObj($L))",
-                    mField.name, mField.name, Utils.class, mField.name);
+            methodBuilder.addStatement("obj.put($S, $T.writeDBObj(db, $L))",
+                    mField.name, Utils.class, mField.name);
+
+        }
+    }
+
+    class DBOArrayFieldCodeGen extends FieldCodeGen {
+
+        private final ClassName mClassName;
+
+        DBOArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+            mClassName = ((Nodes.ObjType)field.type).getClassName();
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
+            methodBuilder.addStatement("$T array = value.asArray()", UBArray.class);
+            methodBuilder.addStatement("final int size = array.size()");
+            methodBuilder.addStatement("this.$L = new $T[size]", mField.name, mClassName);
+            methodBuilder.beginControlFlow("for (int i=0;i<size;i++)");
+            methodBuilder.addStatement("this.$L[i] = $T.readDBObj(db, array.get(i), new $T())", mField.name, Utils.class, mClassName);
+            methodBuilder.endControlFlow();
+            methodBuilder.nextControlFlow("else");
+            methodBuilder.addStatement("this.$L = null", mField.name);
+            methodBuilder.endControlFlow();
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("obj.put($S, $T.createArrayOrNull(db, $L))",
+                    mField.name, Utils.class, mField.name);
 
         }
     }

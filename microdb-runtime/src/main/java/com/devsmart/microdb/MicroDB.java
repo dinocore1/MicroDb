@@ -421,37 +421,6 @@ public class MicroDB {
         }
     }
 
-    public UBValue writeObject(DBObject obj) {
-        if(obj == null) {
-            return UBValueFactory.createNull();
-        }
-
-        if(obj.getDB() != this || obj.getId() == null) {
-            UBObject data = UBValueFactory.createObject();
-            obj.writeToUBObject(data);
-            return data;
-        } else {
-            //write id
-            return UBValueFactory.createString(obj.getId().toString());
-        }
-    }
-
-    public <T extends DBObject> T readObject(UBValue data, T shell) {
-        if(data == null || data.isNull() || shell == null) {
-            return null;
-        }
-
-        if(data.isString()) {
-            final UUID id = UUID.fromString(data.asString());
-            return get(id, shell);
-        } else if(data.isObject()) {
-            shell.readFromUBObject(data.asObject());
-            return shell;
-        } else {
-            return null;
-        }
-    }
-
     public synchronized Operation delete(DBObject obj) {
         checkValid(obj);
         mDeletedObjects.add(obj.getId());
