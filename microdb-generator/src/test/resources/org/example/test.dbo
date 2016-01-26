@@ -21,6 +21,7 @@ dbo MyDBObj {
     float[] myFloatArray;
     double[] myDoubleArray;
     ExtendObj[] myExtendoArray;
+    UBObject myUBObject;
 }
 
 dbo ExtendObj extends MyDBObj {

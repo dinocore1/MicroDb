@@ -12,6 +12,7 @@ import java.util.ArrayList;
 public class JavaCodeGenerator {
 
     private static final String MICRODB_PACKAGE = "com.devsmart.microdb";
+    private static final ClassName UBOBJECT_CLASSNAME = ClassName.get(UBObject.class);
 
     private final Nodes.DBONode mDBO;
     private final Nodes.FileNode mFileCtx;
@@ -79,7 +80,11 @@ public class JavaCodeGenerator {
                 } else if (field.type.type == Nodes.TypeNode.STRING) {
                     fieldCodeGane.add(new StringFieldCodeGen(field));
                 } else if (field.type.type == Nodes.TypeNode.DBO) {
-                    fieldCodeGane.add(new DBOFieldCodeGen(field));
+                    if(UBOBJECT_CLASSNAME.equals(fieldType)) {
+                        fieldCodeGane.add(new UBObjectFieldCodeGen(field));
+                    } else {
+                        fieldCodeGane.add(new DBOFieldCodeGen(field));
+                    }
                 }
             }
 
@@ -183,9 +188,14 @@ public class JavaCodeGenerator {
                 }
             } break;
 
-            case Nodes.TypeNode.DBO:
-                retval = ((Nodes.ObjType)type).getClassName();
-                break;
+            case Nodes.TypeNode.DBO: {
+                Nodes.ObjType objType = ((Nodes.ObjType)type);
+                if("UBObject".equals(objType.mSimpleName)){
+                    retval = UBOBJECT_CLASSNAME;
+                } else {
+                    retval = ((Nodes.ObjType) type).getClassName();
+                }
+            } break;
 
 
         }
@@ -688,6 +698,28 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("obj.put($S, $T.createArrayOrNull(db, $L))",
                     mField.name, Utils.class, mField.name);
+
+        }
+    }
+
+    class UBObjectFieldCodeGen extends FieldCodeGen {
+
+        UBObjectFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder builder) {
+            builder.addStatement("value = obj.get($S)", mField.name);
+            builder.beginControlFlow("if (value != null && value.isObject())");
+            builder.addStatement("this.$L = value.asObject()", mField.name);
+            builder.endControlFlow();
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder builder) {
+            builder.addStatement("obj.put($S, $L != null ? $L : $T.createNull())",
+                    mField.name, mField.name, mField.name, UBValueFactory.class);
 
         }
     }

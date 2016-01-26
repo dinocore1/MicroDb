@@ -51,6 +51,8 @@ public class MyDBObj extends DBObject {
 
     private ExtendObj[] myExtendoArray;
 
+    private UBObject myUBObject;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -74,6 +76,7 @@ public class MyDBObj extends DBObject {
         obj.put("myFloatArray", UBValueFactory.createArrayOrNull(myFloatArray));
         obj.put("myDoubleArray", UBValueFactory.createArrayOrNull(myDoubleArray));
         obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
+        obj.put("myUBObject", myUBObject != null ? myUBObject : UBValueFactory.createNull());
     }
 
     @Override
@@ -171,6 +174,10 @@ public class MyDBObj extends DBObject {
             }
         } else {
             this.myExtendoArray = null;
+        }
+        value = obj.get("myUBObject");
+        if (value != null && value.isObject()) {
+            this.myUBObject = value.asObject();
         }
     }
 
@@ -342,6 +349,15 @@ public class MyDBObj extends DBObject {
 
     public void setMyExtendoArray(ExtendObj[] value) {
         this.myExtendoArray = value;
+        setDirty();
+    }
+
+    public UBObject getMyUBObject() {
+        return myUBObject;
+    }
+
+    public void setMyUBObject(UBObject value) {
+        this.myUBObject = value;
         setDirty();
     }
 
