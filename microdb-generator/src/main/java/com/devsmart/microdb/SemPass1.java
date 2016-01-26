@@ -8,6 +8,7 @@ import org.antlr.v4.runtime.Token;
 public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
     private final CompilerContext mContext;
+    private Nodes.FileNode mCurrentFile;
 
     public SemPass1(CompilerContext ctx) {
         mContext = ctx;
@@ -15,6 +16,10 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
     private void error(String msg, Token location) {
         mContext.error(msg, location);
+    }
+
+    private void warn(String msg, Token location) {
+        mContext.warn(msg, location);
     }
 
     private Nodes.Node putMap(ParserRuleContext ctx, Nodes.Node node) {
@@ -50,12 +55,26 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
     @Override
     public Nodes.Node visitFile(MicroDBParser.FileContext ctx) {
-        Nodes.FileNode retval = new Nodes.FileNode();
-        retval.packageName = ctx.header().packageName().getText();
+        mCurrentFile = new Nodes.FileNode();
+        visit(ctx.header());
+
         for(MicroDBParser.DboContext dbo : ctx.dbo()){
-            retval.dboList.add((Nodes.DBONode) visit(dbo));
+            mCurrentFile.dboList.add((Nodes.DBONode) visit(dbo));
         }
-        return retval;
+        return mCurrentFile;
+    }
+
+    @Override
+    public Nodes.Node visitHeader(MicroDBParser.HeaderContext ctx) {
+        super.visitHeader(ctx);
+        MicroDBParser.PackageNameContext packagename = ctx.packageName();
+        if(packagename != null) {
+            mCurrentFile.packageName = packagename.getText();
+        } else {
+            warn("missing package name", ctx.start);
+        }
+
+        return null;
     }
 
     @Override

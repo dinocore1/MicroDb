@@ -60,6 +60,18 @@ public class CompilerContext {
         return retval;
     }
 
+    public CompileMessage warn(String msg, Token location) {
+        if(location != null) {
+            msg = String.format("%s %d:%d %s",
+                    location.getTokenSource().getSourceName(),
+                    location.getLine(), location.getCharPositionInLine(), msg);
+        }
+        CompileMessage retval = new CompileMessage(CompileMessage.TYPE_WARNING, msg);
+        compileMessages.add(retval);
+        return retval;
+    }
+
+
     public ANTLRErrorListener parserErrorHandler = new ANTLRErrorListener() {
         @Override
         public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {

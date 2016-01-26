@@ -38,6 +38,12 @@ public class Generator {
 
         SemPass1 semPass1 = new SemPass1(compilerContext);
         Nodes.FileNode fileNode = (Nodes.FileNode) semPass1.visitFile(root);
+
+        if(compilerContext.hasErrors()) {
+            compilerContext.reportMessages(System.err);
+            return false;
+        }
+
         SemPass2 semPass2 = new SemPass2(compilerContext);
         semPass2.visit(root);
 
