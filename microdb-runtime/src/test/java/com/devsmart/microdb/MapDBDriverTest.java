@@ -4,12 +4,13 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValueFactory;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import java.io.IOException;
 import java.util.UUID;
+
+import static org.junit.Assert.assertEquals;
 
 public class MapDBDriverTest {
 
@@ -43,7 +44,7 @@ public class MapDBDriverTest {
 
         Iterable<Row> rows = dbDriver.queryIndex("type", "dog", true, "dog", true);
         int dogCount = 0;
-        for(Row r : rows){
+        for (Row r : rows) {
             assertEquals("dog", r.getSecondaryKey());
             dogCount++;
         }
@@ -51,7 +52,7 @@ public class MapDBDriverTest {
 
         rows = dbDriver.queryIndex("type", "cat", true, "cat", true);
         int catCount = 0;
-        for(Row r : rows) {
+        for (Row r : rows) {
             assertEquals("cat", r.getSecondaryKey());
             catCount++;
 

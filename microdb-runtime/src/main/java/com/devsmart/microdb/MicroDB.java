@@ -70,7 +70,7 @@ public class MicroDB {
                     logger.warn("", e);
                 }
             }
-            if(mException != null) {
+            if (mException != null) {
                 Throwables.propagate(mException);
             }
         }
@@ -341,6 +341,7 @@ public class MicroDB {
 
     /**
      * Constructs a new proxy instance of {@code classType}
+     *
      * @param classType
      * @param <T>
      * @return a new object of type T

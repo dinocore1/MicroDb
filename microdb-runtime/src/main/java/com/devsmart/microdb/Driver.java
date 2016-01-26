@@ -12,12 +12,14 @@ public interface Driver {
     void close();
 
     UBObject getMeta() throws IOException;
+
     void saveMeta(UBObject obj) throws IOException;
 
     void addChangeListener(ChangeListener changeListener);
 
     /**
      * loads the database value with {@code key}
+     *
      * @param key
      * @return the value stored in the database or null if it does not exist
      * @throws IOException
@@ -27,7 +29,8 @@ public interface Driver {
     /**
      * inserts a new value into the the database. A new
      * unique key will be automatically generated and returned.
-     * @param id the new object key. This value should have originated from a call to {@code genId()}
+     *
+     * @param id    the new object key. This value should have originated from a call to {@code genId()}
      * @param value
      * @throws IOException
      */
@@ -39,6 +42,7 @@ public interface Driver {
      * replace value with key {@code id} with new value {@code value}.
      * If a value with with {@code id} does not exist, insert the key-value
      * pair.
+     *
      * @param id
      * @param value
      * @throws IOException
@@ -47,6 +51,7 @@ public interface Driver {
 
     /**
      * delete the database object with key {@code key}
+     *
      * @param key
      * @throws IOException
      */
@@ -55,10 +60,14 @@ public interface Driver {
     long incrementLongField(String fieldName);
 
     <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException;
+
     <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;
+
     void deleteIndex(String indexName);
 
     void beginTransaction() throws IOException;
+
     void commitTransaction() throws IOException;
+
     void rollbackTransaction() throws IOException;
 }

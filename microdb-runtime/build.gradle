@@ -1,81 +1,80 @@
-
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'signing'
 
 
 dependencies {
-  compile 'org.slf4j:slf4j-api:1.7.7'
-  compile 'com.dev-smart:ubjson:0.1.1-SNAPSHOT'
-  compile 'org.mapdb:mapdb:1.0.8'
-  compile 'com.google.guava:guava:17.0'
-  testCompile 'junit:junit:4.11'
-  testCompile 'org.slf4j:slf4j-simple:1.7.7'
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'com.dev-smart:ubjson:0.1.1-SNAPSHOT'
+    compile 'org.mapdb:mapdb:1.0.8'
+    compile 'com.google.guava:guava:17.0'
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.slf4j:slf4j-simple:1.7.7'
 }
 
 compileJava {
-  targetCompatibility = 1.6
-  sourceCompatibility = 1.6
+    targetCompatibility = 1.6
+    sourceCompatibility = 1.6
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from 'build/docs/javadoc'
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
 }
 
 task sourceJar(type: Jar) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
+    classifier = 'sources'
+    from sourceSets.main.allSource
 }
 
 artifacts {
-  archives javadocJar
-  archives sourceJar
+    archives javadocJar
+    archives sourceJar
 }
 
 signing {
-  sign configurations.archives
+    sign configurations.archives
 }
 
 uploadArchives {
-  repositories.mavenDeployer {
+    repositories.mavenDeployer {
 
-    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-    repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-      authentication(userName: sonatypeUsername, password: sonatypePassword)
-    }
-
-    snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-      authentication(userName: sonatypeUsername, password: sonatypePassword)
-    }
-
-    pom.project {
-      name 'microdb-runtime'
-      description 'Runtime for MicroDb'
-      url 'http://github.com/dinocore1/MicroDb'
-
-      scm {
-        url 'scm:git@github.com:dinocore1/MicroDb.git'
-        connection 'scm:git@github.com:dinocore1/MicroDb.git'
-        developerConnection 'scm:git@github.com:dinocore1/MicroDb.git'
-      }
-
-      licenses {
-        license {
-          name 'MIT License'
-          url 'https://github.com/dinocore1/MicroDb/blob/master/LICENSE.txt'
-          distribution 'repo'
+        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
         }
-      }
 
-      developers {
-        developer {
-          id 'psoucy'
-          name 'Paul Soucy'
+        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+            authentication(userName: sonatypeUsername, password: sonatypePassword)
         }
-      }
-    }
 
-  }
+        pom.project {
+            name 'microdb-runtime'
+            description 'Runtime for MicroDb'
+            url 'http://github.com/dinocore1/MicroDb'
+
+            scm {
+                url 'scm:git@github.com:dinocore1/MicroDb.git'
+                connection 'scm:git@github.com:dinocore1/MicroDb.git'
+                developerConnection 'scm:git@github.com:dinocore1/MicroDb.git'
+            }
+
+            licenses {
+                license {
+                    name 'MIT License'
+                    url 'https://github.com/dinocore1/MicroDb/blob/master/LICENSE.txt'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'psoucy'
+                    name 'Paul Soucy'
+                }
+            }
+        }
+
+    }
 }

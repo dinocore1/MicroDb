@@ -17,7 +17,8 @@ public class Commit {
     private Date mDate;
     private String mMessage;
 
-    private Commit() {}
+    private Commit() {
+    }
 
     public static Commit newRoot() {
         Commit retval = new Commit();

@@ -8,6 +8,8 @@ import java.util.UUID;
 public interface Row {
 
     UUID getPrimaryKey();
+
     Comparable<?> getSecondaryKey();
+
     UBValue getValue();
 }

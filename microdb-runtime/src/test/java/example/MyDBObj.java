@@ -162,7 +162,7 @@ public class MyDBObj extends DBObject {
             UBArray array = value.asArray();
             final int size = array.size();
             this.myExtendoArray = new ExtendObj[size];
-            for(int i=0;i<size;i++) {
+            for (int i = 0; i < size; i++) {
                 this.myExtendoArray[i] = Utils.readDBObj(db, array.get(i), new ExtendObj());
             }
         } else {

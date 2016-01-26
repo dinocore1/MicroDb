@@ -89,7 +89,7 @@ public class Change {
     }
 
     public void apply(Driver driver) throws IOException {
-        switch(mType) {
+        switch (mType) {
             case TYPE_DELETE:
                 driver.delete(mObjId);
                 break;

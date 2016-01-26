@@ -4,15 +4,15 @@ import com.devsmart.microdb.version.Change;
 import com.devsmart.microdb.version.Commit;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValueFactory;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
 import java.io.IOException;
 import java.util.UUID;
+
+import static org.junit.Assert.*;
 
 public class VersionManagerTest {
 
@@ -73,7 +73,7 @@ public class VersionManagerTest {
 
         Iterable<Change> diffs = vm.getChanges(vm.getHead().getId());
         int count = 0;
-        for(Change c : diffs) {
+        for (Change c : diffs) {
             count++;
         }
 
@@ -84,7 +84,7 @@ public class VersionManagerTest {
 
         diffs = vm.getChanges(vm.getHead().getId());
         count = 0;
-        for(Change c : diffs) {
+        for (Change c : diffs) {
             count++;
         }
 

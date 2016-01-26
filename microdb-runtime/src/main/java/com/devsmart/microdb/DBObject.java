@@ -16,7 +16,7 @@ public class DBObject {
     @Override
     protected void finalize() throws Throwable {
         try {
-            if(mDB != null) {
+            if (mDB != null) {
                 mDB.finalizing(this);
             }
 
@@ -34,14 +34,14 @@ public class DBObject {
     }
 
     public void writeToUBObject(UBObject data) {
-        if(mId != null) {
+        if (mId != null) {
             data.put("id", UBValueFactory.createString(mId.toString()));
         }
     }
 
     public void readFromUBObject(UBObject data) {
         UBValue value = data.get("id");
-        if(value != null && value.isString()) {
+        if (value != null && value.isString()) {
             mId = UUID.fromString(value.asString());
         }
     }
@@ -51,10 +51,10 @@ public class DBObject {
     }
 
     public void save() throws IOException {
-        if(mDB == null) {
+        if (mDB == null) {
             throw new RuntimeException("DBObject does not reference a database");
         }
-        if(mId == null) {
+        if (mId == null) {
             throw new RuntimeException("DBObject does not have an ID");
         }
         mDB.save(this);
@@ -65,7 +65,7 @@ public class DBObject {
     }
 
     public void delete() throws IOException {
-        if(mDB == null) {
+        if (mDB == null) {
             throw new RuntimeException("DBObject does not reference a database");
         }
         mDB.delete(this);

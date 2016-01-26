@@ -2,10 +2,7 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.ubjson.*;
-import com.google.common.base.Throwables;
 import org.mapdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
@@ -61,7 +58,7 @@ public class MapDBDriver implements Driver {
                 .comparator(BTreeMap.COMPARABLE_COMPARATOR)
                 .makeOrGet();
 
-        if(mMapDB.exists("metadata")){
+        if (mMapDB.exists("metadata")) {
             mMetadata = mMapDB.getAtomicVar("metadata");
         } else {
             Atomic.Var<? extends UBValue> metadata = mMapDB.createAtomicVar("metadata", UBValueFactory.createObject(), SERIALIZER_UBVALUE);
@@ -98,7 +95,7 @@ public class MapDBDriver implements Driver {
     @Override
     public UUID genId() {
         UUID key = UUID.randomUUID();
-        while(mObjects.containsKey(key)) {
+        while (mObjects.containsKey(key)) {
             key = UUID.randomUUID();
         }
         return key;
@@ -107,13 +104,13 @@ public class MapDBDriver implements Driver {
     @Override
     public void insert(UUID id, UBValue value) throws IOException {
 
-        for(ChangeListener l : mChangeListeners) {
+        for (ChangeListener l : mChangeListeners) {
             l.onBeforeInsert(this, value);
         }
 
         mObjects.put(id, value);
 
-        for(ChangeListener l : mChangeListeners) {
+        for (ChangeListener l : mChangeListeners) {
             l.onAfterInsert(this, id, value);
         }
 
@@ -132,7 +129,7 @@ public class MapDBDriver implements Driver {
     @Override
     public void delete(UUID key) throws IOException {
 
-        for(ChangeListener l : mChangeListeners) {
+        for (ChangeListener l : mChangeListeners) {
             l.onBeforeDelete(this, key);
         }
 
@@ -146,18 +143,18 @@ public class MapDBDriver implements Driver {
     public <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException {
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
 
-        if(max != null && min != null) {
+        if (max != null && min != null) {
             Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
             Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
             return new MapDBRowSet<T>(this,
                     index.subSet(tmin, false, tmax, false));
 
-        } else if(min != null && max == null) {
+        } else if (min != null && max == null) {
             Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
             return new MapDBRowSet<T>(this,
                     index.tailSet(tmin));
 
-        } else if(min == null && max != null) {
+        } else if (min == null && max != null) {
             Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
             return new MapDBRowSet<T>(this,
                     index.headSet(tmax));
@@ -189,7 +186,7 @@ public class MapDBDriver implements Driver {
 
         @Override
         public UBValue getValue() {
-            if(mValue == null) {
+            if (mValue == null) {
                 try {
                     mValue = mDriver.get(getPrimaryKey());
                 } catch (IOException e) {

@@ -5,7 +5,9 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValueFactory;
 import example.MyDBObj;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ReadWriteTest {
 
