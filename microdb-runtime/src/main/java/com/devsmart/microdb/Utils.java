@@ -16,6 +16,7 @@ public class Utils {
         } else if (db != null && obj.getDB() == db && obj.getId() != null) {
             return UBValueFactory.createString(obj.getId().toString());
         } else {
+            obj.beforeWrite();
             UBObject data = UBValueFactory.createObject();
             obj.writeToUBObject(data);
             return data;
@@ -30,6 +31,7 @@ public class Utils {
             return db.get(id, shell);
         } else {
             shell.readFromUBObject(value.asObject());
+            shell.afterRead();
             return shell;
         }
     }

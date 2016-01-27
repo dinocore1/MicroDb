@@ -171,6 +171,7 @@ public class MicroDB {
             @Override
             void doIt() throws IOException {
                 final UUID id = obj.getId();
+                obj.beforeWrite();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
                 mDriver.insert(id, data);
@@ -184,6 +185,7 @@ public class MicroDB {
             @Override
             void doIt() throws IOException {
                 final UUID id = obj.getId();
+                obj.beforeWrite();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
                 mDriver.update(id, data);
@@ -391,6 +393,7 @@ public class MicroDB {
                     shell.init(this);
                     shell.setId(id);
                     shell.readFromUBObject(data.asObject());
+                    shell.afterRead();
                     retval = shell;
                     mLiveObjects.put(id, new SoftReference<DBObject>(retval));
                 }

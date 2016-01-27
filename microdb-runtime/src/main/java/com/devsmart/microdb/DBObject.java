@@ -50,6 +50,14 @@ public class DBObject {
         }
     }
 
+    protected void beforeWrite() {
+
+    }
+
+    protected void afterRead() {
+
+    }
+
     public UUID getId() {
         return mId;
     }
