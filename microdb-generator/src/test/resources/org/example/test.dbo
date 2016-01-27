@@ -20,6 +20,7 @@ dbo MyDBObj {
     long[] myLongArray;
     float[] myFloatArray;
     double[] myDoubleArray;
+    string[] myStringArray;
     ExtendObj[] myExtendoArray;
     UBObject myUBObject;
 

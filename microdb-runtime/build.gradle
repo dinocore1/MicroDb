@@ -5,7 +5,7 @@ apply plugin: 'signing'
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.7'
-    compile 'com.dev-smart:ubjson:0.1.1'
+    compile 'com.dev-smart:ubjson:0.1.2-SNAPSHOT'
     compile 'org.mapdb:mapdb:1.0.8'
     compile 'com.google.guava:guava:17.0'
     testCompile 'junit:junit:4.11'

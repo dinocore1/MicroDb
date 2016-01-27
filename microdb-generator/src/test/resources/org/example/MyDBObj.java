@@ -49,6 +49,8 @@ public class MyDBObj extends DBObject {
 
     private double[] myDoubleArray;
 
+    private String[] myStringArray;
+
     private ExtendObj[] myExtendoArray;
 
     private UBObject myUBObject;
@@ -77,6 +79,7 @@ public class MyDBObj extends DBObject {
         obj.put("myLongArray", UBValueFactory.createArrayOrNull(myLongArray));
         obj.put("myFloatArray", UBValueFactory.createArrayOrNull(myFloatArray));
         obj.put("myDoubleArray", UBValueFactory.createArrayOrNull(myDoubleArray));
+        obj.put("myStringArray", UBValueFactory.createArrayOrNull(myStringArray));
         obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
         obj.put("myUBObject", myUBObject != null ? myUBObject : UBValueFactory.createNull());
     }
@@ -165,6 +168,10 @@ public class MyDBObj extends DBObject {
         value = obj.get("myDoubleArray");
         if (value != null) {
             this.myDoubleArray = value.asFloat64Array();
+        }
+        value = obj.get("myStringArray");
+        if (value != null) {
+            this.myStringArray = value.asStringArray();
         }
         value = obj.get("myExtendoArray");
         if (value != null && value.isArray()) {
@@ -342,6 +349,15 @@ public class MyDBObj extends DBObject {
 
     public void setMyDoubleArray(double[] value) {
         this.myDoubleArray = value;
+        setDirty();
+    }
+
+    public String[] getMyStringArray() {
+        return myStringArray;
+    }
+
+    public void setMyStringArray(String[] value) {
+        this.myStringArray = value;
         setDirty();
     }
 

@@ -79,6 +79,8 @@ public class JavaCodeGenerator {
                     fieldCodeGane.add(new FloatArrayFieldCodeGen(field));
                 } else if(TypeName.DOUBLE == fieldType.componentType) {
                     fieldCodeGane.add(new DoubleArrayFieldCodeGen(field));
+                } else if(field.type.type == Nodes.TypeNode.STRING){
+                    fieldCodeGane.add(new StringArrayFieldCodeGen(field));
                 } else if(field.type.type == Nodes.TypeNode.DBO) {
                     fieldCodeGane.add(new DBOArrayFieldCodeGen(field));
                 }
@@ -667,6 +669,30 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createStringOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+    }
+
+    class StringArrayFieldCodeGen extends FieldCodeGen {
+
+        StringArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder.addStatement("value = obj.get($S)", mField.name);
+            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.addStatement("this.$L = value.asStringArray()", mField.name);
+            methodBuilder.endControlFlow();
+
+
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
+            methodBuilder
+                    .addStatement("obj.put($S, $T.createArrayOrNull($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
     }
