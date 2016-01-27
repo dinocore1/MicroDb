@@ -21,43 +21,18 @@ public class Generator {
 
     private LinkedHashSet<File> mClassPath = new LinkedHashSet<File>();
     private File mOutputDir;
+    private Nodes.FileNode mFileNode;
 
     public Generator() {
 
     }
 
-    public boolean compileInputStream(ANTLRInputStream inputStream) throws IOException {
-        CompilerContext compilerContext = new CompilerContext();
-
-        MicroDBLexer lexer = new MicroDBLexer(inputStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        MicroDBParser parser = new MicroDBParser(tokens);
-        parser.addErrorListener(compilerContext.parserErrorHandler);
-
-        MicroDBParser.FileContext root = parser.file();
-
-        SemPass1 semPass1 = new SemPass1(compilerContext);
-        Nodes.FileNode fileNode = (Nodes.FileNode) semPass1.visitFile(root);
-
-        if(compilerContext.hasErrors()) {
-            compilerContext.reportMessages(System.err);
-            return false;
-        }
-
-        SemPass2 semPass2 = new SemPass2(compilerContext);
-        semPass2.visit(root);
-
-        if(compilerContext.hasErrors()) {
-            compilerContext.reportMessages(System.err);
-            return false;
-        }
-
-
-        for(Nodes.DBONode dbo : fileNode.dboList) {
-            JavaCodeGenerator generator = new JavaCodeGenerator(dbo, fileNode);
+    public void writeOutputFiles() throws IOException {
+        for(Nodes.DBONode dbo : mFileNode.dboList) {
+            JavaCodeGenerator generator = new JavaCodeGenerator(dbo, mFileNode);
 
             String code = generator.generateCode();
-            final String output = fileNode.packageName.replaceAll("\\.", File.separator);
+            final String output = mFileNode.packageName.replaceAll("\\.", File.separator);
             File outputDir = new File(mOutputDir, output);
             outputDir.mkdirs();
             File outputFile = new File(outputDir, dbo.name + ".java");
@@ -76,16 +51,61 @@ public class Generator {
             fout.close();
             */
         }
+    }
+
+    /**
+     * Compile a DBO file. This function will not write the output files. To do so,
+     * call @{code writeOutputFiles()} after calling this method.
+     * @param inputStream
+     * @return true if compile completed without any errors.
+     * @throws IOException
+     */
+    public boolean compileInputStream(ANTLRInputStream inputStream) {
+        CompilerContext compilerContext = new CompilerContext();
+
+        MicroDBLexer lexer = new MicroDBLexer(inputStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        MicroDBParser parser = new MicroDBParser(tokens);
+        parser.addErrorListener(compilerContext.parserErrorHandler);
+
+        MicroDBParser.FileContext root = parser.file();
+
+        SemPass1 semPass1 = new SemPass1(compilerContext);
+        mFileNode = (Nodes.FileNode) semPass1.visitFile(root);
+
+        if(compilerContext.hasErrors()) {
+            compilerContext.reportMessages(System.err);
+            return false;
+        }
+
+        SemPass2 semPass2 = new SemPass2(compilerContext);
+        semPass2.visit(root);
+
+        if(compilerContext.hasErrors()) {
+            compilerContext.reportMessages(System.err);
+            return false;
+        }
 
         return true;
     }
 
+    /**
+     * compile a DBO file and write output files.
+     * @param file
+     * @return true if compile completed without any errors.
+     * @throws IOException
+     */
     public boolean compileFile(File file) throws IOException {
         FileInputStream fin = new FileInputStream(file);
         ANTLRInputStream inputStream = new ANTLRInputStream(fin);
         inputStream.name = file.getAbsolutePath();
-        return compileInputStream(inputStream);
+        final boolean success = compileInputStream(inputStream);
 
+        if(success) {
+            writeOutputFiles();
+        }
+
+        return success;
     }
 
     public void compileDir(File root) throws IOException {
