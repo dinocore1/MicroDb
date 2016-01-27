@@ -1,0 +1,15 @@
+package org.example;
+
+dbo MyDBObj {
+
+    bool myBool;
+
+    #{code}
+
+    @Override
+    protected void beforeWrite() {
+        System.out.println("about to write");
+    }
+
+    #{code}
+}

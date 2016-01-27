@@ -15,8 +15,14 @@ packageName
     : ID (DOT ID)*
     ;
 
-dbo : DBO name=ID LPAREN field+ RPAREN
-    | DBO name=ID 'extends' extend=ID LPAREN field+ RPAREN
+dbo : DBO name=ID LPAREN exprlist RPAREN
+    | DBO name=ID 'extends' extend=ID LPAREN exprlist RPAREN
+    ;
+
+exprlist
+    : exprlist field
+    | exprlist CODEBLOCK
+    |
     ;
 
 field
@@ -58,5 +64,13 @@ DOUBLE : 'double' ;
 STRING : 'string' ;
 PACKAGE : 'package' ;
 DOT : '.' ;
+
+CODEBLOCK
+    : CODE (.)*? CODE
+    ;
+
+fragment
+CODE : '#{code}' ;
+
 ID : [a-zA-Z0-9_]+ ;
 WS : [ \t\r\n]+ -> skip ;

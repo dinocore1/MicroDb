@@ -7,6 +7,7 @@ import com.squareup.javapoet.*;
 
 import javax.lang.model.element.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class JavaCodeGenerator {
@@ -20,6 +21,27 @@ public class JavaCodeGenerator {
     public JavaCodeGenerator(Nodes.DBONode dbo, Nodes.FileNode ctx) {
         mDBO = dbo;
         mFileCtx = ctx;
+    }
+
+    public String generateCode() throws IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        JavaFile javaFile = createJavaFile();
+        javaFile.writeTo(stringBuilder);
+
+
+        StringBuilder extraCode = new StringBuilder();
+        for(String codeblock : mDBO.codeblocks) {
+            extraCode.append(codeblock);
+        }
+        extraCode.append("}");
+
+        final int closePos = stringBuilder.lastIndexOf("}");
+        stringBuilder.replace(closePos, stringBuilder.length(), extraCode.toString());
+
+        String finalCode = stringBuilder.toString();
+        return finalCode;
+
     }
 
     public JavaFile createJavaFile() {

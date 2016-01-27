@@ -3,12 +3,14 @@ package com.devsmart.microdb;
 import com.devsmart.microdb.ast.Nodes;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 
 public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
     private final CompilerContext mContext;
     private Nodes.FileNode mCurrentFile;
+    private Nodes.DBONode mCurrentDBO;
 
     public SemPass1(CompilerContext ctx) {
         mContext = ctx;
@@ -29,16 +31,12 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
     @Override
     public Nodes.Node visitDbo(MicroDBParser.DboContext ctx) {
-
         String name = ctx.name.getText();
         String extend = ctx.extend != null ? ctx.extend.getText() : null;
 
-        Nodes.DBONode retval = new Nodes.DBONode(name, extend);
-        for(MicroDBParser.FieldContext field : ctx.field()) {
-            retval.fields.add((Nodes.FieldNode) visit(field));
-        }
-
-        return retval;
+        mCurrentDBO = new Nodes.DBONode(name, extend);
+        visit(ctx.exprlist());
+        return mCurrentDBO;
     }
 
     @Override
@@ -50,7 +48,22 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
             error("field with name 'id' is reserved", ctx.name);
         }
 
-        return new Nodes.FieldNode(type, name);
+        Nodes.FieldNode fieldNode = new Nodes.FieldNode(type, name);
+        mCurrentDBO.fields.add(fieldNode);
+
+        return fieldNode;
+    }
+
+    @Override
+    public Nodes.Node visitExprlist(MicroDBParser.ExprlistContext ctx) {
+        TerminalNode codeblock = ctx.CODEBLOCK();
+        if(codeblock != null) {
+            String codeblockStr = codeblock.getText();
+            codeblockStr = codeblockStr.substring(7);
+            codeblockStr = codeblockStr.substring(0, codeblockStr.length()-7);
+            mCurrentDBO.codeblocks.add(codeblockStr);
+        }
+        return super.visitExprlist(ctx);
     }
 
     @Override

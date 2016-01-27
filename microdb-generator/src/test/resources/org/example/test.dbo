@@ -22,6 +22,16 @@ dbo MyDBObj {
     double[] myDoubleArray;
     ExtendObj[] myExtendoArray;
     UBObject myUBObject;
+
+    #{code}
+
+    @Override
+    protected void beforeWrite() {
+        System.out.println("about to write");
+    }
+
+    #{code}
+
 }
 
 dbo ExtendObj extends MyDBObj {

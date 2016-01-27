@@ -361,4 +361,9 @@ public class MyDBObj extends DBObject {
         setDirty();
     }
 
+    @Override
+    protected void beforeWrite() {
+        System.out.println("about to write");
+    }
+
 }

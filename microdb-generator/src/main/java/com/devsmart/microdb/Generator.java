@@ -55,6 +55,17 @@ public class Generator {
 
         for(Nodes.DBONode dbo : fileNode.dboList) {
             JavaCodeGenerator generator = new JavaCodeGenerator(dbo, fileNode);
+
+            String code = generator.generateCode();
+            final String output = fileNode.packageName.replaceAll("\\.", File.separator);
+            File outputDir = new File(mOutputDir, output);
+            outputDir.mkdirs();
+            File outputFile = new File(outputDir, dbo.name + ".java");
+            FileWriter fout = new FileWriter(outputFile);
+            fout.write(code);
+            fout.close();
+
+            /*
             JavaFile outputJavaCode = generator.createJavaFile();
             final String output = fileNode.packageName.replaceAll("\\.", File.separator);
             File outputDir = new File(mOutputDir, output);
@@ -63,6 +74,7 @@ public class Generator {
             FileWriter fout = new FileWriter(outputFile);
             outputJavaCode.writeTo(fout);
             fout.close();
+            */
         }
 
         return true;

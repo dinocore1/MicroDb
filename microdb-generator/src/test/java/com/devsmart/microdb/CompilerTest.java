@@ -27,4 +27,13 @@ public class CompilerTest {
         final boolean compileSuccess = gen.compileInputStream(antlrIn);
         assertFalse(compileSuccess);
     }
+
+    @Test
+    public void testCodeBlock() throws Exception{
+        Generator gen = new Generator();
+        InputStream in = Resources.getResource("com/devsmart/microdb/codeblock.dbo").openStream();
+        ANTLRInputStream antlrIn = new ANTLRInputStream(in);
+        final boolean compileSuccess = gen.compileInputStream(antlrIn);
+        assertTrue(compileSuccess);
+    }
 }

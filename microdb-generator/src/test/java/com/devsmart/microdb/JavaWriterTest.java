@@ -40,10 +40,11 @@ public class JavaWriterTest {
 
         JavaCodeGenerator generator = new JavaCodeGenerator(file.dboList.get(dboindex), file);
 
-        StringBuffer sourceBuf = new StringBuffer();
-        generator.createJavaFile().writeTo(sourceBuf);
+        //StringBuffer sourceBuf = new StringBuffer();
+        //generator.createJavaFile().writeTo(sourceBuf);
+        //return sourceBuf.toString();
 
-        return sourceBuf.toString();
+        return generator.generateCode();
     }
 
     @Test
