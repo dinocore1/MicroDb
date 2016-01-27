@@ -53,6 +53,8 @@ public class MyDBObj extends DBObject {
 
     private UBObject myUBObject;
 
+    private String myNoSerialize;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);

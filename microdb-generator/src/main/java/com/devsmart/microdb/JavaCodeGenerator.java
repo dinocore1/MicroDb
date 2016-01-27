@@ -63,10 +63,6 @@ public class JavaCodeGenerator {
 
         for(Nodes.FieldNode field : mDBO.fields) {
 
-            if(field.type.annotations.contains(NO_SERIALIZE)) {
-                continue;
-            }
-
             if(field.type.isArray) {
                 ArrayTypeName fieldType = (ArrayTypeName)getTypeName(field.type);
                 if(field.type.type == Nodes.TypeNode.BOOL) {
@@ -122,8 +118,10 @@ public class JavaCodeGenerator {
 
         for(FieldCodeGen codeGen : fieldCodeGane) {
             classBuilder.addField(codeGen.genField());
-            classBuilder.addMethod(codeGen.genGetterMethod());
-            classBuilder.addMethod(codeGen.genSetterMethod());
+            if(!codeGen.mField.type.annotations.contains(NO_SERIALIZE)) {
+                classBuilder.addMethod(codeGen.genGetterMethod());
+                classBuilder.addMethod(codeGen.genSetterMethod());
+            }
         }
 
         JavaFile proxySourceFile = JavaFile.builder(mFileCtx.packageName, classBuilder.build())
@@ -144,7 +142,9 @@ public class JavaCodeGenerator {
         builder.addStatement("final $T db = getDB()", MicroDB.class);
 
         for(FieldCodeGen fieldCodeGen : fieldCodeGane) {
-            fieldCodeGen.genWriteToUBObject(builder);
+            if(!fieldCodeGen.mField.type.annotations.contains(NO_SERIALIZE)) {
+                fieldCodeGen.genWriteToUBObject(builder);
+            }
         }
 
         return builder.build();
@@ -162,7 +162,9 @@ public class JavaCodeGenerator {
         builder.addStatement("$T value = null", UBValue.class);
 
         for(FieldCodeGen fieldCodeGen : fieldCodeGens) {
-            fieldCodeGen.genReadFromUBObject(builder);
+            if(!fieldCodeGen.mField.type.annotations.contains(NO_SERIALIZE)) {
+                fieldCodeGen.genReadFromUBObject(builder);
+            }
         }
 
         return builder.build();
