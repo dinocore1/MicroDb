@@ -23,6 +23,9 @@ dbo MyDBObj {
     ExtendObj[] myExtendoArray;
     UBObject myUBObject;
 
+    @NoSerialize
+    string myNoSerialize;
+
     #{code}
 
     @Override

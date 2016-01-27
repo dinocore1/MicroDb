@@ -14,6 +14,7 @@ public class JavaCodeGenerator {
 
     private static final String MICRODB_PACKAGE = "com.devsmart.microdb";
     private static final ClassName UBOBJECT_CLASSNAME = ClassName.get(UBObject.class);
+    private static final String NO_SERIALIZE = "NoSerialize";
 
     private final Nodes.DBONode mDBO;
     private final Nodes.FileNode mFileCtx;
@@ -61,6 +62,10 @@ public class JavaCodeGenerator {
         ArrayList<FieldCodeGen> fieldCodeGane = new ArrayList<FieldCodeGen>();
 
         for(Nodes.FieldNode field : mDBO.fields) {
+
+            if(field.type.annotations.contains(NO_SERIALIZE)) {
+                continue;
+            }
 
             if(field.type.isArray) {
                 ArrayTypeName fieldType = (ArrayTypeName)getTypeName(field.type);
