@@ -379,6 +379,15 @@ public class MyDBObj extends DBObject {
         setDirty();
     }
 
+    public String getMyNoSerialize() {
+        return myNoSerialize;
+    }
+
+    public void setMyNoSerialize(String value) {
+        this.myNoSerialize = value;
+        setDirty();
+    }
+
     @Override
     protected void beforeWrite() {
         System.out.println("about to write");

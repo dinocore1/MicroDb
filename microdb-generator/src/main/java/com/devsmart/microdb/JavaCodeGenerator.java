@@ -120,10 +120,9 @@ public class JavaCodeGenerator {
 
         for(FieldCodeGen codeGen : fieldCodeGane) {
             classBuilder.addField(codeGen.genField());
-            if(!codeGen.mField.type.annotations.contains(NO_SERIALIZE)) {
-                classBuilder.addMethod(codeGen.genGetterMethod());
-                classBuilder.addMethod(codeGen.genSetterMethod());
-            }
+            classBuilder.addMethod(codeGen.genGetterMethod());
+            classBuilder.addMethod(codeGen.genSetterMethod());
+
         }
 
         JavaFile proxySourceFile = JavaFile.builder(mFileCtx.packageName, classBuilder.build())
