@@ -9,7 +9,7 @@ public interface Row {
 
     UUID getPrimaryKey();
 
-    Comparable<?> getSecondaryKey();
+    <T extends Comparable<T>> T getSecondaryKey();
 
     UBValue getValue();
 }

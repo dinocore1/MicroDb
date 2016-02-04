@@ -27,8 +27,7 @@ public interface Driver {
     UBValue get(UUID key) throws IOException;
 
     /**
-     * inserts a new value into the the database. A new
-     * unique key will be automatically generated and returned.
+     * inserts a new value into the the database.
      *
      * @param id    the new object key. This value should have originated from a call to {@code genId()}
      * @param value
@@ -59,9 +58,9 @@ public interface Driver {
 
     long incrementLongField(String fieldName);
 
-    <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException;
+    <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException;
 
-    <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;
+    <T extends Comparable<T>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;
 
     void deleteIndex(String indexName);
 

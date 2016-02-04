@@ -140,30 +140,73 @@ public class MapDBDriver implements Driver {
     private static final UUID MIN_UUID = new UUID(Long.MIN_VALUE, Long.MIN_VALUE);
 
     @Override
-    public <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException {
-        NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
+    public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
+        MapDBCursor<T> retval = new MapDBCursor<T>();
+        retval.mDriver = this;
+        retval.index = mMapDB.getTreeSet(indexName);
 
         if (max != null && min != null) {
-            Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            return new MapDBRowSet<T>(this,
-                    index.subSet(tmin, false, tmax, false));
+            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
+            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
 
         } else if (min != null && max == null) {
-            Fun.Tuple2<T, UUID> tmin = (Fun.Tuple2<T, UUID>) Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            return new MapDBRowSet<T>(this,
-                    index.tailSet(tmin));
+            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
 
         } else if (min == null && max != null) {
-            Fun.Tuple2<T, UUID> tmax = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            return new MapDBRowSet<T>(this,
-                    index.headSet(tmax));
-        } else {
-            return new MapDBRowSet<T>(this, index);
+            retval.max = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+        }
+
+        retval.seekToBegining();
+
+        return retval;
+    }
+
+    private static class MapDBCursor<T extends Comparable<T>> implements Cursor {
+
+        MapDBDriver mDriver;
+        NavigableSet<Fun.Tuple2<T, UUID>> index;
+        Fun.Tuple2<T, UUID> min;
+        Fun.Tuple2<T, UUID> max;
+        private Fun.Tuple2<T, UUID> mCurrentValue;
+
+
+        @Override
+        public void seekToBegining() {
+            if(min != null) {
+                mCurrentValue = index.ceiling(min);
+            } else {
+                mCurrentValue = index.first();
+            }
+        }
+
+        @Override
+        public void seekToEnd() {
+            if(max != null) {
+                mCurrentValue = index.floor(max);
+            } else {
+                mCurrentValue = index.last();
+            }
+        }
+
+        @Override
+        public boolean next() {
+            mCurrentValue = index.higher(mCurrentValue);
+            return mCurrentValue != null && (max != null && mCurrentValue.compareTo(max) <= 0);
+        }
+
+        @Override
+        public boolean prev() {
+            mCurrentValue = index.lower(mCurrentValue);
+            return mCurrentValue != null && (min != null && mCurrentValue.compareTo(min) >= 0);
+        }
+
+        @Override
+        public Row get() {
+            return new MapDBRow<T>(mDriver, mCurrentValue);
         }
     }
 
-    private static class MapDBRow<T> implements Row {
+    private static class MapDBRow<T extends Comparable<T>> implements Row {
 
         private final MapDBDriver mDriver;
         final Fun.Tuple2<T, UUID> mTuple;
@@ -180,8 +223,8 @@ public class MapDBDriver implements Driver {
         }
 
         @Override
-        public Comparable<?> getSecondaryKey() {
-            return (Comparable<?>) mTuple.a;
+        public T getSecondaryKey() {
+            return mTuple.a;
         }
 
         @Override
@@ -197,40 +240,8 @@ public class MapDBDriver implements Driver {
         }
     }
 
-    private static class MapDBRowSet<T> implements Iterable<Row> {
-
-        private final MapDBDriver mDriver;
-        private final SortedSet<Fun.Tuple2<T, UUID>> mIndex;
-
-        public MapDBRowSet(MapDBDriver driver, SortedSet<Fun.Tuple2<T, UUID>> index) {
-            mDriver = driver;
-            mIndex = index;
-        }
-
-        @Override
-        public Iterator<Row> iterator() {
-            final Iterator<Fun.Tuple2<T, UUID>> it = mIndex.iterator();
-            return new Iterator<Row>() {
-                @Override
-                public boolean hasNext() {
-                    return it.hasNext();
-                }
-
-                @Override
-                public Row next() {
-                    return new MapDBRow<T>(mDriver, it.next());
-                }
-
-                @Override
-                public void remove() {
-                    it.remove();
-                }
-            };
-        }
-    }
-
     @Override
-    public <T extends Comparable<?>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
+    public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(indexName)
                 .makeOrGet();
 
@@ -249,7 +260,7 @@ public class MapDBDriver implements Driver {
         });
     }
 
-    private static class MapDBEmitter<T extends Comparable<?>> implements Emitter<T> {
+    private static class MapDBEmitter<T extends Comparable<T>> implements Emitter<T> {
 
         ArrayList<T> mKeys = new ArrayList<T>(3);
 

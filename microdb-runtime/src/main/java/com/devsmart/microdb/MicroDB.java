@@ -455,7 +455,7 @@ public class MicroDB {
         waitForCompletion(op);
     }
 
-    public <T extends Comparable<?>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
+    public <T extends Comparable<T>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
         mDriver.addIndex(indexName, mapFunction);
     }
 
@@ -463,13 +463,14 @@ public class MicroDB {
         mDriver.addChangeListener(listener);
     }
 
-    public <T> Iterable<Row> queryIndex(String indexName, Comparable<T> min, boolean minInclusive, Comparable<T> max, boolean maxInclusive) throws IOException {
+    public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
         return mDriver.queryIndex(indexName, min, minInclusive, max, maxInclusive);
     }
 
-    public <T extends DBObject, K> Iterable<T> queryIndex(String indexName, final Class<T> classType, Comparable<K> min, boolean minInclusive, Comparable<K> max, boolean maxInclusive) throws IOException {
-        final Iterable<Row> rowSet = queryIndex(indexName, min, minInclusive, max, maxInclusive);
-        return Iterables.transform(rowSet, new Function<Row, T>() {
+    /*
+    public <T extends DBObject, K extends Comparable<K>> Iterable<T> queryIndex(String indexName, final Class<T> classType, K min, boolean minInclusive, K max, boolean maxInclusive) throws IOException {
+        final Cursor rowCursor = queryIndex(indexName, min, minInclusive, max, maxInclusive);
+        return Iterables.transform(rowCursor, new Function<Row, T>() {
             @Override
             public T apply(Row input) {
                 try {
@@ -487,5 +488,6 @@ public class MicroDB {
         final String className = classType.getSimpleName();
         return queryIndex("type", classType, className, true, className, true);
     }
+    */
 
 }
