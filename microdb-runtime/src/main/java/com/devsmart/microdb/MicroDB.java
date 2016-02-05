@@ -467,6 +467,59 @@ public class MicroDB {
         return mDriver.queryIndex(indexName, min, minInclusive, max, maxInclusive);
     }
 
+    public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException {
+        final String className = classType.getSimpleName();
+
+        return new Iterable<T>() {
+            @Override
+            public Iterator<T> iterator() {
+                try {
+                    final Cursor cursor = queryIndex("type", className, true, className, true);
+                    return new RowIterator<T>(cursor, MicroDB.this, classType);
+                } catch (IOException e) {
+                    Throwables.propagate(e);
+                    return null;
+                }
+            }
+        };
+
+    }
+
+    private static class RowIterator<T extends DBObject> implements Iterator<T> {
+
+        private final MicroDB mDB;
+        private final Class<T> mClassType;
+        private Cursor mCursor;
+        private Row mCurrentRow;
+
+        public RowIterator(Cursor cursor, MicroDB db, Class<T> classType) {
+            mCursor = cursor;
+            mDB = db;
+            mClassType = classType;
+            mCurrentRow = mCursor.get();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return mCurrentRow != null;
+        }
+
+        @Override
+        public T next() {
+            try {
+                final UUID objId = mCurrentRow.getPrimaryKey();
+                T retval = mDB.get(objId, mClassType.newInstance());
+
+                mCursor.next();
+                mCurrentRow = mCursor.get();
+                return retval;
+            } catch (Exception e) {
+                Throwables.propagate(e);
+                return null;
+            }
+        }
+    }
+
     /*
     public <T extends DBObject, K extends Comparable<K>> Iterable<T> queryIndex(String indexName, final Class<T> classType, K min, boolean minInclusive, K max, boolean maxInclusive) throws IOException {
         final Cursor rowCursor = queryIndex(indexName, min, minInclusive, max, maxInclusive);
@@ -484,10 +537,7 @@ public class MicroDB {
         });
     }
 
-    public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException {
-        final String className = classType.getSimpleName();
-        return queryIndex("type", classType, className, true, className, true);
-    }
+
     */
 
 }
