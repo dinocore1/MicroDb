@@ -518,6 +518,11 @@ public class MicroDB {
                 return null;
             }
         }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("remove not implemented");
+        }
     }
 
     /*

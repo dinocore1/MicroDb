@@ -202,7 +202,11 @@ public class MapDBDriver implements Driver {
 
         @Override
         public Row get() {
-            return new MapDBRow<T>(mDriver, mCurrentValue);
+            if(mCurrentValue == null) {
+                return null;
+            } else {
+                return new MapDBRow<T>(mDriver, mCurrentValue);
+            }
         }
     }
 
