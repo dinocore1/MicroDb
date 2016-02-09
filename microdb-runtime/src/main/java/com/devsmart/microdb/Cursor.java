@@ -8,4 +8,5 @@ public interface Cursor {
     boolean next();
     boolean prev();
     Row get();
+    int getCount();
 }

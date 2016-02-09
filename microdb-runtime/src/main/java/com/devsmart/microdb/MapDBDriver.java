@@ -143,17 +143,21 @@ public class MapDBDriver implements Driver {
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
         MapDBCursor<T> retval = new MapDBCursor<T>();
         retval.mDriver = this;
-        retval.index = mMapDB.getTreeSet(indexName);
+
+        NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
 
         if (max != null && min != null) {
             retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
             retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+            retval.index = index.subSet(retval.min, minInclusive, retval.max, maxInclusive);
 
         } else if (min != null && max == null) {
             retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
+            retval.index = index.tailSet(retval.min, minInclusive);
 
         } else if (min == null && max != null) {
-            retval.max = (Fun.Tuple2<T, UUID>) Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
+            retval.index = index.headSet(retval.max, maxInclusive);
         }
 
         retval.seekToBegining();
@@ -172,32 +176,24 @@ public class MapDBDriver implements Driver {
 
         @Override
         public void seekToBegining() {
-            if(min != null) {
-                mCurrentValue = index.ceiling(min);
-            } else {
-                mCurrentValue = index.first();
-            }
+            mCurrentValue = index.first();
         }
 
         @Override
         public void seekToEnd() {
-            if(max != null) {
-                mCurrentValue = index.floor(max);
-            } else {
-                mCurrentValue = index.last();
-            }
+            mCurrentValue = index.last();
         }
 
         @Override
         public boolean next() {
             mCurrentValue = index.higher(mCurrentValue);
-            return mCurrentValue != null && (max != null && mCurrentValue.compareTo(max) <= 0);
+            return mCurrentValue != null;
         }
 
         @Override
         public boolean prev() {
             mCurrentValue = index.lower(mCurrentValue);
-            return mCurrentValue != null && (min != null && mCurrentValue.compareTo(min) >= 0);
+            return mCurrentValue != null;
         }
 
         @Override
@@ -207,6 +203,11 @@ public class MapDBDriver implements Driver {
             } else {
                 return new MapDBRow<T>(mDriver, mCurrentValue);
             }
+        }
+
+        @Override
+        public int getCount() {
+            return index.size();
         }
     }
 

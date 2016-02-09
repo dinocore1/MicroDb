@@ -72,6 +72,7 @@ public class CustomIndexTest {
 
         int numGregs = 0;
         Cursor cursor = index.query(db, "Greg");
+        assertEquals(1, cursor.getCount());
         do {
             Row r = cursor.get();
             String firstName = r.getSecondaryKey();
@@ -83,6 +84,7 @@ public class CustomIndexTest {
 
         int numPauls = 0;
         cursor = index.query(db, "Paul");
+        assertEquals(3, cursor.getCount());
         do {
             Row r = cursor.get();
             String firstName = r.getSecondaryKey();
