@@ -1,15 +1,13 @@
 package org.example;
 
-import com.devsmart.microdb.DBObject;
-import com.devsmart.microdb.DefaultChangeListener;
-import com.devsmart.microdb.Driver;
-import com.devsmart.microdb.MicroDB;
-import com.devsmart.microdb.Utils;
+import com.devsmart.microdb.*;
 import com.devsmart.ubjson.UBArray;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+
+import java.io.IOException;
 
 public class MyDBObj extends DBObject {
 
@@ -61,6 +59,8 @@ public class MyDBObj extends DBObject {
 
     private long myAutoIncrement;
 
+    private String myStrIndex;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -87,6 +87,7 @@ public class MyDBObj extends DBObject {
         obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
         obj.put("myUBObject", myUBObject != null ? myUBObject : UBValueFactory.createNull());
         obj.put("myAutoIncrement", UBValueFactory.createInt(myAutoIncrement));
+        obj.put("myStrIndex", UBValueFactory.createStringOrNull(myStrIndex));
     }
 
     @Override
@@ -196,6 +197,14 @@ public class MyDBObj extends DBObject {
         value = obj.get("myAutoIncrement");
         if (value != null) {
             this.myAutoIncrement = value.asLong();
+        }
+        value = obj.get("myStrIndex");
+        if (value != null) {
+            if (value.isString()) {
+                this.myStrIndex = value.asString();
+            } else {
+                this.myStrIndex = null;
+            }
         }
     }
 
@@ -401,7 +410,16 @@ public class MyDBObj extends DBObject {
         return myAutoIncrement;
     }
 
-    public static void install(MicroDB db) {
+    public String getMyStrIndex() {
+        return myStrIndex;
+    }
+
+    public void setGetMyStrIndex(String value) {
+        this.myStrIndex = value;
+        setDirty();
+    }
+
+    public static void install(MicroDB db) throws IOException {
         db.addChangeListener(new DefaultChangeListener() {
             @Override
             public void onBeforeInsert(Driver driver, UBValue value) {
@@ -411,6 +429,21 @@ public class MyDBObj extends DBObject {
                 }
             }
         });
+        db.addIndex("MyDBObj.myStrIndex", new MapFunction<String>() {
+            @Override
+            public void map(UBValue value, Emitter<String> emitter) {
+                if(Utils.isValidObject(value, MyDBObj.TYPE)) {
+                    UBValue v = value.asObject().get("myStrIndex");
+                    if(v != null && v.isString()) {
+                        emitter.emit(v.asString());
+                    }
+                }
+            }
+        });
+    }
+
+    public static Cursor queryByMyStrIndex(MicroDB db, String min, boolean includeMin, String max, boolean includeMax) throws IOException {
+        return db.queryIndex("MyDBObj.myStrIndex", min, includeMin, max, includeMax);
     }
 
     @Override

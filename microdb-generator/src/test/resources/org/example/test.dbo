@@ -30,6 +30,9 @@ dbo MyDBObj {
     @AutoIncrement
     long myAutoIncrement;
 
+    @Index
+    String myStrIndex;
+
     #{code}
 
     @Override
