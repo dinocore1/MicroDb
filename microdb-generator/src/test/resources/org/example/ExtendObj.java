@@ -37,4 +37,8 @@ public class ExtendObj extends MyDBObj {
         this.myExtendInt = value;
         setDirty();
     }
+
+    public static void install(MicroDB db) {
+    }
+
 }

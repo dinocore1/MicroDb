@@ -1,6 +1,8 @@
 package org.example;
 
 import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.DefaultChangeListener;
+import com.devsmart.microdb.Driver;
 import com.devsmart.microdb.MicroDB;
 import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBArray;
@@ -57,6 +59,8 @@ public class MyDBObj extends DBObject {
 
     private String myNoSerialize;
 
+    private long myAutoIncrement;
+
     @Override
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
@@ -82,6 +86,7 @@ public class MyDBObj extends DBObject {
         obj.put("myStringArray", UBValueFactory.createArrayOrNull(myStringArray));
         obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
         obj.put("myUBObject", myUBObject != null ? myUBObject : UBValueFactory.createNull());
+        obj.put("myAutoIncrement", UBValueFactory.createInt(myAutoIncrement));
     }
 
     @Override
@@ -187,6 +192,10 @@ public class MyDBObj extends DBObject {
         value = obj.get("myUBObject");
         if (value != null && value.isObject()) {
             this.myUBObject = value.asObject();
+        }
+        value = obj.get("myAutoIncrement");
+        if (value != null) {
+            this.myAutoIncrement = value.asLong();
         }
     }
 
@@ -386,6 +395,22 @@ public class MyDBObj extends DBObject {
     public void setMyNoSerialize(String value) {
         this.myNoSerialize = value;
         setDirty();
+    }
+
+    public long getMyAutoIncrement() {
+        return myAutoIncrement;
+    }
+
+    public static void install(MicroDB db) {
+        db.addChangeListener(new DefaultChangeListener() {
+            @Override
+            public void onBeforeInsert(Driver driver, UBValue value) {
+                if(Utils.isValidObject(value, MyDBObj.TYPE)) {
+                    final long longValue = driver.incrementLongField("MyDBObj.myAutoIncrement");
+                    value.asObject().put("myAutoIncrement", UBValueFactory.createInt(longValue));
+                }
+            }
+        });
     }
 
     @Override

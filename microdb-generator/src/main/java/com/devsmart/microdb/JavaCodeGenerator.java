@@ -15,6 +15,7 @@ public class JavaCodeGenerator {
     private static final String MICRODB_PACKAGE = "com.devsmart.microdb";
     private static final ClassName UBOBJECT_CLASSNAME = ClassName.get(UBObject.class);
     private static final String NO_SERIALIZE = "NoSerialize";
+    private static final String AUTOINCREMENT = "AutoIncrement";
 
     private final Nodes.DBONode mDBO;
     private final Nodes.FileNode mFileCtx;
@@ -121,15 +122,23 @@ public class JavaCodeGenerator {
         for(FieldCodeGen codeGen : fieldCodeGane) {
             classBuilder.addField(codeGen.genField());
             classBuilder.addMethod(codeGen.genGetterMethod());
-            classBuilder.addMethod(codeGen.genSetterMethod());
 
+            if(!codeGen.mField.type.annotations.contains(AUTOINCREMENT)) {
+                classBuilder.addMethod(codeGen.genSetterMethod());
+            }
         }
+
+        generateInstallMethod(classBuilder, fieldCodeGane);
 
         JavaFile proxySourceFile = JavaFile.builder(mFileCtx.packageName, classBuilder.build())
                 .skipJavaLangImports(true)
                 .build();
 
         return proxySourceFile;
+    }
+
+    private ClassName getThisClassName() {
+        return ClassName.get(mFileCtx.packageName, mDBO.name);
     }
 
     private static MethodSpec generateWriteToUBObjectMethod(ArrayList<FieldCodeGen> fieldCodeGane) {
@@ -169,6 +178,22 @@ public class JavaCodeGenerator {
         }
 
         return builder.build();
+    }
+
+    private void generateInstallMethod(TypeSpec.Builder classBuilder, ArrayList<FieldCodeGen> fields) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("install")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(TypeName.VOID)
+                .addParameter(MicroDB.class, "db");
+
+        for(FieldCodeGen fieldCodeGen : fields) {
+            CodeBlock.Builder blockBuilder = CodeBlock.builder();
+            fieldCodeGen.genInstallCode(blockBuilder);
+            builder.addCode(blockBuilder.build());
+        }
+
+        classBuilder.addMethod(builder.build());
+
     }
 
     static TypeName getTypeName(Nodes.TypeNode type) {
@@ -282,6 +307,9 @@ public class JavaCodeGenerator {
                     .build();
         }
 
+        public void genInstallCode(CodeBlock.Builder codeBuilder) {
+
+        }
     }
 
     class BoolFieldCodeGen extends FieldCodeGen {
@@ -520,6 +548,31 @@ public class JavaCodeGenerator {
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createInt($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+
+        @Override
+        public void genInstallCode(CodeBlock.Builder codeBuilder) {
+
+            if(mField.type.annotations.contains(AUTOINCREMENT)) {
+
+                ClassName thisClassName = getThisClassName();
+                final String incrementField = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+
+                codeBuilder.add("db.addChangeListener(new $T() {\n", DefaultChangeListener.class);
+                codeBuilder.indent();
+                codeBuilder.add("@$T\npublic void onBeforeInsert($T driver, $T value) {\n", Override.class, Driver.class, UBValue.class);
+                codeBuilder.indent();
+                codeBuilder.beginControlFlow("if($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.addStatement("final long longValue = driver.incrementLongField($S)", incrementField);
+                codeBuilder.addStatement("value.asObject().put($S, $T.createInt(longValue))", mField.name, UBValueFactory.class);
+                codeBuilder.endControlFlow();
+                codeBuilder.unindent();
+                codeBuilder.add("}\n");
+                codeBuilder.unindent();
+                codeBuilder.addStatement("})");
+                codeBuilder.build();
+            }
 
         }
     }

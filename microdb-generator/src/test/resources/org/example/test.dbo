@@ -27,6 +27,9 @@ dbo MyDBObj {
     @NoSerialize
     string myNoSerialize;
 
+    @AutoIncrement
+    long myAutoIncrement;
+
     #{code}
 
     @Override
