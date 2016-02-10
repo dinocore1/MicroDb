@@ -172,27 +172,50 @@ public class MapDBDriver implements Driver {
         Fun.Tuple2<T, UUID> min;
         Fun.Tuple2<T, UUID> max;
         private Fun.Tuple2<T, UUID> mCurrentValue;
+        private int mPosition;
 
 
         @Override
         public void seekToBegining() {
             mCurrentValue = index.first();
+            mPosition = 0;
         }
 
         @Override
         public void seekToEnd() {
             mCurrentValue = index.last();
+            mPosition = getCount();
+        }
+
+        @Override
+        public int getPosition() {
+            return mPosition;
+        }
+
+        @Override
+        public boolean moveToPosition(int pos) {
+            int currentPos;
+            while( (currentPos = getPosition()) != pos) {
+              if(currentPos < pos) {
+                  next();
+              } else {
+                  prev();
+              }
+            }
+            return true;
         }
 
         @Override
         public boolean next() {
             mCurrentValue = index.higher(mCurrentValue);
+            mPosition++;
             return mCurrentValue != null;
         }
 
         @Override
         public boolean prev() {
             mCurrentValue = index.lower(mCurrentValue);
+            mPosition--;
             return mCurrentValue != null;
         }
 
