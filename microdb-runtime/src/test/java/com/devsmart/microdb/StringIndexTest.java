@@ -12,7 +12,7 @@ import org.mapdb.DBMaker;
 import java.io.IOException;
 import java.util.UUID;
 
-public class CustomIndexTest {
+public class StringIndexTest {
 
     private static UUID insert(String firstName, String lastName, MapDBDriver driver) throws IOException {
         UBObject obj;
@@ -67,6 +67,7 @@ public class CustomIndexTest {
         insert("Paul", "Soucy", dbDriver);
         insert("Paul", "Simon", dbDriver);
         insert("Paul", "Alexander", dbDriver);
+        insert("Patrick", "Vin", dbDriver);
         insert("Greg", "Soucy", dbDriver);
         insert("Alex", "Murphy", dbDriver);
 
@@ -93,6 +94,61 @@ public class CustomIndexTest {
         } while(cursor.next());
 
         assertEquals(3, numPauls);
+
+    }
+
+    @Test
+    public void testHeadSet() throws Exception {
+        DB mapdb = DBMaker.newMemoryDB()
+                .make();
+
+        MapDBDriver dbDriver = new MapDBDriver(mapdb);
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+
+        NameIndex index = new NameIndex();
+        index.install(db);
+
+        insert("aaa", "Soucy", dbDriver);
+        insert("aba", "Simon", dbDriver);
+        insert("bbb", "Alexander", dbDriver);
+        insert("baa", "Vin", dbDriver);
+        insert("ccc", "Soucy", dbDriver);
+        insert("caa", "Murphy", dbDriver);
+
+        Cursor cursor = db.queryIndex(index.INDEX_NAME, "ab", true, null, true);
+        assertEquals(5, cursor.getCount());
+
+        cursor = db.queryIndex(index.INDEX_NAME, "aba", true, null, true);
+        assertEquals(5, cursor.getCount());
+
+        cursor = db.queryIndex(index.INDEX_NAME, "aba", false, null, true);
+        assertEquals(4, cursor.getCount());
+
+    }
+
+    @Test
+    public void testTailSet() throws Exception {
+        DB mapdb = DBMaker.newMemoryDB()
+                .make();
+
+        MapDBDriver dbDriver = new MapDBDriver(mapdb);
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+
+        NameIndex index = new NameIndex();
+        index.install(db);
+
+        insert("aaa", "Soucy", dbDriver);
+        insert("aba", "Simon", dbDriver);
+        insert("bbb", "Alexander", dbDriver);
+        insert("baa", "Vin", dbDriver);
+        insert("ccc", "Soucy", dbDriver);
+        insert("caa", "Murphy", dbDriver);
+
+        Cursor cursor = db.queryIndex(index.INDEX_NAME, null, true, "b", false);
+        assertEquals(2, cursor.getCount());
+
+        cursor = db.queryIndex(index.INDEX_NAME, null, true, "bzz", false);
+        assertEquals(4, cursor.getCount());
 
     }
 }
