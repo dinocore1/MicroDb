@@ -35,11 +35,11 @@ public class ExtendObj extends MyDBObj {
         final MicroDB db = getDB();
         UBValue value = null;
         value = obj.get("myExtendInt");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myExtendInt = value.asInt();
         }
         value = obj.get("myTestId");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myTestId = value.asLong();
         }
     }

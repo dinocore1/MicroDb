@@ -103,35 +103,35 @@ public class MyDBObj extends DBObject {
         final MicroDB db = getDB();
         UBValue value = null;
         value = obj.get("myBool");
-        if (value != null) {
+        if (value != null && value.isBool()) {
             this.myBool = value.asBool();
         }
         value = obj.get("myByte");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myByte = value.asByte();
         }
         value = obj.get("myChar");
-        if (value != null) {
+        if (value != null && value.isChar()) {
             this.myChar = value.asChar();
         }
         value = obj.get("myShort");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myShort = value.asShort();
         }
         value = obj.get("myInt");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myInt = value.asInt();
         }
         value = obj.get("myLong");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myLong = value.asLong();
         }
         value = obj.get("myFloat");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myFloat = value.asFloat32();
         }
         value = obj.get("myDouble");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myDouble = value.asFloat64();
         }
         value = obj.get("myString");
@@ -155,35 +155,35 @@ public class MyDBObj extends DBObject {
             this.myExtendo = null;
         }
         value = obj.get("myBoolArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myBoolArray = value.asBoolArray();
         }
         value = obj.get("myByteArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myByteArray = value.asByteArray();
         }
         value = obj.get("myShortArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myShortArray = value.asShortArray();
         }
         value = obj.get("myIntArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myIntArray = value.asInt32Array();
         }
         value = obj.get("myLongArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myLongArray = value.asInt64Array();
         }
         value = obj.get("myFloatArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myFloatArray = value.asFloat32Array();
         }
         value = obj.get("myDoubleArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myDoubleArray = value.asFloat64Array();
         }
         value = obj.get("myStringArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myStringArray = value.asStringArray();
         }
         value = obj.get("myExtendoArray");
@@ -202,7 +202,7 @@ public class MyDBObj extends DBObject {
             this.myUBObject = value.asObject();
         }
         value = obj.get("myAutoIncrement");
-        if (value != null) {
+        if (value != null && value.isNumber()) {
             this.myAutoIncrement = value.asLong();
         }
         value = obj.get("myStrIndex");

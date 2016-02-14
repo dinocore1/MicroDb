@@ -345,7 +345,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isBool())");
             methodBuilder.addStatement("this.$L = value.asBool()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -369,7 +369,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asBoolArray()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -393,7 +393,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asByte()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -417,7 +417,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asByteArray()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -441,7 +441,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asShort()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -465,7 +465,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asShortArray()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -489,7 +489,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isChar())");
             methodBuilder.addStatement("this.$L = value.asChar()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -513,7 +513,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asInt()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -588,7 +588,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asInt32Array()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -612,7 +612,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asLong()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -709,7 +709,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asInt64Array()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -733,7 +733,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asFloat32()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -757,7 +757,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asFloat32Array()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -781,7 +781,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isNumber())");
             methodBuilder.addStatement("this.$L = value.asFloat64()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -805,7 +805,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asFloat64Array()", mField.name);
             methodBuilder.endControlFlow();
 
@@ -906,7 +906,7 @@ public class JavaCodeGenerator {
         @Override
         void genReadFromUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder.addStatement("value = obj.get($S)", mField.name);
-            methodBuilder.beginControlFlow("if (value != null)");
+            methodBuilder.beginControlFlow("if (value != null && value.isArray())");
             methodBuilder.addStatement("this.$L = value.asStringArray()", mField.name);
             methodBuilder.endControlFlow();
 
