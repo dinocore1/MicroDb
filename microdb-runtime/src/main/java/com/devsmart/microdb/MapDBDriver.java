@@ -158,6 +158,8 @@ public class MapDBDriver implements Driver {
         } else if (min == null && max != null) {
             retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
             retval.index = index.headSet(retval.max, maxInclusive);
+        } else {
+            retval.index = index;
         }
 
         retval.seekToBegining();
