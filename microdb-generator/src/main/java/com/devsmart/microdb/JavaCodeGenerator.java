@@ -155,6 +155,7 @@ public class JavaCodeGenerator {
 
         builder.addStatement("super.writeToUBObject(obj)");
         builder.addStatement("final $T db = getDB()", MicroDB.class);
+        builder.addStatement("obj.put($S, TYPE)", "type");
 
         for(FieldCodeGen fieldCodeGen : fieldCodeGane) {
             if(!fieldCodeGen.mField.type.annotations.contains(NO_SERIALIZE)) {

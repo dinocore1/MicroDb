@@ -71,6 +71,7 @@ public class MyDBObj extends DBObject {
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
         final MicroDB db = getDB();
+        obj.put("type", TYPE);
         obj.put("myBool", UBValueFactory.createBool(myBool));
         obj.put("myByte", UBValueFactory.createInt(myByte));
         obj.put("myChar", UBValueFactory.createInt(myChar));

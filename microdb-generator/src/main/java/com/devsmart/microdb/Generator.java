@@ -58,7 +58,6 @@ public class Generator {
      * call @{code writeOutputFiles()} after calling this method.
      * @param inputStream
      * @return true if compile completed without any errors.
-     * @throws IOException
      */
     public boolean compileInputStream(ANTLRInputStream inputStream) {
         CompilerContext compilerContext = new CompilerContext();

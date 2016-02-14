@@ -15,6 +15,7 @@ public class ExtendObj extends MyDBObj {
     public void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
         final MicroDB db = getDB();
+        obj.put("type", TYPE);
         obj.put("myExtendInt", UBValueFactory.createInt(myExtendInt));
     }
 
