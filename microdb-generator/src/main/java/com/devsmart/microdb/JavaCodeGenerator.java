@@ -533,7 +533,7 @@ public class JavaCodeGenerator {
 
             if(mField.type.annotations.contains(INDEX)) {
                 ClassName thisClassName = getThisClassName();
-                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
                 codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, Integer.class);
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Integer.class);
@@ -559,7 +559,7 @@ public class JavaCodeGenerator {
         public void genOtherMethods(TypeSpec.Builder classBuilder) {
 
             ClassName thisClassName = getThisClassName();
-            final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+            final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
 
             String queryByIndexMethodName = String.format("queryBy%s%sIndex", mField.name.substring(0, 1).toUpperCase(),
                     mField.name.substring(1));
@@ -633,7 +633,7 @@ public class JavaCodeGenerator {
             if(mField.type.annotations.contains(AUTOINCREMENT)) {
 
                 ClassName thisClassName = getThisClassName();
-                final String incrementField = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                final String incrementField = String.format("%s.%s_var", thisClassName.simpleName(), mField.name);
 
                 codeBuilder.add("db.addChangeListener(new $T() {\n", DefaultChangeListener.class);
                 codeBuilder.indent();
@@ -651,7 +651,7 @@ public class JavaCodeGenerator {
                 retval.add(IOException.class);
             } else if(mField.type.annotations.contains(INDEX)) {
                 ClassName thisClassName = getThisClassName();
-                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
                 codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, Long.class);
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Long.class);
@@ -678,7 +678,7 @@ public class JavaCodeGenerator {
         public void genOtherMethods(TypeSpec.Builder classBuilder) {
 
             ClassName thisClassName = getThisClassName();
-            final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+            final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
 
             String queryByIndexMethodName = String.format("queryBy%s%sIndex", mField.name.substring(0, 1).toUpperCase(),
                     mField.name.substring(1));
@@ -850,7 +850,7 @@ public class JavaCodeGenerator {
 
             if(mField.type.annotations.contains(INDEX)) {
                 ClassName thisClassName = getThisClassName();
-                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
                 codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, String.class);
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, String.class);
@@ -875,7 +875,7 @@ public class JavaCodeGenerator {
         public void genOtherMethods(TypeSpec.Builder classBuilder) {
 
             ClassName thisClassName = getThisClassName();
-            final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+            final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
 
             String queryByIndexMethodName = String.format("queryBy%s%sIndex", mField.name.substring(0, 1).toUpperCase(),
                     mField.name.substring(1));

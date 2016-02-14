@@ -431,12 +431,12 @@ public class MyDBObj extends DBObject {
             @Override
             public void onBeforeInsert(Driver driver, UBValue value) {
                 if(Utils.isValidObject(value, MyDBObj.TYPE)) {
-                    final long longValue = driver.incrementLongField("MyDBObj.myAutoIncrement");
+                    final long longValue = driver.incrementLongField("MyDBObj.myAutoIncrement_var");
                     value.asObject().put("myAutoIncrement", UBValueFactory.createInt(longValue));
                 }
             }
         });
-        db.addIndex("MyDBObj.myStrIndex", new MapFunction<String>() {
+        db.addIndex("MyDBObj.myStrIndex_idx", new MapFunction<String>() {
             @Override
             public void map(UBValue value, Emitter<String> emitter) {
                 if (Utils.isValidObject(value, MyDBObj.TYPE)) {
@@ -450,7 +450,7 @@ public class MyDBObj extends DBObject {
     }
 
     public static Cursor queryByMyStrIndexIndex(MicroDB db, String min, boolean includeMin, String max, boolean includeMax) throws IOException {
-        return db.queryIndex("MyDBObj.myStrIndex", min, includeMin, max, includeMax);
+        return db.queryIndex("MyDBObj.myStrIndex_idx", min, includeMin, max, includeMax);
     }
 
     @Override
