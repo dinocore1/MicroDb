@@ -31,7 +31,7 @@ dbo MyDBObj {
     long myAutoIncrement;
 
     @Index
-    String myStrIndex;
+    string myStrIndex;
 
     #{code}
 

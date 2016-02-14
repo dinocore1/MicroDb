@@ -1,12 +1,18 @@
 package org.example;
 
-import com.devsmart.microdb.*;
+import com.devsmart.microdb.Cursor;
+import com.devsmart.microdb.DBObject;
+import com.devsmart.microdb.DefaultChangeListener;
+import com.devsmart.microdb.Driver;
+import com.devsmart.microdb.Emitter;
+import com.devsmart.microdb.MapFunction;
+import com.devsmart.microdb.MicroDB;
+import com.devsmart.microdb.Utils;
 import com.devsmart.ubjson.UBArray;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-
 import java.io.IOException;
 
 public class MyDBObj extends DBObject {
@@ -414,7 +420,7 @@ public class MyDBObj extends DBObject {
         return myStrIndex;
     }
 
-    public void setGetMyStrIndex(String value) {
+    public void setMyStrIndex(String value) {
         this.myStrIndex = value;
         setDirty();
     }
@@ -432,7 +438,7 @@ public class MyDBObj extends DBObject {
         db.addIndex("MyDBObj.myStrIndex", new MapFunction<String>() {
             @Override
             public void map(UBValue value, Emitter<String> emitter) {
-                if(Utils.isValidObject(value, MyDBObj.TYPE)) {
+                if (Utils.isValidObject(value, MyDBObj.TYPE)) {
                     UBValue v = value.asObject().get("myStrIndex");
                     if(v != null && v.isString()) {
                         emitter.emit(v.asString());
@@ -442,7 +448,7 @@ public class MyDBObj extends DBObject {
         });
     }
 
-    public static Cursor queryByMyStrIndex(MicroDB db, String min, boolean includeMin, String max, boolean includeMax) throws IOException {
+    public static Cursor queryByMyStrIndexIndex(MicroDB db, String min, boolean includeMin, String max, boolean includeMax) throws IOException {
         return db.queryIndex("MyDBObj.myStrIndex", min, includeMin, max, includeMax);
     }
 

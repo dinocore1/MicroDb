@@ -9,6 +9,9 @@ import javax.lang.model.element.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class JavaCodeGenerator {
 
@@ -16,6 +19,7 @@ public class JavaCodeGenerator {
     private static final ClassName UBOBJECT_CLASSNAME = ClassName.get(UBObject.class);
     private static final String NO_SERIALIZE = "NoSerialize";
     private static final String AUTOINCREMENT = "AutoIncrement";
+    private static final String INDEX = "Index";
 
     private final Nodes.DBONode mDBO;
     private final Nodes.FileNode mFileCtx;
@@ -129,6 +133,7 @@ public class JavaCodeGenerator {
         }
 
         generateInstallMethod(classBuilder, fieldCodeGane);
+        generateOtherMethods(classBuilder, fieldCodeGane);
 
         JavaFile proxySourceFile = JavaFile.builder(mFileCtx.packageName, classBuilder.build())
                 .skipJavaLangImports(true)
@@ -186,14 +191,28 @@ public class JavaCodeGenerator {
                 .returns(TypeName.VOID)
                 .addParameter(MicroDB.class, "db");
 
+        Set<Class<? extends Exception>> excptionsTypes = new HashSet<Class<? extends Exception>>();
+
         for(FieldCodeGen fieldCodeGen : fields) {
             CodeBlock.Builder blockBuilder = CodeBlock.builder();
-            fieldCodeGen.genInstallCode(blockBuilder);
+            excptionsTypes.addAll(fieldCodeGen.genInstallCode(blockBuilder));
             builder.addCode(blockBuilder.build());
+        }
+
+        for(Class execType : excptionsTypes) {
+            builder.addException(execType);
         }
 
         classBuilder.addMethod(builder.build());
 
+    }
+
+    private void generateOtherMethods(TypeSpec.Builder classBuilder, ArrayList<FieldCodeGen> fields) {
+        for(FieldCodeGen fieldCodeGen : fields) {
+            if(fieldCodeGen.mField.type.annotations.contains(INDEX)) {
+                fieldCodeGen.genOtherMethods(classBuilder);
+            }
+        }
     }
 
     static TypeName getTypeName(Nodes.TypeNode type) {
@@ -307,7 +326,11 @@ public class JavaCodeGenerator {
                     .build();
         }
 
-        public void genInstallCode(CodeBlock.Builder codeBuilder) {
+        public Set<Class<? extends Exception>> genInstallCode(CodeBlock.Builder codeBuilder) {
+            return Collections.emptySet();
+        }
+
+        public void genOtherMethods(TypeSpec.Builder classBuilder) {
 
         }
     }
@@ -502,6 +525,39 @@ public class JavaCodeGenerator {
                     .addStatement("obj.put($S, $T.createInt($L))", mField.name, UBValueFactory.class, mField.name);
 
         }
+
+        @Override
+        public Set<Class<? extends Exception>> genInstallCode(CodeBlock.Builder codeBuilder) {
+            Set<Class<? extends Exception>> retval = new HashSet<Class<? extends Exception>>();
+
+            if(mField.type.annotations.contains(INDEX)) {
+                ClassName thisClassName = getThisClassName();
+                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, Integer.class);
+                codeBuilder.indent();
+                codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Integer.class);
+                codeBuilder.indent();
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
+                codeBuilder.beginControlFlow("if (v != null && v.isInteger())");
+                codeBuilder.addStatement("emitter.emit(v.asInt())");
+                codeBuilder.endControlFlow();
+                codeBuilder.endControlFlow();
+                codeBuilder.unindent();
+                codeBuilder.add("}\n");
+                codeBuilder.unindent();
+                codeBuilder.addStatement("})");
+                codeBuilder.build();
+                retval.add(IOException.class);
+
+            }
+
+            return retval;
+        }
+
+        public void genOtherMethods(TypeSpec.Builder classBuilder) {
+
+        }
     }
 
     class IntArrayFieldCodeGen extends FieldCodeGen {
@@ -552,7 +608,8 @@ public class JavaCodeGenerator {
         }
 
         @Override
-        public void genInstallCode(CodeBlock.Builder codeBuilder) {
+        public Set<Class<? extends Exception>> genInstallCode(CodeBlock.Builder codeBuilder) {
+            Set<Class<? extends Exception>> retval = new HashSet<Class<? extends Exception>>();
 
             if(mField.type.annotations.contains(AUTOINCREMENT)) {
 
@@ -572,7 +629,34 @@ public class JavaCodeGenerator {
                 codeBuilder.unindent();
                 codeBuilder.addStatement("})");
                 codeBuilder.build();
+                retval.add(IOException.class);
+            } else if(mField.type.annotations.contains(INDEX)) {
+                ClassName thisClassName = getThisClassName();
+                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, Long.class);
+                codeBuilder.indent();
+                codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Long.class);
+                codeBuilder.indent();
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
+                codeBuilder.beginControlFlow("if (v != null && v.isInteger())");
+                codeBuilder.addStatement("emitter.emit(v.asLong())");
+                codeBuilder.endControlFlow();
+                codeBuilder.endControlFlow();
+                codeBuilder.unindent();
+                codeBuilder.add("}\n");
+                codeBuilder.unindent();
+                codeBuilder.addStatement("})");
+                codeBuilder.build();
+                retval.add(IOException.class);
+
             }
+
+            return retval;
+
+        }
+
+        public void genOtherMethods(TypeSpec.Builder classBuilder) {
 
         }
     }
@@ -714,13 +798,62 @@ public class JavaCodeGenerator {
             methodBuilder.endControlFlow();
             methodBuilder.endControlFlow();
 
-
         }
 
         @Override
         void genWriteToUBObject(MethodSpec.Builder methodBuilder) {
             methodBuilder
                     .addStatement("obj.put($S, $T.createStringOrNull($L))", mField.name, UBValueFactory.class, mField.name);
+
+        }
+
+        @Override
+        public Set<Class<? extends Exception>> genInstallCode(CodeBlock.Builder codeBuilder) {
+            Set<Class<? extends Exception>> retval = new HashSet<Class<? extends Exception>>();
+
+            if(mField.type.annotations.contains(INDEX)) {
+                ClassName thisClassName = getThisClassName();
+                final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+                codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, String.class);
+                codeBuilder.indent();
+                codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, String.class);
+                codeBuilder.indent();
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
+                codeBuilder.beginControlFlow("if (v != null && v.isString())");
+                codeBuilder.addStatement("emitter.emit(v.asString())");
+                codeBuilder.endControlFlow();
+                codeBuilder.endControlFlow();
+                codeBuilder.unindent();
+                codeBuilder.add("}\n");
+                codeBuilder.unindent();
+                codeBuilder.addStatement("})");
+                codeBuilder.build();
+                retval.add(IOException.class);
+
+            }
+            return retval;
+        }
+
+        public void genOtherMethods(TypeSpec.Builder classBuilder) {
+
+            ClassName thisClassName = getThisClassName();
+            final String indexName = String.format("%s.%s", thisClassName.simpleName(), mField.name);
+
+            String queryByIndexMethodName = String.format("queryBy%s%sIndex", mField.name.substring(0, 1).toUpperCase(),
+                    mField.name.substring(1));
+            classBuilder.addMethod(MethodSpec.methodBuilder(queryByIndexMethodName)
+                            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                            .returns(Cursor.class)
+                            .addParameter(MicroDB.class, "db")
+                            .addParameter(String.class, "min")
+                            .addParameter(boolean.class, "includeMin")
+                            .addParameter(String.class, "max")
+                            .addParameter(boolean.class, "includeMax")
+                            .addException(IOException.class)
+                            .addStatement("return db.queryIndex($S, min, includeMin, max, includeMax)", indexName)
+                            .build()
+            );
 
         }
     }
