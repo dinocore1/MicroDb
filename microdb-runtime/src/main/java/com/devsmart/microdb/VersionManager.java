@@ -64,7 +64,7 @@ public class VersionManager {
             throw new RuntimeException("currentVersion is null");
         }
 
-        mMapDBDriver.addChangeListener(mChangeListener);
+        microDB.addChangeListener(mChangeListener);
 
     }
 

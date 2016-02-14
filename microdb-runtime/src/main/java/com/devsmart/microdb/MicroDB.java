@@ -4,9 +4,7 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
-import com.google.common.base.Function;
 import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +24,7 @@ public class MicroDB {
     private final HashMap<UUID, SoftReference<DBObject>> mLiveObjects = new HashMap<UUID, SoftReference<DBObject>>();
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
+    private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
 
     @Override
     protected void finalize() throws Throwable {
@@ -176,6 +175,11 @@ public class MicroDB {
                 obj.writeToUBObject(data);
                 mDriver.insert(id, data);
                 obj.mDirty = false;
+
+                for(ChangeListener listener : mChangeListeners) {
+                    listener.onAfterInsert(mDriver, id, data);
+                }
+
             }
         };
     }
@@ -188,6 +192,11 @@ public class MicroDB {
                 obj.beforeWrite();
                 UBObject data = UBValueFactory.createObject();
                 obj.writeToUBObject(data);
+
+                for(ChangeListener listener : mChangeListeners) {
+                    listener.onBeforeUpdate(mDriver, id, data);
+                }
+
                 mDriver.update(id, data);
                 obj.mDirty = false;
             }
@@ -208,6 +217,11 @@ public class MicroDB {
             @Override
             void doIt() throws IOException {
                 final UUID id = obj.getId();
+
+                for(ChangeListener listener : mChangeListeners) {
+                    listener.onBeforeDelete(mDriver, id);
+                }
+
                 obj.mDirty = false;
                 mDriver.delete(id);
                 synchronized (MicroDB.this) {
@@ -330,6 +344,16 @@ public class MicroDB {
             T retval = create(classType);
             final UUID key = mDriver.genId();
             retval.setId(key);
+
+            UBObject data = UBValueFactory.createObject();
+            retval.writeToUBObject(data);
+
+            for(ChangeListener l : mChangeListeners) {
+                l.onBeforeInsert(mDriver, data);
+            }
+
+            retval.readFromUBObject(data);
+
             retval.setDirty();
             mWriteQueue.enqueue(createInsertOperation(retval));
             mLiveObjects.put(key, new SoftReference<DBObject>(retval));
@@ -460,7 +484,7 @@ public class MicroDB {
     }
 
     public void addChangeListener(ChangeListener listener) {
-        mDriver.addChangeListener(listener);
+        mChangeListeners.add(listener);
     }
 
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {

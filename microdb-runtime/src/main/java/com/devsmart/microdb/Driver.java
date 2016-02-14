@@ -15,8 +15,6 @@ public interface Driver {
 
     void saveMeta(UBObject obj) throws IOException;
 
-    void addChangeListener(ChangeListener changeListener);
-
     /**
      * loads the database value with {@code key}
      *
