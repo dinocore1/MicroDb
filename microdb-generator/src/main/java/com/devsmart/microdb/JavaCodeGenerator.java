@@ -649,7 +649,9 @@ public class JavaCodeGenerator {
                 codeBuilder.addStatement("})");
                 codeBuilder.build();
                 retval.add(IOException.class);
-            } else if(mField.type.annotations.contains(INDEX)) {
+            }
+
+            if(mField.type.annotations.contains(INDEX)) {
                 ClassName thisClassName = getThisClassName();
                 final String indexName = String.format("%s.%s_idx", thisClassName.simpleName(), mField.name);
                 codeBuilder.add("db.addIndex($S, new $T<$T>() {\n", indexName, MapFunction.class, Long.class);
