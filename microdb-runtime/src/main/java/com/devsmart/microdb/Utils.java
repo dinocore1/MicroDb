@@ -5,10 +5,14 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBString;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 public class Utils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
 
     public static UBValue writeDBObj(MicroDB db, DBObject obj) {
         if (obj == null) {
@@ -24,15 +28,18 @@ public class Utils {
     }
 
     public static <T extends DBObject> T readDBObj(MicroDB db, UBValue value, T shell) {
-        if (value == null || value.isNull() || !value.isObject() || shell == null) {
+        if (value == null || value.isNull() || shell == null) {
             return null;
         } else if (db != null && value.isString()) {
             final UUID id = UUID.fromString(value.asString());
             return db.get(id, shell);
-        } else {
+        } else if(value.isObject()) {
             shell.readFromUBObject(value.asObject());
             shell.afterRead();
             return shell;
+        } else {
+            LOGGER.warn("value is not an object or a string id");
+            return null;
         }
     }
 

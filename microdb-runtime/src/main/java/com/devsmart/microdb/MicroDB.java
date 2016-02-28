@@ -325,15 +325,17 @@ public class MicroDB {
 
     /**
      * Saves all DBObjects that are marked dirty
-     *
-     * @throws IOException
      */
-    public void flush() throws IOException {
+    public void flush() {
         synchronized (this) {
             for (SoftReference<DBObject> ref : mLiveObjects.values()) {
                 DBObject obj = ref.get();
-                if (obj != null && obj.mDirty) {
-                    mWriteQueue.enqueue(createWriteObject(obj));
+                if (obj != null) {
+                    synchronized (obj) {
+                        if(obj.mDirty) {
+                            mWriteQueue.enqueue(createWriteObject(obj));
+                        }
+                    }
                 }
             }
         }
