@@ -149,7 +149,7 @@ public class JavaCodeGenerator {
     private static MethodSpec generateWriteToUBObjectMethod(ArrayList<FieldCodeGen> fieldCodeGane) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("writeToUBObject");
         builder.addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
+                .addModifiers(Modifier.PUBLIC, Modifier.SYNCHRONIZED)
                 .returns(TypeName.VOID)
                 .addParameter(UBObject.class, "obj");
 
@@ -319,7 +319,7 @@ public class JavaCodeGenerator {
         MethodSpec genSetterMethod() {
             final String setterName = createSetterName();
             return MethodSpec.methodBuilder(setterName)
-                    .addModifiers(Modifier.PUBLIC)
+                    .addModifiers(Modifier.PUBLIC, Modifier.SYNCHRONIZED)
                     .returns(TypeName.VOID)
                     .addParameter(getTypeName(mField.type), "value")
                     .addStatement("this.$L = value", mField.name)

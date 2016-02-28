@@ -68,7 +68,7 @@ public class MyDBObj extends DBObject {
     private String myStrIndex;
 
     @Override
-    public void writeToUBObject(UBObject obj) {
+    public synchronized void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
         final MicroDB db = getDB();
         obj.put("type", TYPE);
@@ -219,7 +219,7 @@ public class MyDBObj extends DBObject {
         return myBool;
     }
 
-    public void setMyBool(boolean value) {
+    public synchronized void setMyBool(boolean value) {
         this.myBool = value;
         setDirty();
     }
@@ -228,7 +228,7 @@ public class MyDBObj extends DBObject {
         return myByte;
     }
 
-    public void setMyByte(byte value) {
+    public synchronized void setMyByte(byte value) {
         this.myByte = value;
         setDirty();
     }
@@ -237,7 +237,7 @@ public class MyDBObj extends DBObject {
         return myChar;
     }
 
-    public void setMyChar(char value) {
+    public synchronized void setMyChar(char value) {
         this.myChar = value;
         setDirty();
     }
@@ -246,7 +246,7 @@ public class MyDBObj extends DBObject {
         return myShort;
     }
 
-    public void setMyShort(short value) {
+    public synchronized void setMyShort(short value) {
         this.myShort = value;
         setDirty();
     }
@@ -255,7 +255,7 @@ public class MyDBObj extends DBObject {
         return myInt;
     }
 
-    public void setMyInt(int value) {
+    public synchronized void setMyInt(int value) {
         this.myInt = value;
         setDirty();
     }
@@ -264,7 +264,7 @@ public class MyDBObj extends DBObject {
         return myLong;
     }
 
-    public void setMyLong(long value) {
+    public synchronized void setMyLong(long value) {
         this.myLong = value;
         setDirty();
     }
@@ -273,7 +273,7 @@ public class MyDBObj extends DBObject {
         return myFloat;
     }
 
-    public void setMyFloat(float value) {
+    public synchronized void setMyFloat(float value) {
         this.myFloat = value;
         setDirty();
     }
@@ -282,7 +282,7 @@ public class MyDBObj extends DBObject {
         return myDouble;
     }
 
-    public void setMyDouble(double value) {
+    public synchronized void setMyDouble(double value) {
         this.myDouble = value;
         setDirty();
     }
@@ -291,7 +291,7 @@ public class MyDBObj extends DBObject {
         return myString;
     }
 
-    public void setMyString(String value) {
+    public synchronized void setMyString(String value) {
         this.myString = value;
         setDirty();
     }
@@ -300,7 +300,7 @@ public class MyDBObj extends DBObject {
         return myDBO;
     }
 
-    public void setMyDBO(MyDBObj value) {
+    public synchronized void setMyDBO(MyDBObj value) {
         this.myDBO = value;
         setDirty();
     }
@@ -309,7 +309,7 @@ public class MyDBObj extends DBObject {
         return myExtendo;
     }
 
-    public void setMyExtendo(ExtendObj value) {
+    public synchronized void setMyExtendo(ExtendObj value) {
         this.myExtendo = value;
         setDirty();
     }
@@ -318,7 +318,7 @@ public class MyDBObj extends DBObject {
         return myBoolArray;
     }
 
-    public void setMyBoolArray(boolean[] value) {
+    public synchronized void setMyBoolArray(boolean[] value) {
         this.myBoolArray = value;
         setDirty();
     }
@@ -327,7 +327,7 @@ public class MyDBObj extends DBObject {
         return myByteArray;
     }
 
-    public void setMyByteArray(byte[] value) {
+    public synchronized void setMyByteArray(byte[] value) {
         this.myByteArray = value;
         setDirty();
     }
@@ -336,7 +336,7 @@ public class MyDBObj extends DBObject {
         return myShortArray;
     }
 
-    public void setMyShortArray(short[] value) {
+    public synchronized void setMyShortArray(short[] value) {
         this.myShortArray = value;
         setDirty();
     }
@@ -345,7 +345,7 @@ public class MyDBObj extends DBObject {
         return myIntArray;
     }
 
-    public void setMyIntArray(int[] value) {
+    public synchronized void setMyIntArray(int[] value) {
         this.myIntArray = value;
         setDirty();
     }
@@ -354,7 +354,7 @@ public class MyDBObj extends DBObject {
         return myLongArray;
     }
 
-    public void setMyLongArray(long[] value) {
+    public synchronized void setMyLongArray(long[] value) {
         this.myLongArray = value;
         setDirty();
     }
@@ -363,7 +363,7 @@ public class MyDBObj extends DBObject {
         return myFloatArray;
     }
 
-    public void setMyFloatArray(float[] value) {
+    public synchronized void setMyFloatArray(float[] value) {
         this.myFloatArray = value;
         setDirty();
     }
@@ -372,7 +372,7 @@ public class MyDBObj extends DBObject {
         return myDoubleArray;
     }
 
-    public void setMyDoubleArray(double[] value) {
+    public synchronized void setMyDoubleArray(double[] value) {
         this.myDoubleArray = value;
         setDirty();
     }
@@ -381,7 +381,7 @@ public class MyDBObj extends DBObject {
         return myStringArray;
     }
 
-    public void setMyStringArray(String[] value) {
+    public synchronized void setMyStringArray(String[] value) {
         this.myStringArray = value;
         setDirty();
     }
@@ -390,7 +390,7 @@ public class MyDBObj extends DBObject {
         return myExtendoArray;
     }
 
-    public void setMyExtendoArray(ExtendObj[] value) {
+    public synchronized void setMyExtendoArray(ExtendObj[] value) {
         this.myExtendoArray = value;
         setDirty();
     }
@@ -399,7 +399,7 @@ public class MyDBObj extends DBObject {
         return myUBObject;
     }
 
-    public void setMyUBObject(UBObject value) {
+    public synchronized void setMyUBObject(UBObject value) {
         this.myUBObject = value;
         setDirty();
     }
@@ -408,7 +408,7 @@ public class MyDBObj extends DBObject {
         return myNoSerialize;
     }
 
-    public void setMyNoSerialize(String value) {
+    public synchronized void setMyNoSerialize(String value) {
         this.myNoSerialize = value;
         setDirty();
     }
@@ -421,7 +421,7 @@ public class MyDBObj extends DBObject {
         return myStrIndex;
     }
 
-    public void setMyStrIndex(String value) {
+    public synchronized void setMyStrIndex(String value) {
         this.myStrIndex = value;
         setDirty();
     }

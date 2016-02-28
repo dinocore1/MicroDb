@@ -21,7 +21,7 @@ public class ExtendObj extends MyDBObj {
     private long myTestId;
 
     @Override
-    public void writeToUBObject(UBObject obj) {
+    public synchronized void writeToUBObject(UBObject obj) {
         super.writeToUBObject(obj);
         final MicroDB db = getDB();
         obj.put("type", TYPE);
@@ -48,7 +48,7 @@ public class ExtendObj extends MyDBObj {
         return myExtendInt;
     }
 
-    public void setMyExtendInt(int value) {
+    public synchronized void setMyExtendInt(int value) {
         this.myExtendInt = value;
         setDirty();
     }

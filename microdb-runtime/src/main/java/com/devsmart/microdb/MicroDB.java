@@ -169,17 +169,20 @@ public class MicroDB {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                final UUID id = obj.getId();
-                obj.beforeWrite();
+                final UUID id;
                 UBObject data = UBValueFactory.createObject();
-                obj.writeToUBObject(data);
-                mDriver.insert(id, data);
-                obj.mDirty = false;
-
-                for(ChangeListener listener : mChangeListeners) {
-                    listener.onAfterInsert(mDriver, id, data);
+                synchronized (obj) {
+                    id = obj.getId();
+                    obj.beforeWrite();
+                    obj.writeToUBObject(data);
+                    obj.mDirty = false;
                 }
 
+                mDriver.insert(id, data);
+
+                for (ChangeListener listener : mChangeListeners) {
+                    listener.onAfterInsert(mDriver, id, data);
+                }
             }
         };
     }
@@ -188,17 +191,20 @@ public class MicroDB {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                final UUID id = obj.getId();
-                obj.beforeWrite();
+                final UUID id;
                 UBObject data = UBValueFactory.createObject();
-                obj.writeToUBObject(data);
+                synchronized (obj) {
+                    id = obj.getId();
+                    obj.beforeWrite();
+                    obj.writeToUBObject(data);
+                    obj.mDirty = false;
+                }
 
-                for(ChangeListener listener : mChangeListeners) {
+                for (ChangeListener listener : mChangeListeners) {
                     listener.onBeforeUpdate(mDriver, id, data);
                 }
 
                 mDriver.update(id, data);
-                obj.mDirty = false;
             }
         };
     }
@@ -216,13 +222,15 @@ public class MicroDB {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                final UUID id = obj.getId();
-
-                for(ChangeListener listener : mChangeListeners) {
-                    listener.onBeforeDelete(mDriver, id);
+                final UUID id;
+                synchronized (obj) {
+                    id = obj.getId();
+                    obj.mDirty = false;
                 }
 
-                obj.mDirty = false;
+                for (ChangeListener listener : mChangeListeners) {
+                    listener.onBeforeDelete(mDriver, id);
+                }
                 mDriver.delete(id);
                 synchronized (MicroDB.this) {
                     mDeletedObjects.remove(id);
