@@ -130,31 +130,31 @@ public class MyDBObj extends DBObject {
             this.myExtendo = null;
         }
         value = obj.get("myBoolArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myBoolArray = value.asBoolArray();
         }
         value = obj.get("myByteArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myByteArray = value.asByteArray();
         }
         value = obj.get("myShortArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myShortArray = value.asShortArray();
         }
         value = obj.get("myIntArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myIntArray = value.asInt32Array();
         }
         value = obj.get("myLongArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myLongArray = value.asInt64Array();
         }
         value = obj.get("myFloatArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myFloatArray = value.asFloat32Array();
         }
         value = obj.get("myDoubleArray");
-        if (value != null) {
+        if (value != null && value.isArray()) {
             this.myDoubleArray = value.asFloat64Array();
         }
         value = obj.get("myExtendoArray");
