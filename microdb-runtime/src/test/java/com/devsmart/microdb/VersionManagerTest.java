@@ -5,6 +5,7 @@ import com.devsmart.microdb.version.Commit;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.collect.Lists;
+import example.MyDBObj;
 import org.junit.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -43,15 +44,24 @@ public class VersionManagerTest {
 
         assertFalse(vm.isDirty());
 
-        insert("dog", "fido", dbDriver);
-        insert("cat", "symo", dbDriver);
-        insert("dog", "mondo", dbDriver);
-        insert("cat", "thuggy", dbDriver);
+        MyDBObj obj = db.insert(MyDBObj.class);
+        obj.setMyString("fido");
+
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("symo");
+
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("mondo");
+
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("thuggy");
+
+        db.flush();
 
         assertTrue(vm.isDirty());
 
         vm.commit();
-        db.sync();
+        db.flush();
 
         assertFalse(vm.isDirty());
     }
@@ -66,10 +76,20 @@ public class VersionManagerTest {
 
         VersionManager vm = new VersionManager(db, dbDriver);
 
-        insert("dog", "fido", dbDriver);
-        UUID symo = insert("cat", "symo", dbDriver);
-        insert("dog", "mondo", dbDriver);
-        insert("cat", "thuggy", dbDriver);
+        MyDBObj obj, symo;
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("fido");
+
+        symo = db.insert(MyDBObj.class);
+        symo.setMyString("symo");
+
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("mondo");
+
+        obj = db.insert(MyDBObj.class);
+        obj.setMyString("thuggy");
+
+        db.flush();
 
         Iterable<Change> diffs = vm.getChanges(vm.getHead().getId());
         int count = 0;
@@ -90,7 +110,10 @@ public class VersionManagerTest {
 
         assertEquals(0, count);
 
-        dbDriver.delete(symo);
+        db.delete(symo);
+
+        db.flush();
+
         diffs = vm.getChanges(vm.getHead().getId());
         Change c = diffs.iterator().next();
 

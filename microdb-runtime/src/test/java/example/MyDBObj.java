@@ -53,7 +53,7 @@ public class MyDBObj extends DBObject {
         final MicroDB db = getDB();
         obj.put("myBool", UBValueFactory.createBool(myBool));
         obj.put("myByte", UBValueFactory.createInt(myByte));
-        obj.put("myChar", UBValueFactory.createInt(myChar));
+        obj.put("myChar", UBValueFactory.createChar(myChar));
         obj.put("myShort", UBValueFactory.createInt(myShort));
         obj.put("myInt", UBValueFactory.createInt(myInt));
         obj.put("myLong", UBValueFactory.createInt(myLong));
