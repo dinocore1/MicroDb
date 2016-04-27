@@ -4,9 +4,8 @@ apply plugin: 'signing'
 
 
 dependencies {
-    compile 'org.slf4j:slf4j-api:1.7.7'
-    compile 'com.dev-smart:ubjson:0.1.3'
-    compile 'com.google.guava:guava:17.0'
+    compile 'org.mapdb:mapdb:1.0.8'
+    compile project(':microdb-runtime')
     testCompile 'junit:junit:4.11'
     testCompile 'org.slf4j:slf4j-simple:1.7.7'
 }
@@ -49,8 +48,8 @@ uploadArchives {
         }
 
         pom.project {
-            name 'microdb-runtime'
-            description 'Runtime for MicroDb'
+            name 'microdb-mapdbdriver'
+            description 'MapDB driver for MicroDb'
             url 'http://github.com/dinocore1/MicroDb'
 
             scm {

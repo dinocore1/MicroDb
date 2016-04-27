@@ -14,7 +14,7 @@ public class ReadWriteTest {
     @Test
     public void testWriteEmbeddedObj() throws Exception {
 
-        MicroDB db = DBBuilder.builder()
+        MicroDB db = MapDBDBBuilder.builder()
                 .buildMemoryDB();
 
         MyDBObj obj1 = db.insert(MyDBObj.class);
@@ -39,7 +39,7 @@ public class ReadWriteTest {
 
     @Test
     public void testWriteIDRefObj() throws Exception {
-        MicroDB db = DBBuilder.builder()
+        MicroDB db = MapDBDBBuilder.builder()
                 .buildMemoryDB();
 
         MyDBObj obj1 = db.insert(MyDBObj.class);

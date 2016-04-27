@@ -7,7 +7,7 @@ import org.mapdb.DBMaker;
 import java.io.File;
 import java.io.IOException;
 
-public class DBBuilder {
+public class MapDBDBBuilder {
 
     static class NullCallback implements DBCallback {
 
@@ -20,19 +20,19 @@ public class DBBuilder {
     private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion = 0;
 
-    public static DBBuilder builder() {
-        return new DBBuilder();
+    public static MapDBDBBuilder builder() {
+        return new MapDBDBBuilder();
     }
 
-    private DBBuilder() {
+    private MapDBDBBuilder() {
     }
 
-    public DBBuilder callback(DBCallback cb) {
+    public MapDBDBBuilder callback(DBCallback cb) {
         mCallback = cb;
         return this;
     }
 
-    public DBBuilder schemaVersion(int version) {
+    public MapDBDBBuilder schemaVersion(int version) {
         mSchemaVersion = version;
         return this;
     }
