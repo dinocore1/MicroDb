@@ -32,7 +32,7 @@ public class AndroidSqliteDBBuilder {
         return this;
     }
 
-    private static void onCreate(SQLiteDatabase db) {
+    static void onCreate(SQLiteDatabase db) {
         final String sqlCreateTables = String.format("CREATE TABLE Objects (%s TEXT PRIMARY KEY, %s BLOB);",
                 AndroidSqliteDriver.TableObjects.COLUMN_ID, AndroidSqliteDriver.TableObjects.COLUMN_DATA);
 
