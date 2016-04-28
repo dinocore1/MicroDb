@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteStatement;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBReader;
 import com.devsmart.ubjson.UBValue;
+import com.devsmart.ubjson.UBValueFactory;
 import com.devsmart.ubjson.UBWriter;
 
 import java.io.ByteArrayInputStream;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 public class AndroidSqliteDriver implements Driver {
 
+    private static final String KEY_META = "microdb-meta";
 
     static class TableObjects {
         final static String NAME = "Objects";
@@ -29,7 +31,6 @@ public class AndroidSqliteDriver implements Driver {
     TableObjects.COLUMN_ID);
 
     private SQLiteDatabase mDatabase;
-    private final SQLiteStatement mInsertObject;
     private final SQLiteStatement mUpdateObject;
     private final SQLiteStatement mDeleteObject;
 
@@ -37,14 +38,10 @@ public class AndroidSqliteDriver implements Driver {
     public AndroidSqliteDriver(SQLiteDatabase database) {
         mDatabase = database;
 
-        mInsertObject = mDatabase.compileStatement(String.format("INSERT INTO %s (%s, %s) VALUES(?, ?)",
+
+        mUpdateObject = mDatabase.compileStatement(String.format("INSERT OR REPLACE INTO %s (%s, %s) VALUES(?, ?)",
                 TableObjects.NAME,
                 TableObjects.COLUMN_ID, TableObjects.COLUMN_DATA));
-
-        mUpdateObject = mDatabase.compileStatement(String.format("UPDATE %s SET %s = ? WHERE %s = ?",
-                TableObjects.NAME,
-                TableObjects.COLUMN_DATA,
-                TableObjects.COLUMN_ID));
 
         mDeleteObject = mDatabase.compileStatement(String.format("DELETE FROM %s WHERE %s = ?",
                 TableObjects.NAME,
@@ -59,19 +56,22 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public UBObject getMeta() throws IOException {
-        return null;
+        UBValue retval = getObject(KEY_META);
+        if(retval != null && retval.isObject()) {
+            return retval.asObject();
+        } else {
+            return UBValueFactory.createObject();
+        }
     }
 
     @Override
     public void saveMeta(UBObject obj) throws IOException {
-
+        saveObject(KEY_META, obj);
     }
 
-    @Override
-    public UBValue get(UUID key) throws IOException {
-
+    private UBValue getObject(String key) throws IOException {
         UBValue retval = null;
-        android.database.Cursor cursor = mDatabase.rawQuery(SELECT_SINGLE_OBJECT_SQL, new String[]{key.toString()});
+        android.database.Cursor cursor = mDatabase.rawQuery(SELECT_SINGLE_OBJECT_SQL, new String[]{key});
         try {
             if (cursor.moveToFirst()) {
                 byte[] buff = cursor.getBlob(0);
@@ -86,9 +86,8 @@ public class AndroidSqliteDriver implements Driver {
         return retval;
     }
 
-    @Override
-    public void insert(UUID id, UBValue value) throws IOException {
-        mInsertObject.bindString(1, id.toString());
+    private int saveObject(String key, UBValue value) throws IOException {
+        mUpdateObject.bindString(1, key);
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         UBWriter writer = new UBWriter(bout);
@@ -96,10 +95,19 @@ public class AndroidSqliteDriver implements Driver {
         writer.close();
 
         byte[] buff = bout.toByteArray();
-        mInsertObject.bindBlob(2, buff);
-        if(mInsertObject.executeInsert() == -1) {
-            throw new IOException("error inserting" + id);
-        }
+        mUpdateObject.bindBlob(2, buff);
+
+        return mUpdateObject.executeUpdateDelete();
+    }
+
+    @Override
+    public UBValue get(UUID key) throws IOException {
+        return getObject(key.toString());
+    }
+
+    @Override
+    public void insert(UUID id, UBValue value) throws IOException {
+        saveObject(id.toString(), value);
     }
 
     @Override
@@ -109,20 +117,7 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public void update(UUID id, UBValue value) throws IOException {
-
-        mUpdateObject.bindString(2, id.toString());
-
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        UBWriter writer = new UBWriter(bout);
-        writer.write(value);
-        writer.close();
-
-        byte[] buff = bout.toByteArray();
-        mUpdateObject.bindBlob(1, buff);
-
-        if(mUpdateObject.executeUpdateDelete() != 1) {
-            throw new IOException("update " + id);
-        }
+        saveObject(id.toString(), value);
     }
 
     @Override
@@ -153,16 +148,16 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public void beginTransaction() throws IOException {
-
+        mDatabase.execSQL("BEGIN;");
     }
 
     @Override
     public void commitTransaction() throws IOException {
-
+        mDatabase.execSQL("COMMIT;");
     }
 
     @Override
     public void rollbackTransaction() throws IOException {
-
+        mDatabase.execSQL("ROLLBACK;");
     }
 }

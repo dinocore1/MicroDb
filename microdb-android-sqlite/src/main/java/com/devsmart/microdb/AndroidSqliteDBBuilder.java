@@ -9,9 +9,17 @@ import java.io.IOException;
 
 public class AndroidSqliteDBBuilder {
 
+    static class NullCallback implements DBCallback {
+
+        @Override
+        public void onUpgrade(MicroDB db, int oldVersion, int newVersion) throws IOException {
+
+        }
+    }
+
     private static final int DB_VERSION = 1;
 
-    private DBCallback mCallback;
+    private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion;
 
     public static AndroidSqliteDBBuilder builder() {
@@ -45,6 +53,7 @@ public class AndroidSqliteDBBuilder {
         final int dbVersion = db.getVersion();
         if(dbVersion == 0) {
             onCreate(db);
+            db.setVersion(1);
         }
 
         AndroidSqliteDriver driver = new AndroidSqliteDriver(db);

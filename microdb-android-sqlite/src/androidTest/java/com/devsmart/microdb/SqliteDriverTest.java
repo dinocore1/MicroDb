@@ -40,4 +40,23 @@ public class SqliteDriverTest extends InstrumentationTestCase {
         assertNotNull(retval);
 
     }
+
+    @MediumTest
+    public void testOpenMicroDB() throws Exception {
+        final File testdbfile = new File("/sdcard/microdbtest/test.db");
+        testdbfile.getParentFile().mkdirs();
+        if(testdbfile.exists()) {
+            testdbfile.delete();
+        }
+
+        MicroDB db = AndroidSqliteDBBuilder.builder()
+                .build(testdbfile);
+
+        db.close();
+
+        db = AndroidSqliteDBBuilder.builder()
+                .build(testdbfile);
+
+
+    }
 }

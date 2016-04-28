@@ -483,8 +483,7 @@ public class MicroDB {
      * This method blocks until all queued write operation are completed.
      */
     public void sync() {
-        //Operation op = createNoOp();
-        Operation op = createCommitOperation();
+        Operation op = createNoOp();
         mWriteQueue.enqueue(op);
         waitForCompletion(op);
     }

@@ -66,6 +66,7 @@ public class MapDBDriver implements Driver {
 
     @Override
     public void close() {
+        mMapDB.commit();
         mMapDB.close();
     }
 
