@@ -30,14 +30,17 @@ public class SqliteDriverTest extends InstrumentationTestCase {
         AndroidSqliteDriver driver = new AndroidSqliteDriver(sqldb);
 
         UBObject obj = UBValueFactory.createObject();
-        obj.put("my key", UBValueFactory.createString("hello world"));
-        obj.put("my int", UBValueFactory.createInt(5));
+        obj.put("key1", UBValueFactory.createString("hello world"));
+        obj.put("key2", UBValueFactory.createInt(5));
 
         final UUID key = UUID.randomUUID();
         driver.insert(key, obj);
 
         final UBValue retval = driver.get(key);
         assertNotNull(retval);
+        assertTrue(retval.isObject());
+        UBObject savedObj = retval.asObject();
+        assertEquals("hello world", savedObj.get("key1").asString());
 
     }
 
