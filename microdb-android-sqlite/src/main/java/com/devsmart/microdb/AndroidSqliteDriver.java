@@ -16,7 +16,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -43,20 +42,34 @@ public class AndroidSqliteDriver implements Driver {
 
     private abstract class ObjectIndex<T extends Comparable<T>> implements Emitter<T> {
 
+        final String mIndexName;
         MapFunction<T> mMapFunction;
         SQLiteStatement mInsertFunction;
+        SQLiteStatement mDeleteFunction;
         String mCurrentObjId;
 
         public ObjectIndex(String indexName, MapFunction<T> mapFunction) {
+            mIndexName = indexName;
             mMapFunction = mapFunction;
             mInsertFunction = mDatabase.compileStatement(
                     String.format("INSERT OR REPLACE INTO %s (value, objid) VALUES(?, ?);",
                             indexName));
+
+            mDeleteFunction = mDatabase.compileStatement(
+                    String.format("DELETE FROM %s WHERE objid = ?;", indexName));
+
         }
 
         public synchronized void map(UUID id, UBValue value) {
             mCurrentObjId = id.toString();
             mMapFunction.map(value, this);
+        }
+
+        public void deleteEntriesFromObject(String objid) {
+            synchronized (mDeleteFunction) {
+                mDeleteFunction.bindString(1, objid);
+                mDeleteFunction.executeUpdateDelete();
+            }
         }
 
     }
@@ -203,11 +216,13 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public void update(UUID id, UBValue value) throws IOException {
+        final String objid = id.toString();
         mDatabase.beginTransaction();
         try {
 
             for(int i=0;i<mObjectIndicies.size();i++) {
                 ObjectIndex index = mObjectIndicies.get(i);
+                index.deleteEntriesFromObject(objid);
                 index.map(id, value);
             }
 
@@ -220,8 +235,22 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public void delete(UUID key) throws IOException {
-        mDeleteObject.bindString(1, key.toString());
-        mDeleteObject.executeUpdateDelete();
+        final String keyStr = key.toString();
+        mDatabase.beginTransaction();
+        try {
+
+            for(int i=0;i<mObjectIndicies.size();i++) {
+                ObjectIndex index = mObjectIndicies.get(i);
+                index.deleteEntriesFromObject(keyStr);
+            }
+
+            mDeleteObject.bindString(1, keyStr);
+            mDeleteObject.executeUpdateDelete();
+
+            mDatabase.setTransactionSuccessful();
+        } finally {
+            mDatabase.endTransaction();
+        }
     }
 
     @Override
@@ -229,8 +258,33 @@ public class AndroidSqliteDriver implements Driver {
         return 0;
     }
 
+    private <T extends Comparable<T>> ObjectIndex<T> findIndexByName(String indexName) {
+        ObjectIndex retval = null;
+        for(int i=0;i<mObjectIndicies.size();i++) {
+            ObjectIndex<T> idx = mObjectIndicies.get(i);
+            if(idx.mIndexName.equals(indexName)) {
+                return idx;
+            }
+        }
+
+        return retval;
+    }
+
     @Override
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
+
+        ObjectIndex<T> objIndex = findIndexByName(indexName);
+        if(objIndex == null) {
+            throw new IOException("no index with name: " + indexName);
+        }
+
+        android.database.Cursor c = null;
+        if(min != null && max != null) {
+
+        }
+
+
+
         return null;
     }
 
@@ -287,8 +341,12 @@ public class AndroidSqliteDriver implements Driver {
         }
 
 
-        String sql = String.format("CREATE TABLE IF NOT EXISTS %s (value %s, objid TEXT, PRIMARY KEY(value, objid));",
-                indexName, sqlType);
+        String sql = String.format("CREATE TABLE IF NOT EXISTS %s (value %s, objid TEXT);" +
+                        "CREATE INDEX IF NOT EXISTS %s ON %s(value);" +
+                        "CREATE INDEX IF NOT EXISTS %s ON %s(objid);",
+                indexName, sqlType,
+                indexName+"_val", indexName,
+                indexName+"_obj", indexName);
 
         mDatabase.execSQL(sql);
         try {
@@ -305,16 +363,20 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public void beginTransaction() throws IOException {
-        mDatabase.execSQL("BEGIN;");
+        mDatabase.beginTransaction();
+        //mDatabase.execSQL("BEGIN;");
     }
 
     @Override
     public void commitTransaction() throws IOException {
-        mDatabase.execSQL("COMMIT;");
+        mDatabase.setTransactionSuccessful();
+        mDatabase.endTransaction();
+        //mDatabase.execSQL("COMMIT;");
     }
 
     @Override
     public void rollbackTransaction() throws IOException {
-        mDatabase.execSQL("ROLLBACK;");
+        mDatabase.endTransaction();
+        //mDatabase.execSQL("ROLLBACK;");
     }
 }
