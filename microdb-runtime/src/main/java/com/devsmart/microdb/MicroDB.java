@@ -5,12 +5,20 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.base.Throwables;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,6 +33,7 @@ public class MicroDB {
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
     private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
+    private Map<String, Constructor> mConstructorMap;
 
     @Override
     protected void finalize() throws Throwable {
@@ -391,6 +400,55 @@ public class MicroDB {
             Throwables.propagate(e);
             return null;
         }
+    }
+
+    public interface Constructor<T extends DBObject> {
+        T build();
+    }
+
+    public void typeMap(Map<String, Constructor> constructors) {
+        mConstructorMap = constructors;
+    }
+
+    public synchronized <T extends DBObject> T get(UUID id) {
+        if (mDeletedObjects.contains(id)) {
+            return null;
+        }
+        try {
+
+            T retval;
+            DBObject cached;
+
+            SoftReference<DBObject> ref = mLiveObjects.get(id);
+            if (ref != null && (cached = ref.get()) != null) {
+                retval = (T) cached;
+            } else {
+
+                UBValue data = mDriver.get(id);
+                if (data == null) {
+                    return null;
+                } else {
+
+                    if (!data.isObject()) {
+                        throw new RuntimeException("database entry with id: " + id + " is not an object");
+                    }
+
+                    final String dataType = data.asObject().get("type").asString();
+                    retval = (T) mConstructorMap.get(dataType).build();
+
+                    retval.init(this);
+                    retval.setId(id);
+                    retval.readFromUBObject(data.asObject());
+                    retval.afterRead();
+                    mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                }
+            }
+
+            return retval;
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+
     }
 
     /**
