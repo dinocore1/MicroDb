@@ -64,6 +64,10 @@ public class MapDBDriver implements Driver {
         }
     }
 
+    public DB getDB() {
+        return mMapDB;
+    }
+
     @Override
     public void close() {
         mMapDB.close();

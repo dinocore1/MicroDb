@@ -16,6 +16,8 @@ import java.io.IOException;
 public class ExtendObj extends MyDBObj {
     public static final UBString TYPE = UBValueFactory.createString("ExtendObj");
 
+    public static final UBString[] SUBTYPES = new UBString[]{ ExtendObj.TYPE };
+
     private int myExtendInt;
 
     private long myTestId;
@@ -61,7 +63,7 @@ public class ExtendObj extends MyDBObj {
         db.addChangeListener(new DefaultChangeListener() {
             @Override
             public void onBeforeInsert(Driver driver, UBValue value) {
-                if(Utils.isValidObject(value, ExtendObj.TYPE)) {
+                if(Utils.isValidObject(value, ExtendObj.SUBTYPES)) {
                     final long longValue = driver.incrementLongField("ExtendObj.myTestId_var");
                     value.asObject().put("myTestId", UBValueFactory.createInt(longValue));
                 }
@@ -70,7 +72,7 @@ public class ExtendObj extends MyDBObj {
         db.addIndex("ExtendObj.myTestId_idx", new MapFunction<Long>() {
             @Override
             public void map(UBValue value, Emitter<Long> emitter) {
-                if (Utils.isValidObject(value, ExtendObj.TYPE)) {
+                if (Utils.isValidObject(value, ExtendObj.SUBTYPES)) {
                     UBValue v = value.asObject().get("myTestId");
                     if (v != null && v.isInteger()) {
                         emitter.emit(v.asLong());

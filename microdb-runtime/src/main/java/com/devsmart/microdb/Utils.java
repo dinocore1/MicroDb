@@ -54,10 +54,17 @@ public class Utils {
         return UBValueFactory.createArray(output);
     }
 
-    public static boolean isValidObject(UBValue value, UBString type) {
+    public static boolean isValidObject(UBValue value, UBString... types) {
         if (value != null && value.isObject()) {
             UBValue typeStr = value.asObject().get("type");
-            return typeStr != null && typeStr.isString() && type.equals(typeStr);
+            if(typeStr == null || !typeStr.isString()) {
+                return false;
+            }
+            for(int i=0;i<types.length;i++){
+                if(types[i].equals(typeStr)) {
+                    return true;
+                }
+            }
         }
         return false;
     }

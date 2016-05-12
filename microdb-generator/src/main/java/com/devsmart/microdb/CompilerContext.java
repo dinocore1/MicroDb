@@ -48,6 +48,7 @@ public class CompilerContext {
 
     public Map<ParserRuleContext, Nodes.Node> nodeMap = new HashMap<ParserRuleContext, Nodes.Node>();
     public List<CompileMessage> compileMessages = new ArrayList<CompileMessage>();
+    public List<Nodes.DBONode> allDBO = new ArrayList<Nodes.DBONode>();
 
     public CompileMessage error(String msg, Token location) {
         if(location != null) {

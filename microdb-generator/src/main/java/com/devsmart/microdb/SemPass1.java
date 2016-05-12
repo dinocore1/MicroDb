@@ -36,7 +36,8 @@ public class SemPass1 extends MicroDBBaseVisitor<Nodes.Node> {
 
         mCurrentDBO = new Nodes.DBONode(name, extend);
         visit(ctx.exprlist());
-        return mCurrentDBO;
+        mContext.allDBO.add(mCurrentDBO);
+        return putMap(ctx, mCurrentDBO);
     }
 
     @Override
