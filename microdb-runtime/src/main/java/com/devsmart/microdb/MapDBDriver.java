@@ -151,8 +151,10 @@ public class MapDBDriver implements Driver {
 
         @Override
         public void seekToBegining() {
-            mCurrentValue = index.first();
-            mPosition = 0;
+            if(!index.isEmpty()) {
+                mCurrentValue = index.first();
+                mPosition = 0;
+            }
         }
 
         @Override
@@ -278,6 +280,9 @@ public class MapDBDriver implements Driver {
 
 
         public T[] getKeys() {
+            if(mKeys.isEmpty()) {
+                return null;
+            }
             T[] retval = (T[]) new Comparable[mKeys.size()];
             retval = mKeys.toArray(retval);
             return retval;
