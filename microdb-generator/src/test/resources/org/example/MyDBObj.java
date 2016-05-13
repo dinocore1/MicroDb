@@ -19,7 +19,7 @@ public class MyDBObj extends DBObject {
 
     public static final UBString TYPE = UBValueFactory.createString("MyDBObj");
 
-    public static final UBString[] SUBTYPES = new UBString[]{ ExtendObj.TYPE, MyDBObj.TYPE };
+    private static final UBString[] SUBTYPES = new UBString[]{ UBValueFactory.createString("ExtendObj"), MyDBObj.TYPE };
 
     private boolean myBool;
 

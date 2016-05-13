@@ -16,7 +16,7 @@ import java.io.IOException;
 public class ExtendObj extends MyDBObj {
     public static final UBString TYPE = UBValueFactory.createString("ExtendObj");
 
-    public static final UBString[] SUBTYPES = new UBString[]{ ExtendObj.TYPE };
+    private static final UBString[] SUBTYPES = new UBString[]{ ExtendObj.TYPE };
 
     private int myExtendInt;
 
