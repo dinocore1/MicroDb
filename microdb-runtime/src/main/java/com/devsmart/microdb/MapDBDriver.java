@@ -12,6 +12,7 @@ public class MapDBDriver implements Driver {
     final DB mMapDB;
     final Atomic.Var<UBObject> mMetadata;
     BTreeMap<UUID, UBValue> mObjects;
+    private Map<String, IndexObject> mIndicies = new HashMap<String, IndexObject>();
 
     public static class UBValueSerializer implements Serializer<UBValue>, Serializable {
 
@@ -248,24 +249,150 @@ public class MapDBDriver implements Driver {
         }
     }
 
-    @Override
-    public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
-        NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(indexName)
-                .makeOrGet();
+    private class IndexObject<T extends Comparable<T>> {
+        public final String name;
+        MapFunction<T> mapFunction;
 
-        Bind.secondaryKeys(mObjects, index, new Fun.Function2<T[], UUID, UBValue>() {
+        private Bind.MapListener mListener;
 
-            final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+        public IndexObject(String name, final MapFunction<T> mapFunction) {
+            this.name = name;
+            this.mapFunction = mapFunction;
+        }
 
-            @Override
-            public T[] run(UUID uuid, UBValue ubValue) {
-                synchronized (mEmitter) {
-                    mEmitter.clear();
-                    mapFunction.map(ubValue, mEmitter);
-                    return mEmitter.getKeys();
+        void install() {
+            if(mListener != null) {
+                mObjects.modificationListenerRemove(mListener);
+            }
+
+            NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(name)
+                    .makeOrGet();
+
+            Fun.Function2<T[], UUID, UBValue> microDBMapFunction = new Fun.Function2<T[], UUID, UBValue>() {
+
+                final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+
+                @Override
+                public T[] run(UUID uuid, UBValue ubValue) {
+                    synchronized (mEmitter) {
+                        mEmitter.clear();
+                        mapFunction.map(ubValue, mEmitter);
+                        return mEmitter.getKeys();
+                    }
+                }
+            };
+
+            mListener = createIndexListener(mObjects, index, microDBMapFunction);
+            mObjects.modificationListenerAdd(mListener);
+        }
+
+        void reindex() {
+            NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(name)
+                    .makeOrGet();
+            index.clear();
+
+            Fun.Function2<T[], UUID, UBValue> fun = createMapDBFunction();
+
+            if(index.isEmpty()){
+                for(Map.Entry<UUID,UBValue> e:mObjects.entrySet()){
+                    T[] k2 = fun.run(e.getKey(), e.getValue());
+                    if(k2 != null)
+                        for(T k22 :k2)
+                            index.add(Fun.t2(k22, e.getKey()));
                 }
             }
-        });
+        }
+
+        private Fun.Function2<T[], UUID, UBValue> createMapDBFunction() {
+            return new Fun.Function2<T[], UUID, UBValue>() {
+
+                final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+
+                @Override
+                public T[] run(UUID uuid, UBValue ubValue) {
+                    synchronized (mEmitter) {
+                        mEmitter.clear();
+                        mapFunction.map(ubValue, mEmitter);
+                        return mEmitter.getKeys();
+                    }
+                }
+            };
+        }
+
+        private <K,V, K2> Bind.MapListener<K, V> createIndexListener(Bind.MapWithModificationListener<K, V> map,
+                                                                     final Set<Fun.Tuple2<K2, K>> secondary,
+                                                                     final Fun.Function2<K2[], K, V> fun) {
+            return new Bind.MapListener<K, V>() {
+                @Override
+                public void update(K key, V oldVal, V newVal) {
+                    if (newVal == null) {
+                        //removal
+                        K2[] k2 = fun.run(key, oldVal);
+                        if (k2 != null)
+                            for (K2 k22 : k2)
+                                secondary.remove(Fun.t2(k22, key));
+                    } else if (oldVal == null) {
+                        //insert
+                        K2[] k2 = fun.run(key, newVal);
+                        if (k2 != null)
+                            for (K2 k22 : k2)
+                                secondary.add(Fun.t2(k22, key));
+                    } else {
+                        //update, must remove old key and insert new
+                        K2[] oldk = fun.run(key, oldVal);
+                        K2[] newk = fun.run(key, newVal);
+                        if (oldk == null) {
+                            //insert new
+                            if (newk != null)
+                                for (K2 k22 : newk)
+                                    secondary.add(Fun.t2(k22, key));
+                            return;
+                        }
+                        if (newk == null) {
+                            //remove old
+                            for (K2 k22 : oldk)
+                                secondary.remove(Fun.t2(k22, key));
+                            return;
+                        }
+
+                        Set<K2> hashes = new HashSet<K2>();
+                        Collections.addAll(hashes, oldk);
+
+                        //add new non existing items
+                        for (K2 k2 : newk) {
+                            if (!hashes.contains(k2)) {
+                                secondary.add(Fun.t2(k2, key));
+                            }
+                        }
+                        //remove items which are in old, but not in new
+                        for (K2 k2 : newk) {
+                            hashes.remove(k2);
+                        }
+                        for (K2 k2 : hashes) {
+                            secondary.remove(Fun.t2(k2, key));
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    @Override
+    public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
+        IndexObject index = mIndicies.get(indexName);
+        if(index == null) {
+            index = new IndexObject(indexName, mapFunction);
+            mIndicies.put(indexName, index);
+            index.install();
+        }
+    }
+
+    @Override
+    public void recomputeIndex(String indexName) {
+        IndexObject index = mIndicies.get(indexName);
+        if(index != null) {
+            index.reindex();
+        }
     }
 
     private static class MapDBEmitter<T extends Comparable<T>> implements Emitter<T> {
