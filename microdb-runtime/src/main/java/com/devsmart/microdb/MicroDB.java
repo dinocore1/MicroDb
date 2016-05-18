@@ -297,14 +297,19 @@ public class MicroDB {
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
             mDriver.addIndex("type", INDEX_OBJECT_TYPE);
+
+            mDriver.beginTransaction();
             mCallback.onUpgrade(this, -1, mSchemaVersion);
+            mDriver.commitTransaction();
 
         } else {
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if (currentVersion < mSchemaVersion) {
+                mDriver.beginTransaction();
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
                 mDriver.saveMeta(metaObj);
+                mDriver.commitTransaction();
             }
         }
 
