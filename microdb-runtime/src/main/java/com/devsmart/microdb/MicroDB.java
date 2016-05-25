@@ -293,10 +293,11 @@ public class MicroDB {
 
         UBObject metaObj = mDriver.getMeta();
         if (!metaObj.containsKey(METAKEY_INSTANCE)) {
+            mDriver.beginTransaction();
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
-            mDriver.addIndex("type", INDEX_OBJECT_TYPE);
+            mDriver.commitTransaction();
 
             mDriver.beginTransaction();
             mCallback.onUpgrade(this, -1, mSchemaVersion);
@@ -312,6 +313,8 @@ public class MicroDB {
                 mDriver.commitTransaction();
             }
         }
+
+        mDriver.addIndex("type", INDEX_OBJECT_TYPE);
 
     }
 
