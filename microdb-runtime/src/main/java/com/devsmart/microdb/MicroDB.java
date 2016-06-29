@@ -5,20 +5,12 @@ import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.base.Throwables;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
+import java.lang.ref.WeakReference;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,7 +21,7 @@ public class MicroDB {
     private Driver mDriver;
     private int mSchemaVersion;
     private DBCallback mCallback;
-    private final HashMap<UUID, SoftReference<DBObject>> mLiveObjects = new HashMap<UUID, SoftReference<DBObject>>();
+    private final HashMap<UUID, WeakReference<DBObject>> mLiveObjects = new HashMap<UUID, WeakReference<DBObject>>();
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
     private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
@@ -345,7 +337,7 @@ public class MicroDB {
      */
     public void flush() {
         synchronized (this) {
-            for (SoftReference<DBObject> ref : mLiveObjects.values()) {
+            for (WeakReference<DBObject> ref : mLiveObjects.values()) {
                 DBObject obj = ref.get();
                 if (obj != null) {
                     synchronized (obj) {
@@ -383,7 +375,7 @@ public class MicroDB {
 
             retval.setDirty();
             mWriteQueue.enqueue(createInsertOperation(retval));
-            mLiveObjects.put(key, new SoftReference<DBObject>(retval));
+            mLiveObjects.put(key, new WeakReference<DBObject>(retval));
 
             return retval;
 
@@ -427,7 +419,7 @@ public class MicroDB {
             T retval;
             DBObject cached;
 
-            SoftReference<DBObject> ref = mLiveObjects.get(id);
+            WeakReference<DBObject> ref = mLiveObjects.get(id);
             if (ref != null && (cached = ref.get()) != null) {
                 retval = (T) cached;
             } else {
@@ -448,7 +440,7 @@ public class MicroDB {
                     retval.setId(id);
                     retval.readFromUBObject(data.asObject());
                     retval.afterRead();
-                    mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                    mLiveObjects.put(id, new WeakReference<DBObject>(retval));
                 }
             }
 
@@ -476,7 +468,7 @@ public class MicroDB {
             T retval;
             DBObject cached;
 
-            SoftReference<DBObject> ref = mLiveObjects.get(id);
+            WeakReference<DBObject> ref = mLiveObjects.get(id);
             if (ref != null && (cached = ref.get()) != null) {
                 retval = (T) cached;
             } else {
@@ -495,7 +487,7 @@ public class MicroDB {
                     shell.readFromUBObject(data.asObject());
                     shell.afterRead();
                     retval = shell;
-                    mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                    mLiveObjects.put(id, new WeakReference<DBObject>(retval));
                 }
             }
 
