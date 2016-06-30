@@ -10,6 +10,8 @@ import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import com.devsmart.ubjson.UBWriter;
 import com.google.common.base.Throwables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,10 +19,13 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
 public class AndroidSqliteDriver implements Driver {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AndroidSqliteDriver.class);
 
     private static final String KEY_META = "microdb-meta";
 
@@ -270,6 +275,9 @@ public class AndroidSqliteDriver implements Driver {
         return retval;
     }
 
+
+    private static final String[] INDEX_COLUMNS = new String[]{"value", "objid"};
+
     @Override
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
 
@@ -279,13 +287,178 @@ public class AndroidSqliteDriver implements Driver {
         }
 
         android.database.Cursor c = null;
-        if(min != null && max != null) {
 
+        String minSelectionFrag = null;
+        String maxSelectionFrag = null;
+
+        if(min != null) {
+            minSelectionFrag = String.format("value %s ?", minInclusive ? ">=" : ">");
+        }
+
+        if(max != null) {
+            maxSelectionFrag = String.format("value %s ?", maxInclusive ? "<=" : "<");
+        }
+
+        if(min != null && max != null) {
+            String selection = String.format("%s AND %s", minSelectionFrag, maxSelectionFrag);
+            c = mDatabase.query(indexName, INDEX_COLUMNS, selection, new String[]{min.toString(), max.toString()}, null, null, null, null);
+
+        } else if(min != null) {
+            c = mDatabase.query(indexName, INDEX_COLUMNS, minSelectionFrag, new String[]{min.toString()}, null, null, null, null);
+
+        } else if(max != null) {
+            c = mDatabase.query(indexName, INDEX_COLUMNS, maxSelectionFrag, new String[]{max.toString()}, null, null, null, null);
+
+        } else {
+            c = mDatabase.query(indexName, INDEX_COLUMNS, null, null, null, null, null, null);
+        }
+
+        return new SQLiteIndexCursor<T>(this, c);
+    }
+
+    private static class SQLiteIndexCursor<T extends Comparable<T>> implements Cursor {
+
+        private final AndroidSqliteDriver mDriver;
+        private final android.database.Cursor mCursor;
+
+        public SQLiteIndexCursor(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            mDriver = driver;
+            mCursor = cursor;
+        }
+
+        @Override
+        public boolean moveToFirst() {
+            return mCursor.moveToFirst();
+        }
+
+        @Override
+        public boolean moveToLast() {
+            return mCursor.moveToLast();
+        }
+
+        @Override
+        public boolean moveToNext() {
+            return mCursor.moveToNext();
+        }
+
+        @Override
+        public boolean moveToPrevious() {
+            return mCursor.moveToPrevious();
+        }
+
+        @Override
+        public boolean move(int pos) {
+            return mCursor.move(pos);
+        }
+
+        @Override
+        public boolean isFirst() {
+            return mCursor.isFirst();
+        }
+
+        @Override
+        public boolean isLast() {
+            return mCursor.isLast();
+        }
+
+        @Override
+        public boolean isBeforeFirst() {
+            return mCursor.isBeforeFirst();
+        }
+
+        @Override
+        public boolean isAfterLast() {
+            return mCursor.isAfterLast();
+        }
+
+        @Override
+        public int getPosition() {
+            return mCursor.getPosition();
+        }
+
+        @Override
+        public int getCount() {
+            return mCursor.getCount();
+        }
+
+        @Override
+        public Row getRow() {
+            return new SqliteIndexRow(mDriver, mCursor);
+        }
+    }
+
+    private static abstract class SqliteIndexRow<T extends Comparable<T>> implements Row {
+
+        private final AndroidSqliteDriver mDriver;
+        private final UUID mObjectId;
+        UBValue mObjValue;
+
+        public SqliteIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            mDriver = driver;
+            mObjectId = UUID.fromString(cursor.getString(1));
+        }
+
+        @Override
+        public UUID getPrimaryKey() {
+            return mObjectId;
+        }
+
+        @Override
+        public UBValue getValue() {
+            UUID primaryKey = getPrimaryKey();
+            if (mObjValue == null) try {
+                mObjValue = mDriver.get(primaryKey);
+            } catch (IOException e) {
+                LOGGER.error("error getting value for: {}", primaryKey, e);
+            }
+            return mObjValue;
+        }
+    }
+
+    private static class SqliteStringIndexRow extends SqliteIndexRow<String> {
+
+        private final String mStringValue;
+
+        public SqliteStringIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+            mStringValue = cursor.getString(0);
+        }
+
+        @Override
+        public String getSecondaryKey() {
+            return mStringValue;
+        }
+    }
+
+    private static class SqliteFloatIndexRow extends SqliteIndexRow<Double> {
+
+        private final double mDoubleValue;
+
+        public SqliteFloatIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+            mDoubleValue = cursor.getDouble(0);
         }
 
 
+        @Override
+        public Double getSecondaryKey() {
+            return mDoubleValue;
+        }
+    }
 
-        return null;
+    private static class SqliteLongIndexRow extends SqliteIndexRow<Long> {
+
+        private final long mLongValue;
+
+        public SqliteLongIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+            mLongValue = cursor.getLong(0);
+        }
+
+        @Override
+        public Long getSecondaryKey() {
+            return mLongValue;
+        }
     }
 
     private boolean isIntType(Class<?> classType) {

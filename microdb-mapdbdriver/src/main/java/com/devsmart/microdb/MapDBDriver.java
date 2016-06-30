@@ -48,8 +48,7 @@ public class MapDBDriver implements Driver {
 
     public static final Serializer<UBValue> SERIALIZER_UBVALUE = new UBValueSerializer();
 
-    public MapDBDriver(DB mapdb) {
-        mMapDB = mapdb;
+    public MapDBDriver(DB mapdb) {mMapDB = mapdb;
         mObjects = mMapDB.createTreeMap("objects")
                 .keySerializerWrap(Serializer.UUID)
                 .valueSerializer(SERIALIZER_UBVALUE)
@@ -71,7 +70,6 @@ public class MapDBDriver implements Driver {
 
     @Override
     public void close() {
-        mMapDB.commit();
         mMapDB.close();
     }
 
