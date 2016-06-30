@@ -60,6 +60,8 @@ public interface Driver {
 
     <T extends Comparable<T>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException;
 
+    void recomputeIndex(String indexName);
+
     void deleteIndex(String indexName);
 
     void beginTransaction() throws IOException;

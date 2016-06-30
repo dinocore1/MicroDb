@@ -12,6 +12,7 @@ public class MapDBDriver implements Driver {
     final DB mMapDB;
     final Atomic.Var<UBObject> mMetadata;
     BTreeMap<UUID, UBValue> mObjects;
+    private Map<String, IndexObject> mIndicies = new HashMap<String, IndexObject>();
 
     public static class UBValueSerializer implements Serializer<UBValue>, Serializable {
 
@@ -64,6 +65,10 @@ public class MapDBDriver implements Driver {
         }
     }
 
+    public DB getDB() {
+        return mMapDB;
+    }
+
     @Override
     public void close() {
         mMapDB.commit();
@@ -114,52 +119,128 @@ public class MapDBDriver implements Driver {
 
     @Override
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
-        MapDBCursor<T> retval = new MapDBCursor<T>();
-        retval.mDriver = this;
-
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
 
         if (max != null && min != null) {
-            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            retval.index = index.subSet(retval.min, minInclusive, retval.max, maxInclusive);
+            index = index.subSet(Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID), minInclusive,
+                    Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID), maxInclusive);
 
         } else if (min != null && max == null) {
-            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            retval.index = index.tailSet(retval.min, minInclusive);
+            index = index.tailSet(Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID), minInclusive);
 
         } else if (min == null && max != null) {
-            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            retval.index = index.headSet(retval.max, maxInclusive);
-        } else {
-            retval.index = index;
+            index = index.headSet(Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID), maxInclusive);
         }
 
-        retval.seekToBegining();
-
-        return retval;
+        return new MapDBCursor<T>(this, index);
     }
 
     private static class MapDBCursor<T extends Comparable<T>> implements Cursor {
 
-        MapDBDriver mDriver;
-        NavigableSet<Fun.Tuple2<T, UUID>> index;
-        Fun.Tuple2<T, UUID> min;
-        Fun.Tuple2<T, UUID> max;
-        private Fun.Tuple2<T, UUID> mCurrentValue;
+        static final int BEFORE_FIRST = -1;
+        static final int AFTER_LAST = -2;
+
+        private final MapDBDriver mDriver;
+        private final NavigableSet<Fun.Tuple2<T, UUID>> mIndex;
         private int mPosition;
+        private Fun.Tuple2<T, UUID> mCurrentValue;
+
+        MapDBCursor(MapDBDriver driver, NavigableSet<Fun.Tuple2<T, UUID>> index) {
+            mDriver = driver;
+            mIndex = index;
+            mPosition = BEFORE_FIRST;
+        }
 
 
         @Override
-        public void seekToBegining() {
-            mCurrentValue = index.first();
-            mPosition = 0;
+        public boolean moveToFirst() {
+            if(!mIndex.isEmpty()) {
+                mPosition = 0;
+                mCurrentValue = mIndex.first();
+                return true;
+            } else {
+                return false;
+            }
         }
 
         @Override
-        public void seekToEnd() {
-            mCurrentValue = index.last();
-            mPosition = getCount();
+        public boolean moveToLast() {
+            if(!mIndex.isEmpty()) {
+                mPosition = getCount() - 1;
+                mCurrentValue = mIndex.last();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean moveToNext() {
+            if(mPosition == BEFORE_FIRST) {
+                mCurrentValue = mIndex.first();
+                mPosition = 0;
+                return true;
+            } else if(mPosition == AFTER_LAST) {
+                return false;
+            } else {
+                try {
+                    mCurrentValue = mIndex.higher(mCurrentValue);
+                    if(mCurrentValue == null) {
+                        return false;
+                    }
+                    mPosition++;
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }
+
+        @Override
+        public boolean moveToPrevious() {
+            if(mPosition == AFTER_LAST) {
+                mCurrentValue = mIndex.last();
+                mPosition = getCount() - 1;
+                return true;
+            } else if(mPosition == BEFORE_FIRST) {
+                return false;
+            } else {
+                try {
+                    mCurrentValue = mIndex.lower(mCurrentValue);
+                    if(mCurrentValue == null) {
+                        return false;
+                    }
+                    mPosition--;
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }
+
+        @Override
+        public boolean move(int pos) {
+            return false;
+        }
+
+        @Override
+        public boolean isFirst() {
+            return mPosition == 0;
+        }
+
+        @Override
+        public boolean isLast() {
+            return mPosition == getCount() - 1;
+        }
+
+        @Override
+        public boolean isBeforeFirst() {
+            return mPosition == BEFORE_FIRST;
+        }
+
+        @Override
+        public boolean isAfterLast() {
+            return mPosition == AFTER_LAST;
         }
 
         @Override
@@ -168,44 +249,13 @@ public class MapDBDriver implements Driver {
         }
 
         @Override
-        public boolean moveToPosition(int pos) {
-            int currentPos;
-            while( (currentPos = getPosition()) != pos) {
-              if(currentPos < pos) {
-                  next();
-              } else {
-                  prev();
-              }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean next() {
-            mCurrentValue = index.higher(mCurrentValue);
-            mPosition++;
-            return mCurrentValue != null;
-        }
-
-        @Override
-        public boolean prev() {
-            mCurrentValue = index.lower(mCurrentValue);
-            mPosition--;
-            return mCurrentValue != null;
-        }
-
-        @Override
-        public Row get() {
-            if(mCurrentValue == null) {
-                return null;
-            } else {
-                return new MapDBRow<T>(mDriver, mCurrentValue);
-            }
-        }
-
-        @Override
         public int getCount() {
-            return index.size();
+            return mIndex.size();
+        }
+
+        @Override
+        public Row getRow() {
+            return new MapDBRow<T>(mDriver, mCurrentValue);
         }
     }
 
@@ -243,24 +293,150 @@ public class MapDBDriver implements Driver {
         }
     }
 
-    @Override
-    public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
-        NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(indexName)
-                .makeOrGet();
+    private class IndexObject<T extends Comparable<T>> {
+        public final String name;
+        MapFunction<T> mapFunction;
 
-        Bind.secondaryKeys(mObjects, index, new Fun.Function2<T[], UUID, UBValue>() {
+        private Bind.MapListener mListener;
 
-            final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+        public IndexObject(String name, final MapFunction<T> mapFunction) {
+            this.name = name;
+            this.mapFunction = mapFunction;
+        }
 
-            @Override
-            public T[] run(UUID uuid, UBValue ubValue) {
-                synchronized (mEmitter) {
-                    mEmitter.clear();
-                    mapFunction.map(ubValue, mEmitter);
-                    return mEmitter.getKeys();
+        void install() {
+            if(mListener != null) {
+                mObjects.modificationListenerRemove(mListener);
+            }
+
+            NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(name)
+                    .makeOrGet();
+
+            Fun.Function2<T[], UUID, UBValue> microDBMapFunction = new Fun.Function2<T[], UUID, UBValue>() {
+
+                final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+
+                @Override
+                public T[] run(UUID uuid, UBValue ubValue) {
+                    synchronized (mEmitter) {
+                        mEmitter.clear();
+                        mapFunction.map(ubValue, mEmitter);
+                        return mEmitter.getKeys();
+                    }
+                }
+            };
+
+            mListener = createIndexListener(mObjects, index, microDBMapFunction);
+            mObjects.modificationListenerAdd(mListener);
+        }
+
+        void reindex() {
+            NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.createTreeSet(name)
+                    .makeOrGet();
+            index.clear();
+
+            Fun.Function2<T[], UUID, UBValue> fun = createMapDBFunction();
+
+            if(index.isEmpty()){
+                for(Map.Entry<UUID,UBValue> e:mObjects.entrySet()){
+                    T[] k2 = fun.run(e.getKey(), e.getValue());
+                    if(k2 != null)
+                        for(T k22 :k2)
+                            index.add(Fun.t2(k22, e.getKey()));
                 }
             }
-        });
+        }
+
+        private Fun.Function2<T[], UUID, UBValue> createMapDBFunction() {
+            return new Fun.Function2<T[], UUID, UBValue>() {
+
+                final MapDBEmitter<T> mEmitter = new MapDBEmitter<T>();
+
+                @Override
+                public T[] run(UUID uuid, UBValue ubValue) {
+                    synchronized (mEmitter) {
+                        mEmitter.clear();
+                        mapFunction.map(ubValue, mEmitter);
+                        return mEmitter.getKeys();
+                    }
+                }
+            };
+        }
+
+        private <K,V, K2> Bind.MapListener<K, V> createIndexListener(Bind.MapWithModificationListener<K, V> map,
+                                                                     final Set<Fun.Tuple2<K2, K>> secondary,
+                                                                     final Fun.Function2<K2[], K, V> fun) {
+            return new Bind.MapListener<K, V>() {
+                @Override
+                public void update(K key, V oldVal, V newVal) {
+                    if (newVal == null) {
+                        //removal
+                        K2[] k2 = fun.run(key, oldVal);
+                        if (k2 != null)
+                            for (K2 k22 : k2)
+                                secondary.remove(Fun.t2(k22, key));
+                    } else if (oldVal == null) {
+                        //insert
+                        K2[] k2 = fun.run(key, newVal);
+                        if (k2 != null)
+                            for (K2 k22 : k2)
+                                secondary.add(Fun.t2(k22, key));
+                    } else {
+                        //update, must remove old key and insert new
+                        K2[] oldk = fun.run(key, oldVal);
+                        K2[] newk = fun.run(key, newVal);
+                        if (oldk == null) {
+                            //insert new
+                            if (newk != null)
+                                for (K2 k22 : newk)
+                                    secondary.add(Fun.t2(k22, key));
+                            return;
+                        }
+                        if (newk == null) {
+                            //remove old
+                            for (K2 k22 : oldk)
+                                secondary.remove(Fun.t2(k22, key));
+                            return;
+                        }
+
+                        Set<K2> hashes = new HashSet<K2>();
+                        Collections.addAll(hashes, oldk);
+
+                        //add new non existing items
+                        for (K2 k2 : newk) {
+                            if (!hashes.contains(k2)) {
+                                secondary.add(Fun.t2(k2, key));
+                            }
+                        }
+                        //remove items which are in old, but not in new
+                        for (K2 k2 : newk) {
+                            hashes.remove(k2);
+                        }
+                        for (K2 k2 : hashes) {
+                            secondary.remove(Fun.t2(k2, key));
+                        }
+                    }
+                }
+            };
+        }
+    }
+
+    @Override
+    public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
+        IndexObject index = mIndicies.get(indexName);
+        if(index == null) {
+            index = new IndexObject(indexName, mapFunction);
+            mIndicies.put(indexName, index);
+            index.install();
+        }
+    }
+
+    @Override
+    public void recomputeIndex(String indexName) {
+        IndexObject index = mIndicies.get(indexName);
+        if(index != null) {
+            index.reindex();
+        }
     }
 
     private static class MapDBEmitter<T extends Comparable<T>> implements Emitter<T> {
@@ -279,6 +455,9 @@ public class MapDBDriver implements Driver {
 
 
         public T[] getKeys() {
+            if(mKeys.isEmpty()) {
+                return null;
+            }
             T[] retval = (T[]) new Comparable[mKeys.size()];
             retval = mKeys.toArray(retval);
             return retval;

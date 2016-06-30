@@ -1,5 +1,7 @@
 # MicroDB #
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.dev-smart/microdb-runtime/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.dev-smart/microdb-runtime)
+
 MicroDB is an embedded NoSQL Database. MicroDB emphasizes speed, low complexity, and ease.
 Data is stored as [UBJSON](http://ubjson.org/) objects and indices are created using a simple map-reduce framework.
 MicroDB is built on top of [MapDB](http://mapdb.org/) - a fast database engine pure java with no dependencies.

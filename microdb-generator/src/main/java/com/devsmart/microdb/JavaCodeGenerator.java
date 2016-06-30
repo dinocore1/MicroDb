@@ -64,6 +64,21 @@ public class JavaCodeGenerator {
                         .initializer("$T.createString($S)", UBValueFactory.class, mDBO.name)
                         .build());
 
+
+        CodeBlock.Builder subtypesInitBuilder = CodeBlock.builder();
+        subtypesInitBuilder.add("new UBString[]{ ");
+        for(Nodes.DBONode extend : mDBO.dboThatExtend){
+            subtypesInitBuilder.add("$T.createString($S), ", UBValueFactory.class, extend.name);
+        }
+        subtypesInitBuilder.add("$T.TYPE }", getThisClassName());
+
+
+        classBuilder.addField(
+                FieldSpec.builder(UBString[].class, "SUBTYPES", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                        .initializer(subtypesInitBuilder.build())
+                        .build()
+        );
+
         ArrayList<FieldCodeGen> fieldCodeGane = new ArrayList<FieldCodeGen>();
 
         for(Nodes.FieldNode field : mDBO.fields) {
@@ -538,7 +553,7 @@ public class JavaCodeGenerator {
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Integer.class);
                 codeBuilder.indent();
-                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.SUBTYPES))", Utils.class, thisClassName);
                 codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
                 codeBuilder.beginControlFlow("if (v != null && v.isInteger())");
                 codeBuilder.addStatement("emitter.emit(v.asInt())");
@@ -639,7 +654,7 @@ public class JavaCodeGenerator {
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void onBeforeInsert($T driver, $T value) {\n", Override.class, Driver.class, UBValue.class);
                 codeBuilder.indent();
-                codeBuilder.beginControlFlow("if($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.beginControlFlow("if($T.isValidObject(value, $T.SUBTYPES))", Utils.class, thisClassName);
                 codeBuilder.addStatement("final long longValue = driver.incrementLongField($S)", incrementField);
                 codeBuilder.addStatement("value.asObject().put($S, $T.createInt(longValue))", mField.name, UBValueFactory.class);
                 codeBuilder.endControlFlow();
@@ -658,7 +673,7 @@ public class JavaCodeGenerator {
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, Long.class);
                 codeBuilder.indent();
-                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.SUBTYPES))", Utils.class, thisClassName);
                 codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
                 codeBuilder.beginControlFlow("if (v != null && v.isInteger())");
                 codeBuilder.addStatement("emitter.emit(v.asLong())");
@@ -857,7 +872,7 @@ public class JavaCodeGenerator {
                 codeBuilder.indent();
                 codeBuilder.add("@$T\npublic void map($T value, $T<$T> emitter) {\n", Override.class, UBValue.class, Emitter.class, String.class);
                 codeBuilder.indent();
-                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.TYPE))", Utils.class, thisClassName);
+                codeBuilder.beginControlFlow("if ($T.isValidObject(value, $T.SUBTYPES))", Utils.class, thisClassName);
                 codeBuilder.addStatement("$T v = value.asObject().get($S)", UBValue.class, mField.name);
                 codeBuilder.beginControlFlow("if (v != null && v.isString())");
                 codeBuilder.addStatement("emitter.emit(v.asString())");

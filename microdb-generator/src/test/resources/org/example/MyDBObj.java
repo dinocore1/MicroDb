@@ -19,6 +19,8 @@ public class MyDBObj extends DBObject {
 
     public static final UBString TYPE = UBValueFactory.createString("MyDBObj");
 
+    private static final UBString[] SUBTYPES = new UBString[]{ UBValueFactory.createString("ExtendObj"), MyDBObj.TYPE };
+
     private boolean myBool;
 
     private byte myByte;
@@ -430,7 +432,7 @@ public class MyDBObj extends DBObject {
         db.addChangeListener(new DefaultChangeListener() {
             @Override
             public void onBeforeInsert(Driver driver, UBValue value) {
-                if(Utils.isValidObject(value, MyDBObj.TYPE)) {
+                if(Utils.isValidObject(value, MyDBObj.SUBTYPES)) {
                     final long longValue = driver.incrementLongField("MyDBObj.myAutoIncrement_var");
                     value.asObject().put("myAutoIncrement", UBValueFactory.createInt(longValue));
                 }
@@ -439,7 +441,7 @@ public class MyDBObj extends DBObject {
         db.addIndex("MyDBObj.myStrIndex_idx", new MapFunction<String>() {
             @Override
             public void map(UBValue value, Emitter<String> emitter) {
-                if (Utils.isValidObject(value, MyDBObj.TYPE)) {
+                if (Utils.isValidObject(value, MyDBObj.SUBTYPES)) {
                     UBValue v = value.asObject().get("myStrIndex");
                     if(v != null && v.isString()) {
                         emitter.emit(v.asString());

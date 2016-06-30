@@ -61,14 +61,16 @@ class DBOCompilerPlugin implements Plugin<Project> {
             File genSrcOutputDir = new File(project.projectDir, "generated-sources/${variant.name}/java");
 
             def genTask = project.tasks.create("generateMicroDB${variant.name}Sources", MicroDBCompileTask.class, {
-                inputDir = androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs[0]
+                inputDir = androidExtension.sourceSets['main'].java.srcDirs[0]
                 outputDir = genSrcOutputDir
-                classpath.addAll androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs
+                classpath.addAll androidExtension.sourceSets['main'].java.srcDirs
             })
 
             androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs += genSrcOutputDir
 
-            variant.variantData.javaCompileTask.dependsOn(genTask)
+            def javaCompile = variant.hasProperty('javaCompiler') ? variant.javaCompiler : variant.javaCompile
+
+            javaCompile.dependsOn(genTask)
 
             project.tasks.clean.doFirst {
                 delete genSrcOutputDir

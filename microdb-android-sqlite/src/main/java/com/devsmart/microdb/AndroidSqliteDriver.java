@@ -357,6 +357,11 @@ public class AndroidSqliteDriver implements Driver {
     }
 
     @Override
+    public void recomputeIndex(String indexName) {
+        //TODO: implement
+    }
+
+    @Override
     public void deleteIndex(String indexName) {
         mDatabase.execSQL("DROP TABLE IF EXISTS ?", new String[]{indexName});
     }

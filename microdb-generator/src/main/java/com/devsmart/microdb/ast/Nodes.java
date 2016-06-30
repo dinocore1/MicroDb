@@ -23,6 +23,7 @@ public class Nodes {
         public final String extend;
         public final ArrayList<FieldNode> fields = new ArrayList<FieldNode>();
         public final ArrayList<String> codeblocks = new ArrayList<String>();
+        public final ArrayList<DBONode> dboThatExtend = new ArrayList<DBONode>();
 
         public DBONode(String name, String extend) {
             this.name = name;

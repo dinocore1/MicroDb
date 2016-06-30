@@ -3,6 +3,8 @@ package com.devsmart.microdb;
 
 import com.devsmart.microdb.ast.Nodes;
 
+import java.util.List;
+
 public class SemPass2 extends MicroDBBaseVisitor<Void> {
 
     private final CompilerContext mContext;
@@ -17,6 +19,27 @@ public class SemPass2 extends MicroDBBaseVisitor<Void> {
         mCurrentPackage = ctx.packageName().getText();
 
         return super.visitHeader(ctx);
+    }
+
+    @Override
+    public Void visitFile(MicroDBParser.FileContext ctx) {
+
+        for(MicroDBParser.DboContext dbo : ctx.dbo()) {
+            Nodes.DBONode dboNode = (Nodes.DBONode) mContext.nodeMap.get(dbo);
+            getRecursiveExtendsList(dboNode, dboNode.dboThatExtend);
+
+        }
+
+        return super.visitFile(ctx);
+    }
+
+    private void getRecursiveExtendsList(Nodes.DBONode root, List<Nodes.DBONode> list) {
+        for(Nodes.DBONode dboNode : mContext.allDBO) {
+            if(root.name.equals(dboNode.extend)) {
+                list.add(dboNode);
+                getRecursiveExtendsList(dboNode, list);
+            }
+        }
     }
 
     @Override

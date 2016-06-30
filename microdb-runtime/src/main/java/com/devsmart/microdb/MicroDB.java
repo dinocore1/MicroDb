@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,10 +21,11 @@ public class MicroDB {
     private Driver mDriver;
     private int mSchemaVersion;
     private DBCallback mCallback;
-    private final HashMap<UUID, SoftReference<DBObject>> mLiveObjects = new HashMap<UUID, SoftReference<DBObject>>();
+    private final HashMap<UUID, WeakReference<DBObject>> mLiveObjects = new HashMap<UUID, WeakReference<DBObject>>();
     private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
     private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
+    private Map<String, Constructor> mConstructorMap;
 
     @Override
     protected void finalize() throws Throwable {
@@ -284,20 +285,28 @@ public class MicroDB {
 
         UBObject metaObj = mDriver.getMeta();
         if (!metaObj.containsKey(METAKEY_INSTANCE)) {
+            mDriver.beginTransaction();
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
-            mDriver.addIndex("type", INDEX_OBJECT_TYPE);
+            mDriver.commitTransaction();
+
+            mDriver.beginTransaction();
             mCallback.onUpgrade(this, -1, mSchemaVersion);
+            mDriver.commitTransaction();
 
         } else {
             int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
             if (currentVersion < mSchemaVersion) {
+                mDriver.beginTransaction();
                 mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
                 metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
                 mDriver.saveMeta(metaObj);
+                mDriver.commitTransaction();
             }
         }
+
+        mDriver.addIndex("type", INDEX_OBJECT_TYPE);
 
     }
 
@@ -328,7 +337,7 @@ public class MicroDB {
      */
     public void flush() {
         synchronized (this) {
-            for (SoftReference<DBObject> ref : mLiveObjects.values()) {
+            for (WeakReference<DBObject> ref : mLiveObjects.values()) {
                 DBObject obj = ref.get();
                 if (obj != null) {
                     synchronized (obj) {
@@ -366,7 +375,7 @@ public class MicroDB {
 
             retval.setDirty();
             mWriteQueue.enqueue(createInsertOperation(retval));
-            mLiveObjects.put(key, new SoftReference<DBObject>(retval));
+            mLiveObjects.put(key, new WeakReference<DBObject>(retval));
 
             return retval;
 
@@ -393,6 +402,55 @@ public class MicroDB {
         }
     }
 
+    public interface Constructor<T extends DBObject> {
+        T build();
+    }
+
+    public void typeMap(Map<String, Constructor> constructors) {
+        mConstructorMap = constructors;
+    }
+
+    public synchronized <T extends DBObject> T get(UUID id) {
+        if (mDeletedObjects.contains(id)) {
+            return null;
+        }
+        try {
+
+            T retval;
+            DBObject cached;
+
+            WeakReference<DBObject> ref = mLiveObjects.get(id);
+            if (ref != null && (cached = ref.get()) != null) {
+                retval = (T) cached;
+            } else {
+
+                UBValue data = mDriver.get(id);
+                if (data == null) {
+                    return null;
+                } else {
+
+                    if (!data.isObject()) {
+                        throw new RuntimeException("database entry with id: " + id + " is not an object");
+                    }
+
+                    final String dataType = data.asObject().get("type").asString();
+                    retval = (T) mConstructorMap.get(dataType).build();
+
+                    retval.init(this);
+                    retval.setId(id);
+                    retval.readFromUBObject(data.asObject());
+                    retval.afterRead();
+                    mLiveObjects.put(id, new WeakReference<DBObject>(retval));
+                }
+            }
+
+            return retval;
+        } catch (Exception e) {
+            throw new RuntimeException("", e);
+        }
+
+    }
+
     /**
      * fetch and load database object with primary key {@code id}.
      *
@@ -410,7 +468,7 @@ public class MicroDB {
             T retval;
             DBObject cached;
 
-            SoftReference<DBObject> ref = mLiveObjects.get(id);
+            WeakReference<DBObject> ref = mLiveObjects.get(id);
             if (ref != null && (cached = ref.get()) != null) {
                 retval = (T) cached;
             } else {
@@ -429,7 +487,7 @@ public class MicroDB {
                     shell.readFromUBObject(data.asObject());
                     shell.afterRead();
                     retval = shell;
-                    mLiveObjects.put(id, new SoftReference<DBObject>(retval));
+                    mLiveObjects.put(id, new WeakReference<DBObject>(retval));
                 }
             }
 
@@ -523,38 +581,31 @@ public class MicroDB {
         private final MicroDB mDB;
         private final Class<T> mClassType;
         private Cursor mCursor;
-        private Row mCurrentRow;
 
         public RowIterator(Cursor cursor, MicroDB db, Class<T> classType) {
             mCursor = cursor;
             mDB = db;
             mClassType = classType;
-            mCurrentRow = mCursor.get();
         }
 
         @Override
         public boolean hasNext() {
-            return mCurrentRow != null;
+            return !mCursor.isLast();
         }
 
         @Override
         public T next() {
-            try {
-                final UUID objId = mCurrentRow.getPrimaryKey();
-                T retval = mDB.get(objId, mClassType.newInstance());
-
-                mCursor.next();
-                mCurrentRow = mCursor.get();
-                return retval;
-            } catch (Exception e) {
-                Throwables.propagate(e);
-                return null;
+            T retval = null;
+            if (mCursor.moveToNext()) {
+                Row row = mCursor.getRow();
+                final UUID objId = row.getPrimaryKey();
+                try {
+                    retval = mDB.get(objId, mClassType.newInstance());
+                } catch (Exception e) {
+                    Throwables.propagate(e);
+                }
             }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove not implemented");
+            return retval;
         }
     }
 

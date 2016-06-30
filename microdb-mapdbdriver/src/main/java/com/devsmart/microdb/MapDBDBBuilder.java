@@ -19,6 +19,7 @@ public class MapDBDBBuilder {
 
     private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion = 0;
+    private Integer mCacheSize;
 
     public static MapDBDBBuilder builder() {
         return new MapDBDBBuilder();
@@ -37,9 +38,17 @@ public class MapDBDBBuilder {
         return this;
     }
 
+    public MapDBDBBuilder cacheSize(int cacheSize) {
+        mCacheSize = cacheSize;
+        return this;
+    }
+
     public MicroDB build(File path) throws IOException {
-        DB db = DBMaker.newFileDB(path)
-                .make();
+        DBMaker mapdbBuilder = DBMaker.newFileDB(path);
+        if(mCacheSize != null) {
+            mapdbBuilder.cacheSize(mCacheSize);
+        }
+        DB db = mapdbBuilder.make();
 
         MapDBDriver driver = new MapDBDriver(db);
 
