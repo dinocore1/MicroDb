@@ -74,24 +74,24 @@ public class StringIndexTest {
         int numGregs = 0;
         Cursor cursor = index.query(db, "Greg");
         assertEquals(1, cursor.getCount());
-        do {
-            Row r = cursor.get();
+        while(cursor.moveToNext()){
+            Row r = cursor.getRow();
             String firstName = r.getSecondaryKey();
             assertEquals("Greg", firstName);
             numGregs++;
-        } while(cursor.next());
+        }
 
         assertEquals(1, numGregs);
 
         int numPauls = 0;
         cursor = index.query(db, "Paul");
         assertEquals(3, cursor.getCount());
-        do {
-            Row r = cursor.get();
+        while(cursor.moveToNext()){
+            Row r = cursor.getRow();
             String firstName = r.getSecondaryKey();
             assertEquals("Paul", firstName);
             numPauls++;
-        } while(cursor.next());
+        }
 
         assertEquals(3, numPauls);
 

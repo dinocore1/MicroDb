@@ -3,12 +3,21 @@ package com.devsmart.microdb;
 
 public interface Cursor {
 
-    void seekToBegining();
-    void seekToEnd();
+    boolean moveToFirst();
+    boolean moveToLast();
+    boolean moveToNext();
+    boolean moveToPrevious();
+    boolean move(int pos);
+
+    boolean isFirst();
+    boolean isLast();
+
+    boolean isBeforeFirst();
+    boolean isAfterLast();
+
     int getPosition();
-    boolean moveToPosition(int pos);
-    boolean next();
-    boolean prev();
-    Row get();
     int getCount();
+
+    Row getRow();
+
 }

@@ -582,38 +582,31 @@ public class MicroDB {
         private final MicroDB mDB;
         private final Class<T> mClassType;
         private Cursor mCursor;
-        private Row mCurrentRow;
 
         public RowIterator(Cursor cursor, MicroDB db, Class<T> classType) {
             mCursor = cursor;
             mDB = db;
             mClassType = classType;
-            mCurrentRow = mCursor.get();
         }
 
         @Override
         public boolean hasNext() {
-            return mCurrentRow != null;
+            return !mCursor.isLast();
         }
 
         @Override
         public T next() {
-            try {
-                final UUID objId = mCurrentRow.getPrimaryKey();
-                T retval = mDB.get(objId, mClassType.newInstance());
-
-                mCursor.next();
-                mCurrentRow = mCursor.get();
-                return retval;
-            } catch (Exception e) {
-                Throwables.propagate(e);
-                return null;
+            T retval = null;
+            if (mCursor.moveToNext()) {
+                Row row = mCursor.getRow();
+                final UUID objId = row.getPrimaryKey();
+                try {
+                    retval = mDB.get(objId, mClassType.newInstance());
+                } catch (Exception e) {
+                    Throwables.propagate(e);
+                }
             }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("remove not implemented");
+            return retval;
         }
     }
 

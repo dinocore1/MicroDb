@@ -118,54 +118,128 @@ public class MapDBDriver implements Driver {
 
     @Override
     public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
-        MapDBCursor<T> retval = new MapDBCursor<T>();
-        retval.mDriver = this;
-
         NavigableSet<Fun.Tuple2<T, UUID>> index = mMapDB.getTreeSet(indexName);
 
         if (max != null && min != null) {
-            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            retval.index = index.subSet(retval.min, minInclusive, retval.max, maxInclusive);
+            index = index.subSet(Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID), minInclusive,
+                    Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID), maxInclusive);
 
         } else if (min != null && max == null) {
-            retval.min = Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID);
-            retval.index = index.tailSet(retval.min, minInclusive);
+            index = index.tailSet(Fun.t2(min, minInclusive ? MIN_UUID : MAX_UUID), minInclusive);
 
         } else if (min == null && max != null) {
-            retval.max = Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID);
-            retval.index = index.headSet(retval.max, maxInclusive);
-        } else {
-            retval.index = index;
+            index = index.headSet(Fun.t2(max, maxInclusive ? MAX_UUID : MIN_UUID), maxInclusive);
         }
 
-        retval.seekToBegining();
-
-        return retval;
+        return new MapDBCursor<T>(this, index);
     }
 
     private static class MapDBCursor<T extends Comparable<T>> implements Cursor {
 
-        MapDBDriver mDriver;
-        NavigableSet<Fun.Tuple2<T, UUID>> index;
-        Fun.Tuple2<T, UUID> min;
-        Fun.Tuple2<T, UUID> max;
-        private Fun.Tuple2<T, UUID> mCurrentValue;
+        static final int BEFORE_FIRST = -1;
+        static final int AFTER_LAST = -2;
+
+        private final MapDBDriver mDriver;
+        private final NavigableSet<Fun.Tuple2<T, UUID>> mIndex;
         private int mPosition;
+        private Fun.Tuple2<T, UUID> mCurrentValue;
+
+        MapDBCursor(MapDBDriver driver, NavigableSet<Fun.Tuple2<T, UUID>> index) {
+            mDriver = driver;
+            mIndex = index;
+            mPosition = BEFORE_FIRST;
+        }
 
 
         @Override
-        public void seekToBegining() {
-            if(!index.isEmpty()) {
-                mCurrentValue = index.first();
+        public boolean moveToFirst() {
+            if(!mIndex.isEmpty()) {
                 mPosition = 0;
+                mCurrentValue = mIndex.first();
+                return true;
+            } else {
+                return false;
             }
         }
 
         @Override
-        public void seekToEnd() {
-            mCurrentValue = index.last();
-            mPosition = getCount();
+        public boolean moveToLast() {
+            if(!mIndex.isEmpty()) {
+                mPosition = getCount() - 1;
+                mCurrentValue = mIndex.last();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean moveToNext() {
+            if(mPosition == BEFORE_FIRST) {
+                mCurrentValue = mIndex.first();
+                mPosition = 0;
+                return true;
+            } else if(mPosition == AFTER_LAST) {
+                return false;
+            } else {
+                try {
+                    mCurrentValue = mIndex.higher(mCurrentValue);
+                    if(mCurrentValue == null) {
+                        return false;
+                    }
+                    mPosition++;
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }
+
+        @Override
+        public boolean moveToPrevious() {
+            if(mPosition == AFTER_LAST) {
+                mCurrentValue = mIndex.last();
+                mPosition = getCount() - 1;
+                return true;
+            } else if(mPosition == BEFORE_FIRST) {
+                return false;
+            } else {
+                try {
+                    mCurrentValue = mIndex.lower(mCurrentValue);
+                    if(mCurrentValue == null) {
+                        return false;
+                    }
+                    mPosition--;
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }
+        }
+
+        @Override
+        public boolean move(int pos) {
+            return false;
+        }
+
+        @Override
+        public boolean isFirst() {
+            return mPosition == 0;
+        }
+
+        @Override
+        public boolean isLast() {
+            return mPosition == getCount() - 1;
+        }
+
+        @Override
+        public boolean isBeforeFirst() {
+            return mPosition == BEFORE_FIRST;
+        }
+
+        @Override
+        public boolean isAfterLast() {
+            return mPosition == AFTER_LAST;
         }
 
         @Override
@@ -174,44 +248,13 @@ public class MapDBDriver implements Driver {
         }
 
         @Override
-        public boolean moveToPosition(int pos) {
-            int currentPos;
-            while( (currentPos = getPosition()) != pos) {
-              if(currentPos < pos) {
-                  next();
-              } else {
-                  prev();
-              }
-            }
-            return true;
-        }
-
-        @Override
-        public boolean next() {
-            mCurrentValue = index.higher(mCurrentValue);
-            mPosition++;
-            return mCurrentValue != null;
-        }
-
-        @Override
-        public boolean prev() {
-            mCurrentValue = index.lower(mCurrentValue);
-            mPosition--;
-            return mCurrentValue != null;
-        }
-
-        @Override
-        public Row get() {
-            if(mCurrentValue == null) {
-                return null;
-            } else {
-                return new MapDBRow<T>(mDriver, mCurrentValue);
-            }
-        }
-
-        @Override
         public int getCount() {
-            return index.size();
+            return mIndex.size();
+        }
+
+        @Override
+        public Row getRow() {
+            return new MapDBRow<T>(mDriver, mCurrentValue);
         }
     }
 
