@@ -1,0 +1,13 @@
+apply plugin: 'java'
+
+compileJava {
+    targetCompatibility = 1.6
+    sourceCompatibility = 1.6
+}
+
+dependencies {
+    compile project(':microdb-runtime')
+    compile 'junit:junit:4.11'
+    compile 'org.slf4j:slf4j-simple:1.7.7'
+
+}

@@ -215,7 +215,7 @@ public class AndroidSqliteDriver implements Driver {
 
     @Override
     public UUID genId() {
-        return null;
+        return UUID.randomUUID();
     }
 
     @Override
@@ -313,11 +313,9 @@ public class AndroidSqliteDriver implements Driver {
         }
 
         Class<?> keyType = null;
-        for(Type type : objIndex.getClass().getGenericInterfaces()) {
-            if(type instanceof ParameterizedType) {
-                keyType = (Class<?>) ((ParameterizedType)type).getActualTypeArguments()[0];
-                break;
-            }
+        Type type = objIndex.getClass().getGenericSuperclass();
+        if(type instanceof ParameterizedType) {
+            keyType = (Class<?>) ((ParameterizedType)type).getActualTypeArguments()[0];
         }
 
         if(String.class.isAssignableFrom(keyType)) {

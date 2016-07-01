@@ -8,6 +8,7 @@ dependencies {
     compile project(':microdb-runtime')
     testCompile 'junit:junit:4.11'
     testCompile 'org.slf4j:slf4j-simple:1.7.7'
+    testCompile project(':microdb-test')
 }
 
 compileJava {
