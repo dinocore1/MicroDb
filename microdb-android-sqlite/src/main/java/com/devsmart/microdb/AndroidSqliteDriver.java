@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -313,13 +312,32 @@ public class AndroidSqliteDriver implements Driver {
             c = mDatabase.query(indexName, INDEX_COLUMNS, null, null, null, null, null, null);
         }
 
-        return new SQLiteIndexCursor<T>(this, c);
+        Class<?> keyType = null;
+        for(Type type : objIndex.getClass().getGenericInterfaces()) {
+            if(type instanceof ParameterizedType) {
+                keyType = (Class<?>) ((ParameterizedType)type).getActualTypeArguments()[0];
+                break;
+            }
+        }
+
+        if(String.class.isAssignableFrom(keyType)) {
+            return new SQLiteStringIndexCursor(this, c);
+
+        } else if(isIntType(keyType)) {
+            return new SQLiteLongIndexCursor(this, c);
+
+        } else if(isFloatType(keyType)) {
+            return new SQLiteDoubleIndexCursor(this, c);
+
+        }  else {
+            throw new RuntimeException("cannot serialize type: " + keyType);
+        }
     }
 
-    private static class SQLiteIndexCursor<T extends Comparable<T>> implements Cursor {
+    private static abstract class SQLiteIndexCursor<T extends Comparable<T>> implements Cursor {
 
-        private final AndroidSqliteDriver mDriver;
-        private final android.database.Cursor mCursor;
+        final AndroidSqliteDriver mDriver;
+        final android.database.Cursor mCursor;
 
         public SQLiteIndexCursor(AndroidSqliteDriver driver, android.database.Cursor cursor) {
             mDriver = driver;
@@ -380,10 +398,41 @@ public class AndroidSqliteDriver implements Driver {
         public int getCount() {
             return mCursor.getCount();
         }
+    }
+
+    private static class SQLiteStringIndexCursor extends SQLiteIndexCursor<String> {
+
+        public SQLiteStringIndexCursor(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+        }
 
         @Override
         public Row getRow() {
-            return new SqliteIndexRow(mDriver, mCursor);
+            return new SqliteStringIndexRow(mDriver, mCursor);
+        }
+    }
+
+    private static class SQLiteLongIndexCursor extends SQLiteIndexCursor<Long> {
+
+        public SQLiteLongIndexCursor(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+        }
+
+        @Override
+        public Row getRow() {
+            return new SqliteLongIndexRow(mDriver, mCursor);
+        }
+    }
+
+    private static class SQLiteDoubleIndexCursor extends SQLiteIndexCursor<Double> {
+
+        public SQLiteDoubleIndexCursor(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+            super(driver, cursor);
+        }
+
+        @Override
+        public Row getRow() {
+            return new SqliteDoubleIndexRow(mDriver, mCursor);
         }
     }
 
@@ -430,11 +479,11 @@ public class AndroidSqliteDriver implements Driver {
         }
     }
 
-    private static class SqliteFloatIndexRow extends SqliteIndexRow<Double> {
+    private static class SqliteDoubleIndexRow extends SqliteIndexRow<Double> {
 
         private final double mDoubleValue;
 
-        public SqliteFloatIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
+        public SqliteDoubleIndexRow(AndroidSqliteDriver driver, android.database.Cursor cursor) {
             super(driver, cursor);
             mDoubleValue = cursor.getDouble(0);
         }
