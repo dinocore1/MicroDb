@@ -421,19 +421,23 @@ public class MapDBDriver implements Driver {
 
     @Override
     public <T extends Comparable<T>> void addIndex(String indexName, final MapFunction<T> mapFunction) throws IOException {
-        IndexObject index = mIndicies.get(indexName);
-        if(index == null) {
-            index = new IndexObject(indexName, mapFunction);
-            mIndicies.put(indexName, index);
-            index.install();
+        synchronized (mIndicies) {
+            IndexObject index = mIndicies.get(indexName);
+            if (index == null) {
+                index = new IndexObject(indexName, mapFunction);
+                mIndicies.put(indexName, index);
+                index.install();
+            }
         }
     }
 
     @Override
     public void recomputeIndex(String indexName) {
-        IndexObject index = mIndicies.get(indexName);
-        if(index != null) {
-            index.reindex();
+        synchronized (mIndicies) {
+            IndexObject index = mIndicies.get(indexName);
+            if (index != null) {
+                index.reindex();
+            }
         }
     }
 
