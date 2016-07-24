@@ -4,6 +4,7 @@ package com.devsmart.microdb;
 import com.devsmart.ubjson.UBObject;
 import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
+import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -210,11 +211,11 @@ public class MicroDB {
         };
     }
 
-    private Operation createSaveOperation(final UUID mId, final UBObject mData) {
+    private Operation createSaveOperation(final UUID id, final UBValue data) {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                mDriver.update(mId, mData);
+                mDriver.update(id, data);
             }
         };
     }
@@ -497,6 +498,11 @@ public class MicroDB {
         }
     }
 
+    public UBValue get(String key) throws IOException {
+        UUID id = UUID.nameUUIDFromBytes(key.getBytes(Charsets.UTF_8));
+        return mDriver.get(id);
+    }
+
     /**
      * saves/updates {@code obj} to the database. This method is not normally necessary for users to call
      * because database objects will automatically be saved when the garbage collector collects them if
@@ -507,6 +513,13 @@ public class MicroDB {
     public Operation save(DBObject obj) {
         checkValid(obj);
         Operation op = createWriteObject(obj);
+        mWriteQueue.enqueue(op);
+        return op;
+    }
+
+    public Operation save(String key, UBValue data) {
+        UUID id = UUID.nameUUIDFromBytes(key.getBytes(Charsets.UTF_8));
+        Operation op = createSaveOperation(id, data);
         mWriteQueue.enqueue(op);
         return op;
     }
