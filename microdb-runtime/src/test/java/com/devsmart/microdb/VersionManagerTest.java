@@ -38,7 +38,7 @@ public class VersionManagerTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         VersionManager vm = new VersionManager(db, dbDriver);
 
@@ -72,7 +72,7 @@ public class VersionManagerTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         VersionManager vm = new VersionManager(db, dbDriver);
 
@@ -131,7 +131,7 @@ public class VersionManagerTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         VersionManager vm = new VersionManager(db, dbDriver);
 

@@ -6,6 +6,7 @@ import org.mapdb.DBMaker;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class DBBuilder {
 
@@ -20,6 +21,7 @@ public class DBBuilder {
     private DBCallback mCallback = new NullCallback();
     private int mSchemaVersion = 0;
     private Integer mCacheSize;
+    private Map<String, MicroDB.Constructor> mConstructorMap;
 
     public static DBBuilder builder() {
         return new DBBuilder();
@@ -43,6 +45,11 @@ public class DBBuilder {
         return this;
     }
 
+    public DBBuilder constructorsMap(Map<String, MicroDB.Constructor> constructors) {
+        mConstructorMap = constructors;
+        return this;
+    }
+
     public MicroDB build(File path) throws IOException {
         DBMaker mapdbBuilder = DBMaker.newFileDB(path);
         if(mCacheSize != null) {
@@ -52,7 +59,7 @@ public class DBBuilder {
 
         MapDBDriver driver = new MapDBDriver(db);
 
-        return new MicroDB(driver, mSchemaVersion, mCallback);
+        return new MicroDB(driver, mSchemaVersion, mCallback, mConstructorMap);
 
     }
 
@@ -62,7 +69,7 @@ public class DBBuilder {
                 .make();
 
         MapDBDriver driver = new MapDBDriver(db);
-        return new MicroDB(driver, mSchemaVersion, mCallback);
+        return new MicroDB(driver, mSchemaVersion, mCallback, mConstructorMap);
     }
 
 

@@ -59,7 +59,7 @@ public class StringIndexTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         NameIndex index = new NameIndex();
         index.install(db);
@@ -103,7 +103,7 @@ public class StringIndexTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         NameIndex index = new NameIndex();
         index.install(db);
@@ -132,7 +132,7 @@ public class StringIndexTest {
                 .make();
 
         MapDBDriver dbDriver = new MapDBDriver(mapdb);
-        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback());
+        MicroDB db = new MicroDB(dbDriver, 0, new DBBuilder.NullCallback(), null);
 
         NameIndex index = new NameIndex();
         index.install(db);
