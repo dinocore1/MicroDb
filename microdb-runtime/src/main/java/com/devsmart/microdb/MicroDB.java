@@ -270,10 +270,11 @@ public class MicroDB {
     }
 
 
-    MicroDB(Driver driver, int schemaVersion, DBCallback cb) throws IOException {
+    MicroDB(Driver driver, int schemaVersion, DBCallback cb, Map<String, Constructor> constructorMap) throws IOException {
         mDriver = driver;
         mSchemaVersion = schemaVersion;
         mCallback = cb;
+        mConstructorMap = constructorMap;
 
         mWriteQueue.start();
         init();
@@ -283,6 +284,8 @@ public class MicroDB {
     private static final String METAKEY_INSTANCE = "instance";
 
     private void init() throws IOException {
+
+        mDriver.addIndex("type", INDEX_OBJECT_TYPE);
 
         UBObject metaObj = mDriver.getMeta();
         if (!metaObj.containsKey(METAKEY_INSTANCE)) {
@@ -306,8 +309,6 @@ public class MicroDB {
                 mDriver.commitTransaction();
             }
         }
-
-        mDriver.addIndex("type", INDEX_OBJECT_TYPE);
 
     }
 
@@ -407,9 +408,6 @@ public class MicroDB {
         T build();
     }
 
-    public void typeMap(Map<String, Constructor> constructors) {
-        mConstructorMap = constructors;
-    }
 
     public synchronized <T extends DBObject> T get(UUID id) {
         if (mDeletedObjects.contains(id)) {
