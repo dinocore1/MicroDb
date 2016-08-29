@@ -36,10 +36,7 @@ public class PluginTest {
                     jcenter()
                 }
                 dependencies {
-                    classpath 'com.android.tools.build:gradle:2.1.0'
-
-                    // NOTE: Do not place your application dependencies here; they belong
-                    // in the individual module build.gradle files
+                    classpath 'com.android.tools.build:gradle:2.1.2'
                 }
             }
             apply plugin: 'com.android.application'
@@ -50,6 +47,7 @@ public class PluginTest {
                 buildToolsVersion "20.0.0"
 
                 defaultConfig {
+                    applicationId "com.devsmart.microdb.test"
                     minSdkVersion 17
                     targetSdkVersion 19
                     versionCode 1
@@ -83,10 +81,7 @@ public class PluginTest {
                     jcenter()
                 }
                 dependencies {
-                    classpath 'com.android.tools.build:gradle:1.2.3'
-
-                    // NOTE: Do not place your application dependencies here; they belong
-                    // in the individual module build.gradle files
+                    classpath 'com.android.tools.build:gradle:1.5.0'
                 }
             }
             apply plugin: 'com.android.application'
@@ -97,6 +92,7 @@ public class PluginTest {
                 buildToolsVersion "20.0.0"
 
                 defaultConfig {
+                    applicationId "com.devsmart.microdb.test"
                     minSdkVersion 17
                     targetSdkVersion 19
                     versionCode 1

@@ -98,7 +98,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.dev-smart:microdb-gradleplugin:0.3.0-SNAPSHOT'
+        classpath 'com.dev-smart:microdb-gradleplugin:0.3.7'
     }
 }
 
@@ -106,7 +106,7 @@ apply plugin: 'java'
 apply plugin: 'com.devsmart.microdb'
 
 dependencies {
-    compile 'com.dev-smart:microdb-runtime:0.3.0-SNAPSHOT'
+    compile 'com.dev-smart:microdb-runtime:0.3.7'
 }
 ```
 Place .dbo files somewhere under the src/main/java and the compiler will output java source
@@ -145,3 +145,11 @@ while(Person p : mDatabase.queryIndex("age", Person.class, 30, true, 45, true)) 
   ...
 }
 ```
+
+
+### Android Support ###
+
+MicroDB can be used with Android projects. The MicroDB gradle plugin supports
+the Android Gradle Plugin 1.5+. See [Android Gradle Plugin Version Compatibility](http://tools.android.com/tech-docs/new-build-system/version-compatibility)
+for more info.
+
