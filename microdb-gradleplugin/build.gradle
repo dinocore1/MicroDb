@@ -7,7 +7,8 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     compile project (':microdb-generator')
-    testCompile 'com.android.tools.build:gradle:1.2.3'
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.android.tools.build:gradle:2.1.2'
 }
 
 compileJava {
