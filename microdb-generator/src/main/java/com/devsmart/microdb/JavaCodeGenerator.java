@@ -288,6 +288,7 @@ public class JavaCodeGenerator {
                 } else if("UBArray".equals(objType.mSimpleName)){
                     retval = UBARRAY_CLASSNAME;
                 } else {
+                    //TODO: make sure this object extends DBObject
                     retval = ((Nodes.ObjType) type).getClassName();
                 }
             } break;

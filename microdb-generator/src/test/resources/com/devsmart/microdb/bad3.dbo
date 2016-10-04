@@ -1,0 +1,5 @@
+package org.example;
+
+dbo BadField {
+    java.lang.Runnable myObj;
+}
