@@ -63,6 +63,8 @@ public class MyDBObj extends DBObject {
 
     private UBObject myUBObject;
 
+    private UBArray myUBArray;
+
     private String myNoSerialize;
 
     private long myAutoIncrement;
@@ -95,6 +97,7 @@ public class MyDBObj extends DBObject {
         obj.put("myStringArray", UBValueFactory.createArrayOrNull(myStringArray));
         obj.put("myExtendoArray", Utils.createArrayOrNull(db, myExtendoArray));
         obj.put("myUBObject", myUBObject != null ? myUBObject : UBValueFactory.createNull());
+        obj.put("myUBArray", myUBArray != null ? myUBArray : UBValueFactory.createNull());
         obj.put("myAutoIncrement", UBValueFactory.createInt(myAutoIncrement));
         obj.put("myStrIndex", UBValueFactory.createStringOrNull(myStrIndex));
     }
@@ -202,6 +205,10 @@ public class MyDBObj extends DBObject {
         value = obj.get("myUBObject");
         if (value != null && value.isObject()) {
             this.myUBObject = value.asObject();
+        }
+        value = obj.get("myUBArray");
+        if (value != null && value.isArray()) {
+            this.myUBArray = value.asArray();
         }
         value = obj.get("myAutoIncrement");
         if (value != null && value.isNumber()) {
@@ -403,6 +410,15 @@ public class MyDBObj extends DBObject {
 
     public synchronized void setMyUBObject(UBObject value) {
         this.myUBObject = value;
+        setDirty();
+    }
+
+    public UBArray getMyUBArray() {
+        return myUBArray;
+    }
+
+    public synchronized void setMyUBArray(UBArray value) {
+        this.myUBArray = value;
         setDirty();
     }
 
