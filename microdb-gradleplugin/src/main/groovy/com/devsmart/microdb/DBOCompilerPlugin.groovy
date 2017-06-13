@@ -21,21 +21,20 @@ class DBOCompilerPlugin implements Plugin<Project> {
     }
 
     def applyToJavaProject(Project project) {
-        File genSrcOutputDir = new File(project.projectDir, "generated-sources/java");
+        File genSrcOutputDir = new File(project.projectDir, "build/generated-sources/java");
         def genTask = project.tasks.create('generateMicroDBSources', MicroDBCompileTask.class, {
             inputDir = new File(project.projectDir, "src/main/java")
             outputDir = genSrcOutputDir
         })
 
         project.sourceSets {
-            generated {
+            main {
                 java.srcDir genSrcOutputDir
             }
         }
 
         project.tasks.compileJava {
             dependsOn(genTask)
-            source += project.sourceSets.generated.java
         }
 
         project.tasks.clean.doFirst {

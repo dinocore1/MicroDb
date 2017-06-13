@@ -1,7 +1,7 @@
 allprojects {
 
   group = 'com.dev-smart'
-  version = '0.3.8-SNAPSHOT'
+  version = '0.3.9'
   description = 'A embedded NoSQL Database'
 
   repositories {
@@ -12,9 +12,5 @@ allprojects {
     }
   }
 
-  configurations.all {
-    // check for updates every build
-    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
-  }
 }
 
