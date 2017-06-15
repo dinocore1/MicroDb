@@ -137,18 +137,28 @@ public class StringIndexTest {
         NameIndex index = new NameIndex();
         index.install(db);
 
-        insert("aaa", "Soucy", dbDriver);
+        final UUID first = insert("aaa", "Soucy", dbDriver);
         insert("aba", "Simon", dbDriver);
         insert("bbb", "Alexander", dbDriver);
         insert("baa", "Vin", dbDriver);
         insert("ccc", "Soucy", dbDriver);
         insert("caa", "Murphy", dbDriver);
 
+
+        db.sync();
+
         Cursor cursor = db.queryIndex(index.INDEX_NAME, null, true, "b", false);
         assertEquals(2, cursor.getCount());
 
         cursor = db.queryIndex(index.INDEX_NAME, null, true, "bzz", false);
         assertEquals(4, cursor.getCount());
+
+        dbDriver.delete(first);
+
+        db.sync();
+
+        cursor = db.queryIndex(index.INDEX_NAME, null, true, "b", false);
+        assertEquals(1, cursor.getCount());
 
     }
 }
