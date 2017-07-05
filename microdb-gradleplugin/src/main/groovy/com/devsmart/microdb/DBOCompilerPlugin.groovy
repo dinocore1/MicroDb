@@ -2,6 +2,9 @@ package com.devsmart.microdb
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.SourceSet
+import org.gradle.plugins.ide.idea.IdeaPlugin
 
 
 class DBOCompilerPlugin implements Plugin<Project> {
@@ -10,88 +13,58 @@ class DBOCompilerPlugin implements Plugin<Project> {
     void apply(Project project) {
 
         project.afterEvaluate {
-            if (isJavaProject(project)) {
-                applyToJavaProject(project)
-            } else if(isAndroidProject(project)) {
-                applyToAndroidProject(project)
+            if(isAndroidProject(project)) {
+                println("Android Project Detected")
+                //applyToAndroidProject(project)
+                addMicroDbTasks(project)
+            } else if (isJavaProject(project)) {
+                println("Java Project Detected")
+                //applyToJavaProject(project)
+                addMicroDbTasks(project)
             }
         }
-
 
     }
 
-    def applyToJavaProject(Project project) {
-        File genSrcOutputDir = new File(project.projectDir, "build/generated-sources/java");
-        def genTask = project.tasks.create('generateMicroDBSources', MicroDBCompileTask.class, {
-            inputDir = new File(project.projectDir, "src/main/java")
+    private addMicroDbTasks(Project project) {
+        project.sourceSets.all { SourceSet sourceSet ->
+            addTasksToProjectForSourceSet(project, sourceSet)
+        }
+    }
+
+    private def addTasksToProjectForSourceSet(Project project, SourceSet sourceSet) {
+        def microdbConfigName = (sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME) ? "microdb" : sourceSet.getName() + "microdb")
+
+        final File genSrcOutputDir = new File(project.projectDir, "microdb-generated/${sourceSet.name}")
+        def genMicroDBSourcesTaskName = sourceSet.getTaskName('generate', 'microdb')
+        def generateJavaTask = project.tasks.create(genMicroDBSourcesTaskName, MicroDBCompileTask.class, {
+            inputDir = new File(project.projectDir, "src/${sourceSet.name}/java")
             outputDir = genSrcOutputDir
         })
 
-        project.sourceSets {
-            main {
-                java.srcDir genSrcOutputDir
-            }
-        }
-
-        project.tasks.compileJava {
-            dependsOn(genTask)
-        }
+        sourceSet.java.srcDir genSrcOutputDir
+        String compileJavaTaskName = sourceSet.getCompileTaskName("java")
+        Task compileJavaTask = project.tasks.getByName(compileJavaTaskName)
+        compileJavaTask.dependsOn(generateJavaTask)
 
         project.tasks.clean.doFirst {
             delete genSrcOutputDir
         }
-
     }
 
-    def applyToAndroidProject(Project project) {
-        def androidExtension
-        def variants
-        if(hasAndroidPlugin(project)) {
-            androidExtension = project.plugins.getPlugin('android').extension
-            variants = androidExtension.applicationVariants
-        } else if(hasAndroidLibraryPlugin(project)) {
-            androidExtension = project.plugins.getPlugin('android-library').extension
-            variants = androidExtension.libraryVariants
-        }
-
-        variants.all { variant ->
-            println "applying to: ${variant.name}"
-
-            File genSrcOutputDir = new File(project.projectDir, "generated-sources/${variant.name}/java");
-
-            def genTask = project.tasks.create("generateMicroDB${variant.name}Sources", MicroDBCompileTask.class, {
-                inputDir = androidExtension.sourceSets['main'].java.srcDirs[0]
-                outputDir = genSrcOutputDir
-                classpath.addAll androidExtension.sourceSets['main'].java.srcDirs
-            })
-
-            androidExtension.sourceSets[sourceSetName(variant)].java.srcDirs += genSrcOutputDir
-
-            def javaCompile = variant.hasProperty('javaCompiler') ? variant.javaCompiler : variant.javaCompile
-
-            javaCompile.dependsOn(genTask)
-
-            project.tasks.clean.doFirst {
-                delete genSrcOutputDir
-            }
-
-        }
-
+    boolean isJavaProject(project) {
+        return project.plugins.hasPlugin('java')
     }
 
-    def isJavaProject(project) {
-        project.plugins.hasPlugin('java')
+    boolean isAndroidProject(project) {
+        return hasAndroidPlugin(project) || hasAndroidLibraryPlugin(project)
     }
 
-    def isAndroidProject(project) {
-        hasAndroidPlugin(project) || hasAndroidLibraryPlugin(project)
+    boolean hasAndroidPlugin(project) {
+        return project.plugins.hasPlugin('com.android.application')
     }
 
-    def hasAndroidPlugin(project) {
-        project.plugins.hasPlugin('com.android.application')
-    }
-
-    def hasAndroidLibraryPlugin(project) {
+    boolean hasAndroidLibraryPlugin(project) {
         project.plugins.hasPlugin('com.android.library')
     }
 
