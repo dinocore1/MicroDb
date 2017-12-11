@@ -17,6 +17,7 @@ public class JavaCodeGenerator {
 
     private static final String MICRODB_PACKAGE = "com.devsmart.microdb";
     private static final ClassName UBOBJECT_CLASSNAME = ClassName.get(UBObject.class);
+    private static final ClassName UBARRAY_CLASSNAME = ClassName.get(UBArray.class);
     private static final String NO_SERIALIZE = "NoSerialize";
     private static final String AUTOINCREMENT = "AutoIncrement";
     private static final String INDEX = "Index";
@@ -127,6 +128,8 @@ public class JavaCodeGenerator {
                 } else if (field.type.type == Nodes.TypeNode.DBO) {
                     if(UBOBJECT_CLASSNAME.equals(fieldType)) {
                         fieldCodeGane.add(new UBObjectFieldCodeGen(field));
+                    } else if(UBARRAY_CLASSNAME.equals(fieldType)) {
+                        fieldCodeGane.add(new UBArrayFieldCodeGen(field));
                     } else {
                         fieldCodeGane.add(new DBOFieldCodeGen(field));
                     }
@@ -282,6 +285,8 @@ public class JavaCodeGenerator {
                 Nodes.ObjType objType = ((Nodes.ObjType)type);
                 if("UBObject".equals(objType.mSimpleName)){
                     retval = UBOBJECT_CLASSNAME;
+                } else if("UBArray".equals(objType.mSimpleName)){
+                    retval = UBARRAY_CLASSNAME;
                 } else {
                     retval = ((Nodes.ObjType) type).getClassName();
                 }
@@ -1007,6 +1012,28 @@ public class JavaCodeGenerator {
             builder.addStatement("value = obj.get($S)", mField.name);
             builder.beginControlFlow("if (value != null && value.isObject())");
             builder.addStatement("this.$L = value.asObject()", mField.name);
+            builder.endControlFlow();
+        }
+
+        @Override
+        void genWriteToUBObject(MethodSpec.Builder builder) {
+            builder.addStatement("obj.put($S, $L != null ? $L : $T.createNull())",
+                    mField.name, mField.name, mField.name, UBValueFactory.class);
+
+        }
+    }
+
+    class UBArrayFieldCodeGen extends FieldCodeGen {
+
+        UBArrayFieldCodeGen(Nodes.FieldNode field) {
+            super(field);
+        }
+
+        @Override
+        void genReadFromUBObject(MethodSpec.Builder builder) {
+            builder.addStatement("value = obj.get($S)", mField.name);
+            builder.beginControlFlow("if (value != null && value.isArray())");
+            builder.addStatement("this.$L = value.asArray()", mField.name);
             builder.endControlFlow();
         }
 

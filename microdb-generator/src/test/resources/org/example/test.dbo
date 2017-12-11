@@ -23,6 +23,7 @@ dbo MyDBObj {
     string[] myStringArray;
     ExtendObj[] myExtendoArray;
     UBObject myUBObject;
+    UBArray myUBArray;
 
     @NoSerialize
     string myNoSerialize;

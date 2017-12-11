@@ -23,7 +23,6 @@ public class MicroDB {
     private int mSchemaVersion;
     private DBCallback mCallback;
     private final HashMap<UUID, WeakReference<DBObject>> mLiveObjects = new HashMap<UUID, WeakReference<DBObject>>();
-    private final Set<UUID> mDeletedObjects = new HashSet<UUID>();
     private final WriteQueue mWriteQueue = new WriteQueue();
     private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
     private Map<String, Constructor> mConstructorMap;
@@ -234,9 +233,6 @@ public class MicroDB {
                     listener.onBeforeDelete(mDriver, id);
                 }
                 mDriver.delete(id);
-                synchronized (MicroDB.this) {
-                    mDeletedObjects.remove(id);
-                }
             }
         };
     }
@@ -410,9 +406,6 @@ public class MicroDB {
 
 
     public synchronized <T extends DBObject> T get(UUID id) {
-        if (mDeletedObjects.contains(id)) {
-            return null;
-        }
         try {
 
             T retval;
@@ -459,9 +452,6 @@ public class MicroDB {
      * @return dbobject
      */
     public synchronized <T extends DBObject> T get(UUID id, T shell) {
-        if (mDeletedObjects.contains(id)) {
-            return null;
-        }
         try {
 
             T retval;
@@ -530,7 +520,6 @@ public class MicroDB {
 
     public synchronized Operation delete(DBObject obj) {
         checkValid(obj);
-        mDeletedObjects.add(obj.getId());
         Operation op = createDeleteOperation(obj);
         mWriteQueue.enqueue(op);
         mLiveObjects.remove(obj.getId());
