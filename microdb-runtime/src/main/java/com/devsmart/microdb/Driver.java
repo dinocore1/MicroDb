@@ -69,4 +69,6 @@ public interface Driver {
     void commitTransaction() throws IOException;
 
     void rollbackTransaction() throws IOException;
+
+    void compact() throws IOException;
 }
