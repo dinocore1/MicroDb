@@ -22,10 +22,11 @@ public class PluginTest {
     }
 
 
+    /*
     @Test
     public void applyNewAndroidAppProjectTest() {
 
-        //Note this test should work if the env var ANDROID_HOME is defined. If now, manual set by uncommenting below:
+        //Note this test should work if the env var ANDROID_HOME is defined. If not, manual set by uncommenting below:
 
         //System.setProperty("android.home", "/home/paul/apps/android-sdk-linux")
         //System.properties.setProperty("android.home", "/home/paul/apps/android-sdk-linux")
@@ -70,7 +71,7 @@ public class PluginTest {
     @Test
     public void applyOldAndroidAppProjectTest() {
 
-        //Note this test should work if the env var ANDROID_HOME is defined. If now, manual set by uncommenting below:
+        //Note this test should work if the env var ANDROID_HOME is defined. If not, manual set by uncommenting below:
 
         //System.setProperty("android.home", "/home/paul/apps/android-sdk-linux")
         //System.properties.setProperty("android.home", "/home/paul/apps/android-sdk-linux")
@@ -111,5 +112,6 @@ public class PluginTest {
 
         //assertNotNull(project.getTasks().findByName("generateMicroDBdebugSources"));
     }
+    */
 
 }

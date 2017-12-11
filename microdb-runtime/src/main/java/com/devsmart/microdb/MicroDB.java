@@ -246,6 +246,15 @@ public class MicroDB {
         };
     }
 
+    private Operation createCompactOperation() {
+        return new Operation(OperationType.Write) {
+            @Override
+            void doIt() throws IOException {
+                mDriver.compact();
+            }
+        };
+    }
+
     private AtomicBoolean mAutoSave = new AtomicBoolean(true);
 
     static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
@@ -543,6 +552,12 @@ public class MicroDB {
     public void sync() {
         //Operation op = createNoOp();
         Operation op = createCommitOperation();
+        mWriteQueue.enqueue(op);
+        waitForCompletion(op);
+    }
+
+    public void compact() {
+        Operation op = createCompactOperation();
         mWriteQueue.enqueue(op);
         waitForCompletion(op);
     }

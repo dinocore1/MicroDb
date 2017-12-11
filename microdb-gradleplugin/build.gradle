@@ -1,7 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'groovy'
-apply plugin: 'maven'
-apply plugin: 'signing'
+apply plugin: 'com.bmuschko.nexus'
 
 dependencies {
     compile gradleApi()
@@ -16,64 +15,31 @@ compileJava {
     sourceCompatibility = 1.6
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from 'build/docs/javadoc'
-}
+modifyPom {
+    project {
+        name 'microdb-gradleplugin'
+        description 'Gradle Plugin for MicroDb'
+        url 'http://github.com/dinocore1/MicroDb'
 
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar
-    archives sourceJar
-}
-
-signing {
-    sign configurations.archives
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-            authentication(userName: sonatypeUsername, password: sonatypePassword)
+        scm {
+            url 'scm:git@github.com:dinocore1/MicroDb.git'
+            connection 'scm:git@github.com:dinocore1/MicroDb.git'
+            developerConnection 'scm:git@github.com:dinocore1/MicroDb.git'
         }
 
-        snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-            authentication(userName: sonatypeUsername, password: sonatypePassword)
-        }
-
-        pom.project {
-            name 'microdb-gradleplugin'
-            description 'Gradle Plugin for MicroDb'
-            url 'http://github.com/dinocore1/MicroDb'
-
-            scm {
-                url 'scm:git@github.com:dinocore1/MicroDb.git'
-                connection 'scm:git@github.com:dinocore1/MicroDb.git'
-                developerConnection 'scm:git@github.com:dinocore1/MicroDb.git'
-            }
-
-            licenses {
-                license {
-                    name 'MIT License'
-                    url 'https://github.com/dinocore1/MicroDb/blob/master/LICENSE.txt'
-                    distribution 'repo'
-                }
-            }
-
-            developers {
-                developer {
-                    id 'psoucy'
-                    name 'Paul Soucy'
-                }
+        licenses {
+            license {
+                name 'MIT License'
+                url 'https://github.com/dinocore1/MicroDb/blob/master/LICENSE.txt'
+                distribution 'repo'
             }
         }
 
+        developers {
+            developer {
+                id 'psoucy'
+                name 'Paul Soucy'
+            }
+        }
     }
 }

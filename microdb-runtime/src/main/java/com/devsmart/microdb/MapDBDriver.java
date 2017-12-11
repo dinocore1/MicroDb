@@ -492,4 +492,9 @@ public class MapDBDriver implements Driver {
     public void rollbackTransaction() throws IOException {
         mMapDB.rollback();
     }
+
+    @Override
+    public void compact() throws IOException {
+        mMapDB.compact();
+    }
 }
