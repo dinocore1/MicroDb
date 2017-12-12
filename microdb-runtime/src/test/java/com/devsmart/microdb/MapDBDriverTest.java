@@ -61,4 +61,44 @@ public class MapDBDriverTest {
         assertEquals(3, catCount);
 
     }
+
+    @Test
+    public void testCompact() throws Exception {
+        DB mapdb = DBMaker.newTempFileDB()
+                .make();
+
+        MapDBDriver dbDriver = new MapDBDriver(mapdb);
+        dbDriver.addIndex("type", MicroDB.INDEX_OBJECT_TYPE);
+
+        insert("dog", "fido", dbDriver);
+        insert("cat", "whiskers", dbDriver);
+        insert("cat", "symo", dbDriver);
+        final UUID thuggyUUID = insert("cat", "thuggy", dbDriver);
+        insert("dog", "mondo", dbDriver);
+        insert("dog", "bolt", dbDriver);
+
+        dbDriver.delete(thuggyUUID);
+        dbDriver.commitTransaction();
+
+        dbDriver.compact();
+
+        Cursor rows = dbDriver.queryIndex("type", "dog", true, "dog", true);
+        int dogCount = 0;
+        do {
+            Row r = rows.get();
+            assertEquals("dog", r.getSecondaryKey());
+            dogCount++;
+        } while(rows.next());
+        assertEquals(3, dogCount);
+
+        rows = dbDriver.queryIndex("type", "cat", true, "cat", true);
+        int catCount = 0;
+        do {
+            Row r = rows.get();
+            assertEquals("cat", r.getSecondaryKey());
+            catCount++;
+        } while(rows.next());
+        assertEquals(2, catCount);
+
+    }
 }
