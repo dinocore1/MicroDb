@@ -2,15 +2,17 @@ package com.devsmart.microdb;
 
 
 import com.devsmart.ubjson.*;
+import com.google.common.reflect.Reflection;
 import org.mapdb.*;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class MapDBDriver implements Driver {
 
-    final DB mMapDB;
-    final Atomic.Var<UBObject> mMetadata;
+    DB mMapDB;
+    Atomic.Var<UBObject> mMetadata;
     BTreeMap<UUID, UBValue> mObjects;
     private Map<String, IndexObject> mIndicies = new HashMap<String, IndexObject>();
 
@@ -49,6 +51,10 @@ public class MapDBDriver implements Driver {
     public static final Serializer<UBValue> SERIALIZER_UBVALUE = new UBValueSerializer();
 
     public MapDBDriver(DB mapdb) {
+        init(mapdb);
+    }
+
+    private void init(DB mapdb) {
         mMapDB = mapdb;
         mObjects = mMapDB.createTreeMap("objects")
                 .keySerializerWrap(Serializer.UUID)
@@ -495,6 +501,101 @@ public class MapDBDriver implements Driver {
 
     @Override
     public void compact() throws IOException {
-        mMapDB.compact();
+
+        try {
+            mMapDB.commit();
+            Store store = Store.forDB(mMapDB);
+
+            if(!(store instanceof StoreDirect)) {
+                store.compact();
+                return;
+            }
+
+            File indexFile;
+            File physFile;
+
+            Field indexField = StoreDirect.class.getDeclaredField("index");
+            indexField.setAccessible(true);
+            Field physField = StoreDirect.class.getDeclaredField("phys");
+            physField.setAccessible(true);
+
+            indexFile = ((Volume) indexField.get(store)).getFile();
+            physFile = ((Volume) physField.get(store)).getFile();
+
+            final File compactFile = new File(indexFile.getPath() + ".comp2" );
+
+
+            DB newDB = DBMaker.newFileDB(compactFile)
+                    .transactionDisable()
+                    .make();
+
+
+            BTreeMap newObject = newDB.createTreeMap("objects")
+                    .keySerializerWrap(Serializer.UUID)
+                    .valueSerializer(SERIALIZER_UBVALUE)
+                    .valuesOutsideNodesEnable()
+                    .comparator(BTreeMap.COMPARABLE_COMPARATOR)
+                    .makeOrGet();
+
+            ArrayList<AddToIndex> indicesFun = new ArrayList<AddToIndex>();
+            for (Map.Entry<String, IndexObject> entry : mIndicies.entrySet()) {
+                NavigableSet<Fun.Tuple2<?, UUID>> index = newDB.createTreeSet(entry.getKey()).makeOrGet();
+                indicesFun.add(new AddToIndex(entry.getValue(), index));
+            }
+
+            newDB.createAtomicVar("metadata", mMetadata.get(), SERIALIZER_UBVALUE);
+
+            for (Map.Entry<UUID, UBValue> entry : mObjects.entrySet()) {
+                UUID key = entry.getKey();
+                UBValue value = entry.getValue();
+                newObject.put(key, value);
+                for (AddToIndex addToIndex : indicesFun) {
+                    addToIndex.index(key, value);
+                }
+            }
+
+            File indexFile2 = ((Volume)indexField.get(Store.forDB(newDB))).getFile();
+            File physFile2 = ((Volume)physField.get(Store.forDB(newDB))).getFile();
+
+            newDB.close();
+            mMapDB.close();
+
+            if(!physFile2.renameTo(physFile)){
+                throw new IOException("could not rename file");
+            }
+            if(!indexFile2.renameTo(indexFile)) {
+                throw new IOException("could not rename file");
+            }
+
+            init(DBMaker.newFileDB(indexFile).make());
+
+            for(IndexObject indexObject : mIndicies.values()) {
+                indexObject.install();
+            }
+
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
+
+    private static class AddToIndex {
+
+        private final NavigableSet<Fun.Tuple2<?, UUID>> mIndex;
+        private final Fun.Function2<Object[], UUID, UBValue> mapFun;
+
+        public AddToIndex(IndexObject indexObject, NavigableSet<Fun.Tuple2<?, UUID>> index) {
+            mIndex = index;
+            mapFun = indexObject.createMapDBFunction();
+        }
+
+        public void index(UUID uuid, UBValue value) {
+            Object[] k2 = mapFun.run(uuid, value);
+            if(k2 != null) {
+                for(Object k22 : k2) {
+                    mIndex.add(Fun.t2(k22, uuid));
+                }
+            }
+        }
+    }
+
 }
