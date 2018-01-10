@@ -8,6 +8,7 @@ import org.mapdb.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MapDBDriver implements Driver {
 
@@ -544,6 +545,13 @@ public class MapDBDriver implements Driver {
             }
 
             newDB.createAtomicVar("metadata", mMetadata.get(), SERIALIZER_UBVALUE);
+            for(Map.Entry<String, Object> entry : mMapDB.getAll().entrySet()) {
+                String name = entry.getKey();
+                Object value = entry.getValue();
+                if(value instanceof Atomic.Long) {
+                    newDB.createAtomicLong(name, ((Atomic.Long)value).longValue());
+                }
+            }
 
             for (Map.Entry<UUID, UBValue> entry : mObjects.entrySet()) {
                 UUID key = entry.getKey();
