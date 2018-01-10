@@ -22,6 +22,8 @@ public class MapDBDriverTest {
 
         final UUID id = driver.genId();
         driver.insert(id, obj);
+
+        driver.incrementLongField("numObjects");
         return id;
     }
 
@@ -99,6 +101,8 @@ public class MapDBDriverTest {
             catCount++;
         } while(rows.next());
         assertEquals(2, catCount);
+
+        assertEquals(6, dbDriver.incrementLongField("numObjects"));
 
     }
 }
