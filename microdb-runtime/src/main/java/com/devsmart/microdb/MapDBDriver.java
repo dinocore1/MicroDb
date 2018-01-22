@@ -7,6 +7,8 @@ import org.mapdb.*;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -525,12 +527,8 @@ public class MapDBDriver implements Driver {
             newDB.close();
             mMapDB.close();
 
-            if(!physFile2.renameTo(physFile)){
-                throw new IOException("could not rename file");
-            }
-            if(!indexFile2.renameTo(indexFile)) {
-                throw new IOException("could not rename file");
-            }
+            Files.move(physFile2.toPath(), physFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            Files.move(indexFile2.toPath(), indexFile.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
 
             init(DBMaker.newFileDB(indexFile).make());
 
