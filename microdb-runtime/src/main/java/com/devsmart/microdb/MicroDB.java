@@ -494,6 +494,10 @@ public class MicroDB {
         return mDriver.get(id);
     }
 
+    public synchronized UBValue getRaw(UUID id) throws IOException {
+        return mDriver.get(id);
+    }
+
     /**
      * saves/updates {@code obj} to the database. This method is not normally necessary for users to call
      * because database objects will automatically be saved when the garbage collector collects them if
