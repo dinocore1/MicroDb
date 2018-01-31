@@ -219,20 +219,14 @@ public class MicroDB {
         };
     }
 
-    private Operation createDeleteOperation(final DBObject obj) {
+    private Operation createDeleteOperation(final UUID objId) {
         return new Operation(OperationType.Write) {
             @Override
             void doIt() throws IOException {
-                final UUID id;
-                synchronized (obj) {
-                    id = obj.getId();
-                    obj.mDirty = false;
-                }
-
                 for (ChangeListener listener : mChangeListeners) {
-                    listener.onBeforeDelete(mDriver, id);
+                    listener.onBeforeDelete(mDriver, objId);
                 }
-                mDriver.delete(id);
+                mDriver.delete(objId);
             }
         };
     }
@@ -500,6 +494,10 @@ public class MicroDB {
         return mDriver.get(id);
     }
 
+    public synchronized UBValue getRaw(UUID id) throws IOException {
+        return mDriver.get(id);
+    }
+
     /**
      * saves/updates {@code obj} to the database. This method is not normally necessary for users to call
      * because database objects will automatically be saved when the garbage collector collects them if
@@ -529,9 +527,13 @@ public class MicroDB {
 
     public synchronized Operation delete(DBObject obj) {
         checkValid(obj);
-        Operation op = createDeleteOperation(obj);
+        return delete(obj.getId());
+    }
+
+    public synchronized Operation delete(UUID objId) {
+        Operation op = createDeleteOperation(objId);
         mWriteQueue.enqueue(op);
-        mLiveObjects.remove(obj.getId());
+        mLiveObjects.remove(objId);
         return op;
     }
 
