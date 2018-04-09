@@ -35,8 +35,7 @@ public class MapDBDriver implements Driver {
 
         @Override
         public UBValue deserialize(DataInput in, int available) throws IOException {
-            final int size = in.readInt();
-            byte[] buff = new byte[size];
+            byte[] buff = new byte[(available-4)];
             in.readFully(buff);
 
             UBReader reader = new UBReader(new ByteArrayInputStream(buff));
