@@ -34,7 +34,7 @@ public class MapDBDriver implements Driver {
         }
 
         @Override
-        public UBValue deserialize(DataInput in, int available) throws IOException, OutOfMemoryError {
+        public UBValue deserialize(DataInput in, int available) throws IOException {
             byte[] buff = new byte[(available-4)];
             in.readFully(buff);
 
