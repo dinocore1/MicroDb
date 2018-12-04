@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.LinkedHashSet;
+import java.util.regex.Matcher;
 
 public class Generator {
 
@@ -32,7 +33,7 @@ public class Generator {
             JavaCodeGenerator generator = new JavaCodeGenerator(dbo, mFileNode);
 
             String code = generator.generateCode();
-            final String output = mFileNode.packageName.replaceAll("\\.", File.separator);
+            final String output = mFileNode.packageName.replaceAll("\\.", Matcher.quoteReplacement(File.separator));
             File outputDir = new File(mOutputDir, output);
             outputDir.mkdirs();
             File outputFile = new File(outputDir, dbo.name + ".java");
