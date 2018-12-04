@@ -13,7 +13,13 @@ public class DBBuilder {
     static class NullCallback implements DBCallback {
 
         @Override
-        public void onUpgrade(MicroDB db, int oldVersion, int newVersion) throws IOException {
+        public boolean onNeedsUpgrade(MicroDB db, int oldVersion, int newVersion)
+        {
+            return false;
+        }
+
+        @Override
+        public void doUpgrade(MicroDB db, int oldVersion, int newVersion) throws IOException {
 
         }
     }

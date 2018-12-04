@@ -6,6 +6,7 @@ import com.devsmart.ubjson.UBValue;
 import com.devsmart.ubjson.UBValueFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,62 +16,78 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MicroDB {
+public class MicroDB
+{
 
     private static final Logger logger = LoggerFactory.getLogger(MicroDB.class);
 
-    private Driver mDriver;
-    private int mSchemaVersion;
-    private DBCallback mCallback;
-    private final HashMap<UUID, WeakReference<DBObject>> mLiveObjects = new HashMap<UUID, WeakReference<DBObject>>();
-    private final WriteQueue mWriteQueue = new WriteQueue();
-    private ArrayList<ChangeListener> mChangeListeners = new ArrayList<ChangeListener>();
-    private Map<String, Constructor> mConstructorMap;
+    private       Driver                                 mDriver;
+    private       int                                    mSchemaVersion;
+    private       DBCallback                             mCallback;
+    private final HashMap<UUID, WeakReference<DBObject>> mLiveObjects     = new HashMap<UUID, WeakReference<DBObject>>();
+    private final WriteQueue                             mWriteQueue      = new WriteQueue();
+    private       ArrayList<ChangeListener>              mChangeListeners = new ArrayList<ChangeListener>();
+    private       Map<String, Constructor>               mConstructorMap;
 
     @Override
-    protected void finalize() throws Throwable {
+    protected void finalize() throws Throwable
+    {
         mWriteQueue.enqueue(createShutdownOperation());
         super.finalize();
     }
 
-    public void shutdown() {
+    public void shutdown()
+    {
         mWriteQueue.enqueue(createShutdownOperation());
-        try {
+        try
+        {
             mWriteQueue.mWriteThread.join();
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e)
+        {
             logger.warn("", e);
         }
     }
 
-    public enum OperationType {
+    public enum OperationType
+    {
         Write,
         NoOp,
         Shutdown
     }
 
-    abstract static class Operation implements Runnable {
+    abstract static class Operation implements Runnable
+    {
         public final OperationType mCommandType;
-        private Exception mException;
-        private boolean mCompleted = false;
+        private      Exception     mException;
+        private      boolean       mCompleted = false;
 
-        Operation(OperationType type) {
+        Operation(OperationType type)
+        {
             mCommandType = type;
         }
 
-        synchronized void complete() {
+        synchronized void complete()
+        {
             mCompleted = true;
             notifyAll();
         }
 
-        public synchronized void waitForCompletion() {
-            while (!mCompleted) {
-                try {
+        public synchronized void waitForCompletion()
+        {
+            while (!mCompleted)
+            {
+                try
+                {
                     wait(1000);
-                } catch (InterruptedException e) {
+                }
+                catch (InterruptedException e)
+                {
                     logger.warn("", e);
                 }
             }
-            if (mException != null) {
+            if (mException != null)
+            {
                 Throwables.propagate(mException);
             }
         }
@@ -78,30 +95,42 @@ public class MicroDB {
         abstract void doIt() throws IOException;
 
         @Override
-        public void run() {
-            try {
+        public void run()
+        {
+            try
+            {
                 doIt();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 logger.error("uncaught exception while performing write operation", e);
                 mException = e;
             }
         }
     }
 
-    private class WriteQueue implements Runnable {
-        private static final long DEFAULT_WAIT = 2000;
-        private final Queue<Operation> mOperationQueue = new ConcurrentLinkedQueue<Operation>();
-        private Thread mWriteThread = new Thread(this, "MicroDB Write Thread");
+    private class WriteQueue implements Runnable
+    {
+        private static final long             DEFAULT_WAIT    = 2000;
+        private final        Queue<Operation> mOperationQueue = new ConcurrentLinkedQueue<Operation>();
+        private              Thread           mWriteThread    = new Thread(this, "MicroDB Write Thread");
 
         @Override
-        public void run() {
-            while (true) {
+        public void run()
+        {
+            while (true)
+            {
                 Operation op = mOperationQueue.poll();
-                if (op == null) {
+                if (op == null)
+                {
                     waitForNextCommand();
-                } else {
-                    try {
-                        switch (op.mCommandType) {
+                }
+                else
+                {
+                    try
+                    {
+                        switch (op.mCommandType)
+                        {
                             case Write:
                                 op.run();
                                 break;
@@ -113,7 +142,9 @@ public class MicroDB {
                                 logger.info("Write Thread exiting");
                                 return;
                         }
-                    } finally {
+                    }
+                    finally
+                    {
                         op.complete();
                     }
                 }
@@ -122,57 +153,75 @@ public class MicroDB {
 
         }
 
-        private synchronized void waitForNextCommand() {
-            try {
+        private synchronized void waitForNextCommand()
+        {
+            try
+            {
                 wait(DEFAULT_WAIT);
-            } catch (InterruptedException e) {
+            }
+            catch (InterruptedException e)
+            {
                 logger.warn("unexpected interrupt", e);
             }
         }
 
 
-        public void start() {
+        public void start()
+        {
             //mWriteThread.setDaemon(true);
             mWriteThread.start();
         }
 
-        public void enqueue(Operation op) {
+        public void enqueue(Operation op)
+        {
             mOperationQueue.offer(op);
         }
 
-        public synchronized void kick() {
+        public synchronized void kick()
+        {
             notify();
         }
     }
 
 
-    void enqueueOperation(Operation op) {
+    void enqueueOperation(Operation op)
+    {
         mWriteQueue.enqueue(op);
     }
 
-    private Operation createShutdownOperation() {
-        return new Operation(OperationType.Shutdown) {
+    private Operation createShutdownOperation()
+    {
+        return new Operation(OperationType.Shutdown)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
             }
         };
     }
 
-    private Operation createNoOp() {
-        return new Operation(OperationType.NoOp) {
+    private Operation createNoOp()
+    {
+        return new Operation(OperationType.NoOp)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
             }
         };
     }
 
-    private Operation createInsertOperation(final DBObject obj) {
-        return new Operation(OperationType.Write) {
+    private Operation createInsertOperation(final DBObject obj)
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
                 final UUID id;
                 UBObject data = UBValueFactory.createObject();
-                synchronized (obj) {
+                synchronized (obj)
+                {
                     id = obj.getId();
                     obj.beforeWrite();
                     obj.writeToUBObject(data);
@@ -181,27 +230,33 @@ public class MicroDB {
 
                 mDriver.insert(id, data);
 
-                for (ChangeListener listener : mChangeListeners) {
+                for (ChangeListener listener : mChangeListeners)
+                {
                     listener.onAfterInsert(mDriver, id, data);
                 }
             }
         };
     }
 
-    private Operation createWriteObject(final DBObject obj) {
-        return new Operation(OperationType.Write) {
+    private Operation createWriteObject(final DBObject obj)
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
                 final UUID id;
                 UBObject data = UBValueFactory.createObject();
-                synchronized (obj) {
+                synchronized (obj)
+                {
                     id = obj.getId();
                     obj.beforeWrite();
                     obj.writeToUBObject(data);
                     obj.mDirty = false;
                 }
 
-                for (ChangeListener listener : mChangeListeners) {
+                for (ChangeListener listener : mChangeListeners)
+                {
                     listener.onBeforeUpdate(mDriver, id, data);
                 }
 
@@ -210,20 +265,27 @@ public class MicroDB {
         };
     }
 
-    private Operation createSaveOperation(final UUID id, final UBValue data) {
-        return new Operation(OperationType.Write) {
+    private Operation createSaveOperation(final UUID id, final UBValue data)
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
                 mDriver.update(id, data);
             }
         };
     }
 
-    private Operation createDeleteOperation(final UUID objId) {
-        return new Operation(OperationType.Write) {
+    private Operation createDeleteOperation(final UUID objId)
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
-                for (ChangeListener listener : mChangeListeners) {
+            void doIt() throws IOException
+            {
+                for (ChangeListener listener : mChangeListeners)
+                {
                     listener.onBeforeDelete(mDriver, objId);
                 }
                 mDriver.delete(objId);
@@ -231,19 +293,25 @@ public class MicroDB {
         };
     }
 
-    private Operation createCommitOperation() {
-        return new Operation(OperationType.Write) {
+    private Operation createCommitOperation()
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
                 mDriver.commitTransaction();
             }
         };
     }
 
-    private Operation createCompactOperation() {
-        return new Operation(OperationType.Write) {
+    private Operation createCompactOperation()
+    {
+        return new Operation(OperationType.Write)
+        {
             @Override
-            void doIt() throws IOException {
+            void doIt() throws IOException
+            {
                 mDriver.compact();
             }
         };
@@ -251,25 +319,31 @@ public class MicroDB {
 
     private AtomicBoolean mAutoSave = new AtomicBoolean(true);
 
-    static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>() {
+    static final MapFunction<String> INDEX_OBJECT_TYPE = new MapFunction<String>()
+    {
         @Override
-        public void map(UBValue value, Emitter<String> emitter) {
-            if (value != null && value.isObject()) {
+        public void map(UBValue value, Emitter<String> emitter)
+        {
+            if (value != null && value.isObject())
+            {
                 UBObject obj = value.asObject();
                 UBValue typevar = obj.get("type");
-                if (typevar != null && typevar.isString()) {
+                if (typevar != null && typevar.isString())
+                {
                     emitter.emit(typevar.asString());
                 }
             }
         }
     };
 
-    public Driver getDriver() {
+    public Driver getDriver()
+    {
         return mDriver;
     }
 
 
-    MicroDB(Driver driver, int schemaVersion, DBCallback cb, Map<String, Constructor> constructorMap) throws IOException {
+    MicroDB(Driver driver, int schemaVersion, DBCallback cb, Map<String, Constructor> constructorMap) throws IOException
+    {
         mDriver = driver;
         mSchemaVersion = schemaVersion;
         mCallback = cb;
@@ -280,35 +354,47 @@ public class MicroDB {
     }
 
     private static final String METAKEY_DBVERSION = "schema_version";
-    private static final String METAKEY_INSTANCE = "instance";
+    private static final String METAKEY_INSTANCE  = "instance";
 
-    private void init() throws IOException {
-
+    private void init() throws IOException
+    {
         mDriver.addIndex("type", INDEX_OBJECT_TYPE);
 
+        int currentVersion = -1;
         UBObject metaObj = mDriver.getMeta();
-        if (!metaObj.containsKey(METAKEY_INSTANCE)) {
+        if (!metaObj.containsKey(METAKEY_INSTANCE))
+        {
             mDriver.beginTransaction();
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
-            metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
             mDriver.commitTransaction();
-
-            mDriver.beginTransaction();
-            mCallback.onUpgrade(this, -1, mSchemaVersion);
-            mDriver.commitTransaction();
-
-        } else {
-            int currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
-            if (currentVersion < mSchemaVersion) {
-                mDriver.beginTransaction();
-                mCallback.onUpgrade(this, currentVersion, mSchemaVersion);
-                metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
-                mDriver.saveMeta(metaObj);
-                mDriver.commitTransaction();
-            }
+        }
+        else
+        {
+            currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
         }
 
+        if (currentVersion < mSchemaVersion && mCallback.onNeedsUpgrade(this, currentVersion, mSchemaVersion))
+        {
+            upgrade();
+        }
+
+    }
+
+    public void upgrade() throws IOException
+    {
+        int currentVersion = -1;
+        UBObject metaObj = mDriver.getMeta();
+        if (metaObj.containsKey(METAKEY_DBVERSION))
+        {
+            currentVersion = metaObj.get(METAKEY_DBVERSION).asInt();
+        }
+
+        mDriver.beginTransaction();
+        mCallback.doUpgrade(this, currentVersion, mSchemaVersion);
+        metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
+        mDriver.saveMeta(metaObj);
+        mDriver.commitTransaction();
     }
 
 
@@ -317,17 +403,21 @@ public class MicroDB {
      *
      * @param obj
      */
-    protected void finalizing(DBObject obj) {
-        if (mAutoSave.get() && obj.mDirty) {
+    protected void finalizing(DBObject obj)
+    {
+        if (mAutoSave.get() && obj.mDirty)
+        {
             mWriteQueue.enqueue(createWriteObject(obj));
         }
-        synchronized (this) {
+        synchronized (this)
+        {
             mLiveObjects.remove(obj.getId());
         }
 
     }
 
-    public synchronized void close() throws IOException {
+    public synchronized void close() throws IOException
+    {
         flush();
         mLiveObjects.clear();
         mDriver.close();
@@ -336,13 +426,19 @@ public class MicroDB {
     /**
      * Saves all DBObjects that are marked dirty
      */
-    public void flush() {
-        synchronized (this) {
-            for (WeakReference<DBObject> ref : mLiveObjects.values()) {
+    public void flush()
+    {
+        synchronized (this)
+        {
+            for (WeakReference<DBObject> ref : mLiveObjects.values())
+            {
                 DBObject obj = ref.get();
-                if (obj != null) {
-                    synchronized (obj) {
-                        if(obj.mDirty) {
+                if (obj != null)
+                {
+                    synchronized (obj)
+                    {
+                        if (obj.mDirty)
+                        {
                             mWriteQueue.enqueue(createWriteObject(obj));
                         }
                     }
@@ -359,8 +455,10 @@ public class MicroDB {
      * @param <T>
      * @return newly created object
      */
-    public synchronized <T extends DBObject> T insert(Class<T> classType) {
-        try {
+    public synchronized <T extends DBObject> T insert(Class<T> classType)
+    {
+        try
+        {
             T retval = create(classType);
             final UUID key = mDriver.genId();
             retval.setId(key);
@@ -368,7 +466,8 @@ public class MicroDB {
             UBObject data = UBValueFactory.createObject();
             retval.writeToUBObject(data);
 
-            for(ChangeListener l : mChangeListeners) {
+            for (ChangeListener l : mChangeListeners)
+            {
                 l.onBeforeInsert(mDriver, data);
             }
 
@@ -380,7 +479,9 @@ public class MicroDB {
 
             return retval;
 
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("", e);
         }
     }
@@ -392,39 +493,53 @@ public class MicroDB {
      * @param <T>
      * @return a new object of type T
      */
-    public <T extends DBObject> T create(Class<T> classType) {
-        try {
+    public <T extends DBObject> T create(Class<T> classType)
+    {
+        try
+        {
             T retval = classType.newInstance();
             retval.init(this);
             return retval;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             Throwables.propagate(e);
             return null;
         }
     }
 
-    public interface Constructor<T extends DBObject> {
+    public interface Constructor<T extends DBObject>
+    {
         T build();
     }
 
 
-    public synchronized <T extends DBObject> T get(UUID id) {
-        try {
+    public synchronized <T extends DBObject> T get(UUID id)
+    {
+        try
+        {
 
             T retval;
             DBObject cached;
 
             WeakReference<DBObject> ref = mLiveObjects.get(id);
-            if (ref != null && (cached = ref.get()) != null) {
+            if (ref != null && (cached = ref.get()) != null)
+            {
                 retval = (T) cached;
-            } else {
+            }
+            else
+            {
 
                 UBValue data = mDriver.get(id);
-                if (data == null) {
+                if (data == null)
+                {
                     return null;
-                } else {
+                }
+                else
+                {
 
-                    if (!data.isObject()) {
+                    if (!data.isObject())
+                    {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
 
@@ -440,7 +555,9 @@ public class MicroDB {
             }
 
             return retval;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("", e);
         }
 
@@ -454,23 +571,32 @@ public class MicroDB {
      * @param <T>
      * @return dbobject
      */
-    public synchronized <T extends DBObject> T get(UUID id, T shell) {
-        try {
+    public synchronized <T extends DBObject> T get(UUID id, T shell)
+    {
+        try
+        {
 
             T retval;
             DBObject cached;
 
             WeakReference<DBObject> ref = mLiveObjects.get(id);
-            if (ref != null && (cached = ref.get()) != null) {
+            if (ref != null && (cached = ref.get()) != null)
+            {
                 retval = (T) cached;
-            } else {
+            }
+            else
+            {
 
                 UBValue data = mDriver.get(id);
-                if (data == null) {
+                if (data == null)
+                {
                     return null;
-                } else {
+                }
+                else
+                {
 
-                    if (!data.isObject()) {
+                    if (!data.isObject())
+                    {
                         throw new RuntimeException("database entry with id: " + id + " is not an object");
                     }
 
@@ -484,17 +610,21 @@ public class MicroDB {
             }
 
             return retval;
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new RuntimeException("", e);
         }
     }
 
-    public UBValue get(String key) throws IOException {
+    public UBValue get(String key) throws IOException
+    {
         UUID id = UUID.nameUUIDFromBytes(key.getBytes(Charsets.UTF_8));
         return mDriver.get(id);
     }
 
-    public synchronized UBValue getRaw(UUID id) throws IOException {
+    public synchronized UBValue getRaw(UUID id) throws IOException
+    {
         return mDriver.get(id);
     }
 
@@ -505,45 +635,53 @@ public class MicroDB {
      *
      * @param obj the data to be saved
      */
-    public Operation save(DBObject obj) {
+    public Operation save(DBObject obj)
+    {
         checkValid(obj);
         Operation op = createWriteObject(obj);
         mWriteQueue.enqueue(op);
         return op;
     }
 
-    public Operation save(String key, UBValue data) {
+    public Operation save(String key, UBValue data)
+    {
         UUID id = UUID.nameUUIDFromBytes(key.getBytes(Charsets.UTF_8));
         Operation op = createSaveOperation(id, data);
         mWriteQueue.enqueue(op);
         return op;
     }
 
-    private void checkValid(DBObject obj) {
-        if (obj == null || obj.getDB() != this || obj.getId() == null) {
+    private void checkValid(DBObject obj)
+    {
+        if (obj == null || obj.getDB() != this || obj.getId() == null)
+        {
             throw new RuntimeException("DBObject is invalid. DBObjects must be created with MicroDB.insert() method");
         }
     }
 
-    public synchronized Operation delete(DBObject obj) {
+    public synchronized Operation delete(DBObject obj)
+    {
         checkValid(obj);
         return delete(obj.getId());
     }
 
-    public synchronized Operation delete(UUID objId) {
+    public synchronized Operation delete(UUID objId)
+    {
         Operation op = createDeleteOperation(objId);
         mWriteQueue.enqueue(op);
         mLiveObjects.remove(objId);
         return op;
     }
 
-    public Operation commit() {
+    public Operation commit()
+    {
         Operation op = createCommitOperation();
         mWriteQueue.enqueue(op);
         return op;
     }
 
-    public void waitForCompletion(Operation op) {
+    public void waitForCompletion(Operation op)
+    {
         mWriteQueue.kick();
         op.waitForCompletion();
     }
@@ -551,41 +689,52 @@ public class MicroDB {
     /**
      * This method blocks until all queued write operation are completed.
      */
-    public void sync() {
+    public void sync()
+    {
         //Operation op = createNoOp();
         Operation op = createCommitOperation();
         mWriteQueue.enqueue(op);
         waitForCompletion(op);
     }
 
-    public void compact() {
+    public void compact()
+    {
         Operation op = createCompactOperation();
         mWriteQueue.enqueue(op);
         waitForCompletion(op);
     }
 
-    public <T extends Comparable<T>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException {
+    public <T extends Comparable<T>> void addIndex(String indexName, MapFunction<T> mapFunction) throws IOException
+    {
         mDriver.addIndex(indexName, mapFunction);
     }
 
-    public void addChangeListener(ChangeListener listener) {
+    public void addChangeListener(ChangeListener listener)
+    {
         mChangeListeners.add(listener);
     }
 
-    public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException {
+    public <T extends Comparable<T>> Cursor queryIndex(String indexName, T min, boolean minInclusive, T max, boolean maxInclusive) throws IOException
+    {
         return mDriver.queryIndex(indexName, min, minInclusive, max, maxInclusive);
     }
 
-    public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException {
+    public <T extends DBObject> Iterable<T> getAllOfType(final Class<T> classType) throws IOException
+    {
         final String className = classType.getSimpleName();
 
-        return new Iterable<T>() {
+        return new Iterable<T>()
+        {
             @Override
-            public Iterator<T> iterator() {
-                try {
+            public Iterator<T> iterator()
+            {
+                try
+                {
                     final Cursor cursor = queryIndex("type", className, true, className, true);
                     return new RowIterator<T>(cursor, MicroDB.this, classType);
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     Throwables.propagate(e);
                     return null;
                 }
@@ -594,14 +743,16 @@ public class MicroDB {
 
     }
 
-    private static class RowIterator<T extends DBObject> implements Iterator<T> {
+    private static class RowIterator<T extends DBObject> implements Iterator<T>
+    {
 
-        private final MicroDB mDB;
+        private final MicroDB  mDB;
         private final Class<T> mClassType;
-        private Cursor mCursor;
-        private Row mCurrentRow;
+        private       Cursor   mCursor;
+        private       Row      mCurrentRow;
 
-        public RowIterator(Cursor cursor, MicroDB db, Class<T> classType) {
+        public RowIterator(Cursor cursor, MicroDB db, Class<T> classType)
+        {
             mCursor = cursor;
             mDB = db;
             mClassType = classType;
@@ -609,27 +760,33 @@ public class MicroDB {
         }
 
         @Override
-        public boolean hasNext() {
+        public boolean hasNext()
+        {
             return mCurrentRow != null;
         }
 
         @Override
-        public T next() {
-            try {
+        public T next()
+        {
+            try
+            {
                 final UUID objId = mCurrentRow.getPrimaryKey();
                 T retval = mDB.get(objId, mClassType.newInstance());
 
                 mCursor.next();
                 mCurrentRow = mCursor.get();
                 return retval;
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Throwables.propagate(e);
                 return null;
             }
         }
 
         @Override
-        public void remove() {
+        public void remove()
+        {
             throw new UnsupportedOperationException("remove not implemented");
         }
     }
