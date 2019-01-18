@@ -381,8 +381,7 @@ public class MicroDB
         } 
         else 
         {
-            mDriver.beginTransaction();
-            metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
+            mDriver.beginTransaction();            
             metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
             mDriver.saveMeta(metaObj);
             mDriver.commitTransaction();
