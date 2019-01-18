@@ -362,10 +362,12 @@ public class MicroDB
 
         int currentVersion = -1;
         UBObject metaObj = mDriver.getMeta();
+        boolean requiresUpgrade = false;
         if (!metaObj.containsKey(METAKEY_INSTANCE))
         {
             mDriver.beginTransaction();
             metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
+
             mDriver.saveMeta(metaObj);
             mDriver.commitTransaction();
         }
@@ -377,8 +379,15 @@ public class MicroDB
         if (currentVersion < mSchemaVersion && mCallback.onNeedsUpgrade(this, currentVersion, mSchemaVersion))
         {
             upgrade();
+        } 
+        else 
+        {
+            mDriver.beginTransaction();
+            metaObj.put(METAKEY_INSTANCE, UBValueFactory.createString(UUID.randomUUID().toString()));
+            metaObj.put(METAKEY_DBVERSION, UBValueFactory.createInt(mSchemaVersion));
+            mDriver.saveMeta(metaObj);
+            mDriver.commitTransaction();
         }
-
     }
 
     public void upgrade() throws IOException
