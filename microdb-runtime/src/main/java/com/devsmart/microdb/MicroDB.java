@@ -362,7 +362,6 @@ public class MicroDB
 
         int currentVersion = -1;
         UBObject metaObj = mDriver.getMeta();
-        boolean requiresUpgrade = false;
         if (!metaObj.containsKey(METAKEY_INSTANCE))
         {
             mDriver.beginTransaction();
