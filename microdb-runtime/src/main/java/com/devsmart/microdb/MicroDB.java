@@ -404,25 +404,6 @@ public class MicroDB
         mDriver.commitTransaction();
     }
 
-
-    /**
-     * called when a dbobject is being finalized by the GC
-     *
-     * @param obj
-     */
-    protected void finalizing(DBObject obj)
-    {
-        if (mAutoSave.get() && obj.mDirty)
-        {
-            mWriteQueue.enqueue(createWriteObject(obj));
-        }
-        synchronized (this)
-        {
-            mLiveObjects.remove(obj.getId());
-        }
-
-    }
-
     public synchronized void close() throws IOException
     {
         flush();

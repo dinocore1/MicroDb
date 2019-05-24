@@ -17,18 +17,6 @@ public class DBObject {
     private MicroDB mDB;
     protected boolean mDirty;
 
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            if (mDB != null) {
-                mDB.finalizing(this);
-            }
-
-        } finally {
-            super.finalize();
-        }
-    }
-
     protected void init(MicroDB microDB) {
         mDB = microDB;
     }

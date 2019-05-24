@@ -10,7 +10,7 @@ buildscript {
 allprojects {
 
   group = 'com.dev-smart'
-  version = '0.4.2'
+  version = '0.4.3-SNAPSHOT'
   description = 'A embedded NoSQL Database'
 
   repositories {
